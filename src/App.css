@@ -1,7 +1,6 @@
 /* ACES CMS - Multi-Theme Architecture
  * 1. 🌌 Deep Midnight: Dark Space & Sci-Fi (Indigo/Cyan/Obsidian)
  * 2. 🌸 Pastel Aurora: Dreamy Soft Nordic Aurora (Royal Lavender/Blush/Lilac)
- * 3. ⚡ Cyber Emerald: Matrix Bio-Terminal (Matrix Mint/Jade/Forest Obsidian)
  */
 
 /* =========================================================
@@ -129,60 +128,7 @@
 }
 
 /* =========================================================
-   4. THEME 3: CYBER EMERALD
-   ========================================================= */
-.theme-cyber-emerald {
-  --bg-canvas: #04130d;
-  --bg-radial: radial-gradient(at 15% 15%, rgba(16, 185, 129, 0.16) 0px, transparent 40%),
-               radial-gradient(at 85% 15%, rgba(20, 184, 166, 0.13) 0px, transparent 40%),
-               radial-gradient(at 85% 85%, rgba(5, 150, 105, 0.14) 0px, transparent 40%),
-               radial-gradient(at 15% 85%, rgba(132, 204, 22, 0.12) 0px, transparent 40%),
-               radial-gradient(at 50% 50%, #04130d 0px, transparent 75%);
-  --panel-bg: #092218;
-  --panel-border: #134431;
-  --panel-subtle: #061a12;
-  --card-bg: #092218;
-  --card-hover: #0d2e21;
-  --card-border: #134431;
-  --card-border-hover: #1b6348;
-  --dialog-bg: #092218;
-  --dialog-border: #134431;
-
-  --text-primary: #ecfdf5;
-  --text-secondary: #a7f3d0;
-  --text-muted: #6ee7b7;
-
-  --btn-primary-bg: #10b981;
-  --btn-primary-hover: #059669;
-  --btn-primary-border: #059669;
-  --btn-primary-text: #022c1e;
-
-  --btn-secondary-bg: #0e3022;
-  --btn-secondary-hover: #144430;
-  --btn-secondary-border: #18533b;
-  --btn-secondary-text: #6ee7b7;
-
-  --input-bg: #03140e;
-  --input-border: #134431;
-  --input-focus: #10b981;
-  --input-ring: rgba(16, 185, 129, 0.25);
-  --input-text: #ecfdf5;
-
-  --badge-brand-bg: rgba(16, 185, 129, 0.16);
-  --badge-brand-border: rgba(16, 185, 129, 0.35);
-  --badge-brand-text: #6ee7b7;
-
-  --accent-color: #10b981;
-  --accent-glow: rgba(16, 185, 129, 0.3);
-  --brand-gradient: linear-gradient(135deg, #10b981, #059669);
-
-  background-color: var(--bg-canvas);
-  background-image: var(--bg-radial);
-  color: var(--text-primary);
-}
-
-/* =========================================================
-   5. UNIFIED COMPONENT PRIMITIVES (Using CSS Variables)
+   4. UNIFIED COMPONENT PRIMITIVES (Using CSS Variables)
    ========================================================= */
 .glass-panel {
   background-color: var(--panel-bg);
@@ -293,12 +239,4 @@ textarea {
 }
 .theme-pastel-aurora ::-webkit-scrollbar-thumb:hover {
   background: #c084fc;
-}
-
-.theme-cyber-emerald ::-webkit-scrollbar-thumb {
-  background: #134431;
-  border-radius: 9999px;
-}
-.theme-cyber-emerald ::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
 }

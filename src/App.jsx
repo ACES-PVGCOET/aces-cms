@@ -40,14 +40,13 @@ import Toast from './components/Toast';
  * Themes:
  *  1. 🌌 Deep Midnight ('deep-midnight')
  *  2. 🌸 Pastel Aurora ('pastel-aurora')
- *  3. ⚡ Cyber Emerald ('cyber-emerald')
  */
 function App() {
-  // 3-Theme State with fallback & localStorage
+  // Theme State with fallback & localStorage
   const [theme, setTheme] = useState(() => {
     try {
       const stored = localStorage.getItem('aces_cms_theme_3');
-      if (['deep-midnight', 'pastel-aurora', 'cyber-emerald'].includes(stored)) {
+      if (['deep-midnight', 'pastel-aurora'].includes(stored)) {
         return stored;
       }
       return 'deep-midnight';
@@ -57,7 +56,7 @@ function App() {
   });
 
   const handleSelectTheme = (newTheme) => {
-    if (['deep-midnight', 'pastel-aurora', 'cyber-emerald'].includes(newTheme)) {
+    if (['deep-midnight', 'pastel-aurora'].includes(newTheme)) {
       setTheme(newTheme);
       try {
         localStorage.setItem('aces_cms_theme_3', newTheme);
@@ -241,7 +240,6 @@ function App() {
   const themeDisplayNames = {
     'deep-midnight': 'Deep Midnight',
     'pastel-aurora': 'Pastel Aurora',
-    'cyber-emerald': 'Cyber Emerald',
   };
 
   return (
