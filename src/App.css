@@ -1,0 +1,304 @@
+/* ACES CMS - Multi-Theme Architecture
+ * 1. 🌌 Deep Midnight: Dark Space & Sci-Fi (Indigo/Cyan/Obsidian)
+ * 2. 🌸 Pastel Aurora: Dreamy Soft Nordic Aurora (Royal Lavender/Blush/Lilac)
+ * 3. ⚡ Cyber Emerald: Matrix Bio-Terminal (Matrix Mint/Jade/Forest Obsidian)
+ */
+
+/* =========================================================
+   1. UNIVERSAL CANVAS & ROOT TRANSITIONS
+   ========================================================= */
+.aces-canvas {
+  min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  background-attachment: fixed;
+  background-size: 100% 100%;
+}
+
+.aces-canvas *,
+.aces-canvas *::before,
+.aces-canvas *::after {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =========================================================
+   2. THEME 1: DEEP MIDNIGHT
+   ========================================================= */
+.theme-deep-midnight {
+  --bg-canvas: #0b0f19;
+  --bg-radial: radial-gradient(at 15% 15%, rgba(99, 102, 241, 0.14) 0px, transparent 40%),
+               radial-gradient(at 85% 15%, rgba(236, 72, 153, 0.1) 0px, transparent 40%),
+               radial-gradient(at 85% 85%, rgba(14, 165, 233, 0.1) 0px, transparent 40%),
+               radial-gradient(at 15% 85%, rgba(168, 85, 247, 0.1) 0px, transparent 40%),
+               radial-gradient(at 50% 50%, #0b0f19 0px, transparent 75%);
+  --panel-bg: #0f172a;
+  --panel-border: #1e293b;
+  --panel-subtle: #0b1120;
+  --card-bg: #0f172a;
+  --card-hover: #131d35;
+  --card-border: #1e293b;
+  --card-border-hover: #334155;
+  --dialog-bg: #0f172a;
+  --dialog-border: #1e293b;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --btn-primary-bg: #6366f1;
+  --btn-primary-hover: #4f46e5;
+  --btn-primary-border: #4f46e5;
+  --btn-primary-text: #ffffff;
+
+  --btn-secondary-bg: #1e293b;
+  --btn-secondary-hover: #334155;
+  --btn-secondary-border: #334155;
+  --btn-secondary-text: #e2e8f0;
+
+  --input-bg: #020617;
+  --input-border: #1e293b;
+  --input-focus: #6366f1;
+  --input-ring: rgba(99, 102, 241, 0.25);
+  --input-text: #ffffff;
+
+  --badge-brand-bg: rgba(99, 102, 241, 0.15);
+  --badge-brand-border: rgba(99, 102, 241, 0.35);
+  --badge-brand-text: #a5b4fc;
+
+  --accent-color: #6366f1;
+  --accent-glow: rgba(99, 102, 241, 0.3);
+  --brand-gradient: linear-gradient(135deg, #6366f1, #4f46e5);
+
+  background-color: var(--bg-canvas);
+  background-image: var(--bg-radial);
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   3. THEME 2: PASTEL AURORA
+   ========================================================= */
+.theme-pastel-aurora {
+  --bg-canvas: #faf7fd;
+  --bg-radial: radial-gradient(at 10% 10%, rgba(253, 230, 138, 0.35) 0px, transparent 40%),
+               radial-gradient(at 90% 10%, rgba(244, 114, 182, 0.25) 0px, transparent 40%),
+               radial-gradient(at 85% 85%, rgba(192, 132, 252, 0.28) 0px, transparent 40%),
+               radial-gradient(at 15% 85%, rgba(167, 243, 208, 0.3) 0px, transparent 40%),
+               radial-gradient(at 50% 50%, #faf7fd 0px, transparent 70%);
+  --panel-bg: #ffffff;
+  --panel-border: #ebdcf7;
+  --panel-subtle: #f9f4fd;
+  --card-bg: #ffffff;
+  --card-hover: #ffffff;
+  --card-border: #ebdcf7;
+  --card-border-hover: #d8b4fe;
+  --dialog-bg: #ffffff;
+  --dialog-border: #ebdcf7;
+
+  --text-primary: #1e1b4b;
+  --text-secondary: #581c87;
+  --text-muted: #7e22ce;
+
+  --btn-primary-bg: #8b5cf6;
+  --btn-primary-hover: #7c3aed;
+  --btn-primary-border: #7c3aed;
+  --btn-primary-text: #ffffff;
+
+  --btn-secondary-bg: #f5effe;
+  --btn-secondary-hover: #ece2fd;
+  --btn-secondary-border: #e9d5ff;
+  --btn-secondary-text: #5b21b6;
+
+  --input-bg: #ffffff;
+  --input-border: #d8b4fe;
+  --input-focus: #8b5cf6;
+  --input-ring: rgba(139, 92, 246, 0.2);
+  --input-text: #1e1b4b;
+
+  --badge-brand-bg: #f3e8ff;
+  --badge-brand-border: #d8b4fe;
+  --badge-brand-text: #6b21a8;
+
+  --accent-color: #8b5cf6;
+  --accent-glow: rgba(139, 92, 246, 0.25);
+  --brand-gradient: linear-gradient(135deg, #a855f7, #ec4899);
+
+  background-color: var(--bg-canvas);
+  background-image: var(--bg-radial);
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   4. THEME 3: CYBER EMERALD
+   ========================================================= */
+.theme-cyber-emerald {
+  --bg-canvas: #04130d;
+  --bg-radial: radial-gradient(at 15% 15%, rgba(16, 185, 129, 0.16) 0px, transparent 40%),
+               radial-gradient(at 85% 15%, rgba(20, 184, 166, 0.13) 0px, transparent 40%),
+               radial-gradient(at 85% 85%, rgba(5, 150, 105, 0.14) 0px, transparent 40%),
+               radial-gradient(at 15% 85%, rgba(132, 204, 22, 0.12) 0px, transparent 40%),
+               radial-gradient(at 50% 50%, #04130d 0px, transparent 75%);
+  --panel-bg: #092218;
+  --panel-border: #134431;
+  --panel-subtle: #061a12;
+  --card-bg: #092218;
+  --card-hover: #0d2e21;
+  --card-border: #134431;
+  --card-border-hover: #1b6348;
+  --dialog-bg: #092218;
+  --dialog-border: #134431;
+
+  --text-primary: #ecfdf5;
+  --text-secondary: #a7f3d0;
+  --text-muted: #6ee7b7;
+
+  --btn-primary-bg: #10b981;
+  --btn-primary-hover: #059669;
+  --btn-primary-border: #059669;
+  --btn-primary-text: #022c1e;
+
+  --btn-secondary-bg: #0e3022;
+  --btn-secondary-hover: #144430;
+  --btn-secondary-border: #18533b;
+  --btn-secondary-text: #6ee7b7;
+
+  --input-bg: #03140e;
+  --input-border: #134431;
+  --input-focus: #10b981;
+  --input-ring: rgba(16, 185, 129, 0.25);
+  --input-text: #ecfdf5;
+
+  --badge-brand-bg: rgba(16, 185, 129, 0.16);
+  --badge-brand-border: rgba(16, 185, 129, 0.35);
+  --badge-brand-text: #6ee7b7;
+
+  --accent-color: #10b981;
+  --accent-glow: rgba(16, 185, 129, 0.3);
+  --brand-gradient: linear-gradient(135deg, #10b981, #059669);
+
+  background-color: var(--bg-canvas);
+  background-image: var(--bg-radial);
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   5. UNIFIED COMPONENT PRIMITIVES (Using CSS Variables)
+   ========================================================= */
+.glass-panel {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.glass-panel-subtle {
+  background-color: var(--panel-subtle);
+  border: 1px solid var(--panel-border);
+}
+
+.glass-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.15);
+}
+
+.glass-card-hover:hover {
+  background-color: var(--card-hover);
+  border-color: var(--card-border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.25);
+}
+
+.acrylic-dialog {
+  background-color: var(--dialog-bg);
+  border: 1px solid var(--dialog-border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+}
+
+/* Primary Button */
+.btn-primary {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 1px solid var(--btn-primary-border);
+  font-weight: 700;
+  box-shadow: 0 1px 3px 0 var(--accent-glow);
+}
+
+.btn-primary:hover {
+  background-color: var(--btn-primary-hover);
+  box-shadow: 0 4px 10px 0 var(--accent-glow);
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--btn-secondary-border);
+  font-weight: 600;
+}
+
+.btn-secondary:hover {
+  background-color: var(--btn-secondary-hover);
+}
+
+/* Inputs & Form Controls */
+input,
+select,
+textarea {
+  color: var(--input-text);
+  background-color: var(--input-bg);
+}
+
+.glass-input {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-text);
+}
+
+.glass-input:focus {
+  background-color: var(--input-bg);
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px var(--input-ring);
+  outline: none;
+}
+
+/* Line clamp helper */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Theme-Adaptive Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.theme-deep-midnight ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+.theme-deep-midnight ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+.theme-pastel-aurora ::-webkit-scrollbar-thumb {
+  background: #d8b4fe;
+  border-radius: 9999px;
+}
+.theme-pastel-aurora ::-webkit-scrollbar-thumb:hover {
+  background: #c084fc;
+}
+
+.theme-cyber-emerald ::-webkit-scrollbar-thumb {
+  background: #134431;
+  border-radius: 9999px;
+}
+.theme-cyber-emerald ::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
