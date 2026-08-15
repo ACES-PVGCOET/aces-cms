@@ -1,8 +1,8 @@
-import { Moon, Sparkles, Zap } from 'lucide-react';
+import { Moon, Sparkles } from 'lucide-react';
 
 /**
  * ThemeSelector Component
- * Multi-Theme switcher for Deep Midnight, Pastel Aurora, and Cyber Emerald.
+ * Multi-Theme switcher for Deep Midnight and Pastel Aurora.
  */
 export function ThemeSelector({ currentTheme = 'deep-midnight', onSelectTheme }) {
   const themes = [
@@ -19,13 +19,6 @@ export function ThemeSelector({ currentTheme = 'deep-midnight', onSelectTheme })
       shortLabel: 'Aurora',
       icon: Sparkles,
       indicatorColor: '#ec4899',
-    },
-    {
-      id: 'cyber-emerald',
-      label: 'Cyber Emerald',
-      shortLabel: 'Emerald',
-      icon: Zap,
-      indicatorColor: '#10b981',
     },
   ];
 
