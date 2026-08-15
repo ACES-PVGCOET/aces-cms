@@ -7,8 +7,10 @@ import {
   Trash2, 
   Link as LinkIcon, 
   FileText, 
-  Image as ImageIcon 
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
+import { uploadToCloudinary } from '../services/api';
 
 const PRESET_COVERS = [
   'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
@@ -42,6 +44,8 @@ export function MagazineModal({ isOpen, initialMagazine, onClose, onSubmit }) {
 
   const [showCoverUrlInput, setShowCoverUrlInput] = useState(false);
   const [showPdfUrlInput, setShowPdfUrlInput] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const [pdfFileName, setPdfFileName] = useState('');
   const [errors, setErrors] = useState({});
 
@@ -80,28 +84,34 @@ export function MagazineModal({ isOpen, initialMagazine, onClose, onSubmit }) {
     setErrors({});
     setShowCoverUrlInput(false);
     setShowPdfUrlInput(false);
+    setIsUploadingCover(false);
+    setIsUploadingPdf(false);
   }, [initialMagazine, isOpen]);
 
   if (!isOpen) return null;
 
-  const handleCoverFileChange = (e) => {
+  const handleCoverFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 15 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, coverImage: 'Cover image must be under 15MB' }));
+    if (file.size > 20 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, coverImage: 'Cover image must be under 20MB' }));
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setFormData((prev) => ({ ...prev, coverImage: event.target?.result }));
+    try {
+      setIsUploadingCover(true);
       setErrors((prev) => ({ ...prev, coverImage: '' }));
-    };
-    reader.readAsDataURL(file);
+      const cdnUrl = await uploadToCloudinary(file, 'magazines', 'image');
+      setFormData((prev) => ({ ...prev, coverImage: cdnUrl }));
+    } catch (err) {
+      setErrors((prev) => ({ ...prev, coverImage: err.message || 'Failed to upload cover image to Cloudinary' }));
+    } finally {
+      setIsUploadingCover(false);
+    }
   };
 
-  const handlePdfFileChange = (e) => {
+  const handlePdfFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -110,18 +120,22 @@ export function MagazineModal({ isOpen, initialMagazine, onClose, onSubmit }) {
       return;
     }
 
-    if (file.size > 30 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, pdfUrl: 'PDF file must be under 30MB' }));
+    if (file.size > 40 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, pdfUrl: 'PDF file must be under 40MB' }));
       return;
     }
 
     setPdfFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setFormData((prev) => ({ ...prev, pdfUrl: event.target?.result }));
+    try {
+      setIsUploadingPdf(true);
       setErrors((prev) => ({ ...prev, pdfUrl: '' }));
-    };
-    reader.readAsDataURL(file);
+      const cdnUrl = await uploadToCloudinary(file, 'magazines', 'raw');
+      setFormData((prev) => ({ ...prev, pdfUrl: cdnUrl }));
+    } catch (err) {
+      setErrors((prev) => ({ ...prev, pdfUrl: err.message || 'Failed to upload PDF file to Cloudinary' }));
+    } finally {
+      setIsUploadingPdf(false);
+    }
   };
 
   const validate = () => {
@@ -309,11 +323,21 @@ export function MagazineModal({ isOpen, initialMagazine, onClose, onSubmit }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
+                    disabled={isUploadingCover}
                     onClick={() => coverInputRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs leading-4 font-bold btn-secondary cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs leading-4 font-bold btn-secondary cursor-pointer disabled:opacity-50"
                   >
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Upload Cover</span>
+                    {isUploadingCover ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                        <span>Uploading Cover...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Cover</span>
+                      </>
+                    )}
                   </button>
 
                   <button
@@ -393,11 +417,21 @@ export function MagazineModal({ isOpen, initialMagazine, onClose, onSubmit }) {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
+                  disabled={isUploadingPdf}
                   onClick={() => pdfInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs leading-4 font-bold btn-secondary cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs leading-4 font-bold btn-secondary cursor-pointer disabled:opacity-50"
                 >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>Upload PDF File</span>
+                  {isUploadingPdf ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                      <span>Uploading PDF...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload PDF File</span>
+                    </>
+                  )}
                 </button>
 
                 <button

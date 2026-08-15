@@ -1,55 +1,103 @@
-import { useState, useEffect } from 'react';
-import { INITIAL_ANNOUNCEMENTS } from '../data/mockData';
+import { useState, useEffect, useCallback } from 'react';
+import { announcementsApi } from '../services/api';
 
-const STORAGE_KEY = 'aces_cms_announcements_data';
+function normalizeAnnouncement(item) {
+  return {
+    id: item.id || item._id,
+    topic: item.topic || 'ACES Announcement',
+    description: item.description || '',
+    created_by: item.created_by || null,
+    updated_by: item.updated_by || null,
+    created_at: item.created_at || new Date().toISOString(),
+    updated_at: item.updated_at || item.created_at || new Date().toISOString(),
+  };
+}
 
 /**
  * useAnnouncements Hook
- * Provides announcements list and marketing team broadcasting interface.
+ * Provides announcements list and broadcasting interface strictly connected to API schema.
  */
 export function useAnnouncements() {
-  const [announcements, setAnnouncements] = useState(() => {
+  const [announcements, setAnnouncements] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch announcements from API on mount
+  const fetchFromApi = useCallback(async () => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
+      setIsLoading(true);
+      const apiData = await announcementsApi.getAll();
+      if (Array.isArray(apiData)) {
+        const normalized = apiData.map(normalizeAnnouncement);
+        setAnnouncements(normalized);
       }
     } catch (e) {
-      console.warn('Failed to load announcements from localStorage', e);
+      console.info('[Announcements Hook] API fetch error:', e.message);
+    } finally {
+      setIsLoading(false);
     }
-    return INITIAL_ANNOUNCEMENTS;
-  });
+  }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(announcements));
-    } catch (e) {
-      console.warn('Failed to save announcements to localStorage', e);
-    }
-  }, [announcements]);
+    fetchFromApi();
+  }, [fetchFromApi]);
 
-  const addAnnouncement = (newAnnouncement) => {
-    const item = {
-      id: `aces-ann-${Date.now().toString().slice(-4)}`,
-      title: newAnnouncement.title,
-      category: newAnnouncement.category || 'General',
-      targetAudience: newAnnouncement.targetAudience || 'All Members',
-      publishedAt: new Date().toISOString().split('T')[0],
-      status: 'Published',
-      author: newAnnouncement.author || 'ACES Admin',
-      summary: newAnnouncement.summary,
-    };
-    setAnnouncements((prev) => [item, ...prev]);
-    return item;
+  const addAnnouncement = async (newAnnouncement) => {
+    const topic = (newAnnouncement.topic || newAnnouncement.title || '').trim();
+    const description = (newAnnouncement.description || '').trim();
+
+    try {
+      setIsLoading(true);
+      const apiResult = await announcementsApi.create({ topic, description });
+      const finalItem = normalizeAnnouncement(apiResult);
+      setAnnouncements((prev) => [finalItem, ...prev]);
+      return finalItem;
+    } catch (e) {
+      console.error('[Announcements Hook] API create announcement failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const deleteAnnouncement = (id) => {
-    setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+  const updateAnnouncement = async (id, updatedData) => {
+    const topic = (updatedData.topic || updatedData.title || '').trim();
+    const description = (updatedData.description || '').trim();
+
+    try {
+      setIsLoading(true);
+      const apiResult = await announcementsApi.update(id, { topic, description });
+      const updatedNorm = normalizeAnnouncement(apiResult);
+      setAnnouncements((prev) => prev.map((a) => (a.id === id ? updatedNorm : a)));
+      return updatedNorm;
+    } catch (e) {
+      console.error('[Announcements Hook] API update announcement failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteAnnouncement = async (id) => {
+    try {
+      setIsLoading(true);
+      await announcementsApi.delete(id);
+      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+    } catch (e) {
+      console.error('[Announcements Hook] API delete announcement failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return {
     announcements,
     addAnnouncement,
+    updateAnnouncement,
     deleteAnnouncement,
+    isLoading,
+    refreshAnnouncements: fetchFromApi,
   };
 }
+
+export default useAnnouncements;

@@ -1,152 +1,163 @@
-import { useState, useEffect, useMemo } from 'react';
-import { INITIAL_EVENTS } from '../data/mockData';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { eventsApi } from '../services/api';
 
-const STORAGE_KEY = 'aces_cms_events_data';
+function normalizeEvent(evt) {
+  const overview = evt.overview || evt.title || 'ACES Session';
+  const banner_url = evt.banner_url || evt.banner || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&auto=format&fit=crop&q=80';
+  const isHighlight = Boolean(evt.isHighlight !== undefined ? evt.isHighlight : evt.featured);
+
+  return {
+    id: evt.id || evt._id,
+    overview,
+    description: evt.description || '',
+    terms: evt.terms || 'Standard ACES student guidelines apply.',
+    reg_form_id: evt.reg_form_id || null,
+    banner_url,
+    isHighlight,
+  };
+}
 
 /**
  * useEvents Hook
- * Provides plug-and-play Event state management, status/mode filtering,
- * search querying, and CRUD operations.
+ * Provides Event state management strictly adhering to backend Event API model:
+ * overview, description, terms, reg_form_id, banner_url, isHighlight.
  */
 export function useEvents() {
-  const [events, setEvents] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.warn('Failed to load events from localStorage', e);
-    }
-    return INITIAL_EVENTS;
-  });
-
+  const [events, setEvents] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All Statuses');
-  const [modeFilter, setModeFilter] = useState('All Modes');
+  const [highlightFilter, setHighlightFilter] = useState('All'); // 'All' | 'Highlighted' | 'Standard'
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync to localStorage
-  useEffect(() => {
+  // Fetch events from backend API on mount
+  const fetchFromApi = useCallback(async () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+      setIsLoading(true);
+      const apiData = await eventsApi.getAll();
+      if (Array.isArray(apiData)) {
+        setEvents(apiData.map(normalizeEvent));
+      }
     } catch (e) {
-      console.warn('Failed to save events to localStorage', e);
+      console.info('[Events Hook] API fetch error:', e.message);
+    } finally {
+      setIsLoading(false);
     }
-  }, [events]);
+  }, []);
+
+  useEffect(() => {
+    fetchFromApi();
+  }, [fetchFromApi]);
 
   // Filtered events
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
-      // Status filter
-      if (statusFilter !== 'All Statuses' && event.status !== statusFilter) {
-        return false;
-      }
-
-      // Mode filter
-      if (modeFilter !== 'All Modes' && event.mode !== modeFilter) {
-        return false;
-      }
+      // Highlight filter
+      if (highlightFilter === 'Highlighted' && !event.isHighlight) return false;
+      if (highlightFilter === 'Standard' && event.isHighlight) return false;
 
       // Search query filter
       if (searchQuery.trim() !== '') {
         const q = searchQuery.toLowerCase().trim();
-        const matchesTitle = event.title.toLowerCase().includes(q);
-        const matchesDesc = event.description.toLowerCase().includes(q);
-        const matchesVenue = event.venue.toLowerCase().includes(q);
-        const matchesTeam = event.organizerTeam?.toLowerCase().includes(q);
-        const matchesTags = event.tags?.some((t) => t.toLowerCase().includes(q));
+        const matchesOverview = (event.overview || '').toLowerCase().includes(q);
+        const matchesDesc = (event.description || '').toLowerCase().includes(q);
+        const matchesTerms = (event.terms || '').toLowerCase().includes(q);
+        const matchesFormId = (event.reg_form_id || '').toLowerCase().includes(q);
 
-        return matchesTitle || matchesDesc || matchesVenue || matchesTeam || matchesTags;
+        return matchesOverview || matchesDesc || matchesTerms || matchesFormId;
       }
 
       return true;
     });
-  }, [events, statusFilter, modeFilter, searchQuery]);
+  }, [events, highlightFilter, searchQuery]);
 
   // Event stats
   const eventStats = useMemo(() => {
     const totalEvents = events.length;
-    const upcomingSessions = events.filter((e) => e.status === 'Scheduled' || e.status === 'Live').length;
-    const recentlyCompleted = events.filter((e) => e.status === 'Completed').length;
+    const highlightedCount = events.filter((e) => e.isHighlight).length;
+    const formLinkedCount = events.filter((e) => Boolean(e.reg_form_id)).length;
 
     return {
       totalEvents,
-      upcomingSessions: `${upcomingSessions} Active`,
-      recentlyCompleted: `${recentlyCompleted} Archived`,
+      highlightedCount,
+      formLinkedCount,
     };
   }, [events]);
 
   // Create Event
-  const createEvent = (eventData) => {
+  const createEvent = async (eventData) => {
     setIsLoading(true);
-    const newEvent = {
-      id: `aces-evt-${Date.now().toString().slice(-4)}`,
-      title: eventData.title.trim(),
-      description: eventData.description.trim(),
-      date: eventData.date || new Date().toISOString().split('T')[0],
-      time: eventData.time || '4:00 PM - 6:00 PM',
-      mode: eventData.mode || 'Offline',
-      status: eventData.status || 'Scheduled',
-      venue: eventData.venue?.trim() || 'ACES Auditorium',
-      attendeesCount: Number(eventData.attendeesCount) || 0,
-      capacity: Number(eventData.capacity) || 100,
-      banner:
-        eventData.banner?.trim() ||
-        'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&auto=format&fit=crop&q=80',
-      organizerTeam: eventData.organizerTeam || 'Web Team',
-      tags: eventData.tags || ['ACES', 'Tech'],
-      featured: Boolean(eventData.featured),
-    };
+    const overview = (eventData.overview || '').trim();
+    const description = (eventData.description || '').trim();
+    const terms = (eventData.terms || 'Standard ACES student guidelines apply.').trim();
+    const banner_url = eventData.banner_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&auto=format&fit=crop&q=80';
+    const isHighlight = Boolean(eventData.isHighlight);
 
-    setEvents((prev) => [newEvent, ...prev]);
-    setIsLoading(false);
-    return newEvent;
+    try {
+      const apiResult = await eventsApi.create({
+        overview,
+        description,
+        terms,
+        reg_form_id: eventData.reg_form_id || null,
+        banner_url,
+        isHighlight,
+      });
+      const finalEvent = normalizeEvent(apiResult);
+      setEvents((prev) => [finalEvent, ...prev]);
+      return finalEvent;
+    } catch (e) {
+      console.error('[Events Hook] API create event failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Update Event
-  const updateEvent = (id, updatedData) => {
+  const updateEvent = async (id, updatedData) => {
     setIsLoading(true);
-    setEvents((prev) =>
-      prev.map((evt) => {
-        if (evt.id === id) {
-          return {
-            ...evt,
-            ...updatedData,
-            title: updatedData.title !== undefined ? updatedData.title.trim() : evt.title,
-            description: updatedData.description !== undefined ? updatedData.description.trim() : evt.description,
-            venue: updatedData.venue !== undefined ? updatedData.venue.trim() : evt.venue,
-            attendeesCount: updatedData.attendeesCount !== undefined ? Number(updatedData.attendeesCount) : evt.attendeesCount,
-            capacity: updatedData.capacity !== undefined ? Number(updatedData.capacity) : evt.capacity,
-          };
-        }
-        return evt;
-      })
-    );
-    setIsLoading(false);
+    try {
+      const apiResult = await eventsApi.update(id, {
+        overview: updatedData.overview !== undefined ? updatedData.overview.trim() : undefined,
+        description: updatedData.description !== undefined ? updatedData.description.trim() : undefined,
+        terms: updatedData.terms !== undefined ? updatedData.terms.trim() : undefined,
+        reg_form_id: updatedData.reg_form_id !== undefined ? updatedData.reg_form_id : undefined,
+        banner_url: updatedData.banner_url,
+        isHighlight: updatedData.isHighlight !== undefined ? Boolean(updatedData.isHighlight) : undefined,
+      });
+      const updatedNorm = normalizeEvent(apiResult);
+      setEvents((prev) => prev.map((evt) => (evt.id === id ? updatedNorm : evt)));
+      return updatedNorm;
+    } catch (e) {
+      console.error('[Events Hook] API update event failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Delete Event
-  const deleteEvent = (id) => {
+  const deleteEvent = async (id) => {
     setIsLoading(true);
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-    setIsLoading(false);
+    try {
+      await eventsApi.delete(id);
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+    } catch (e) {
+      console.error('[Events Hook] API delete event failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Toggle Featured Spotlight
-  const toggleFeatured = (id) => {
-    setEvents((prev) =>
-      prev.map((e) => ({
-        ...e,
-        featured: e.id === id ? !e.featured : false,
-      }))
-    );
-  };
-
-  // Reset to default
-  const resetEventsData = () => {
-    setEvents(INITIAL_EVENTS);
+  // Toggle Highlight Spotlight
+  const toggleHighlight = async (id) => {
+    const target = events.find((e) => e.id === id);
+    if (!target) return;
+    try {
+      await updateEvent(id, { ...target, isHighlight: !target.isHighlight });
+    } catch (e) {
+      console.error('[Events Hook] Toggle highlight failed:', e.message);
+    }
   };
 
   return {
@@ -154,18 +165,18 @@ export function useEvents() {
     filteredEvents,
     searchQuery,
     setSearchQuery,
-    statusFilter,
-    setStatusFilter,
-    modeFilter,
-    setModeFilter,
+    highlightFilter,
+    setHighlightFilter,
     viewMode,
     setViewMode,
     eventStats,
     createEvent,
     updateEvent,
     deleteEvent,
-    toggleFeatured,
-    resetEventsData,
+    toggleHighlight,
     isLoading,
+    refreshEvents: fetchFromApi,
   };
 }
+
+export default useEvents;

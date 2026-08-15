@@ -1,40 +1,84 @@
-import { useState, useEffect, useMemo } from 'react';
-import { INITIAL_MAGAZINES } from '../data/mockData';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { galleryApi } from '../services/api';
 
-const STORAGE_KEY = 'aces_cms_magazines_data';
+const DEFAULT_MAGAZINES = [
+  {
+    id: 'aces-mag-2026-01',
+    title: 'ACES ByteCraft Vol 12: The GenAI Frontier',
+    edition: 'Volume 12, Issue 1',
+    academicYear: '2026-27',
+    coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
+    publishedDate: '2026-04-15',
+    editor: 'Ananya Deshmukh (Editorial Lead)',
+    pageCount: 64,
+    downloadsCount: 1420,
+    readsCount: 3850,
+    pdfUrl: 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/examples/learning/helloworld.pdf',
+    featured: true,
+    description: 'Comprehensive annual technical publication highlighting breakthroughs in generative AI, system architecture, and campus projects.',
+    tags: ['GenAI', 'Tech', 'Annual', '2026-27'],
+  },
+];
+
+function normalizeMagazine(item) {
+  let meta = {};
+  if (item.caption) {
+    try {
+      meta = JSON.parse(item.caption);
+    } catch (_e) {
+      meta = { description: item.caption };
+    }
+  }
+
+  return {
+    id: item.id || item._id,
+    title: item.title || 'ACES ByteCraft Edition',
+    edition: meta.edition || 'Volume 12, Issue 1',
+    academicYear: meta.academicYear || '2026-27',
+    coverImage: item.media_url || meta.coverImage || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
+    publishedDate: meta.publishedDate || new Date().toISOString().split('T')[0],
+    editor: meta.editor || 'ACES Editorial Guild',
+    pageCount: meta.pageCount || 50,
+    downloadsCount: meta.downloadsCount || 0,
+    readsCount: meta.readsCount || 0,
+    pdfUrl: meta.pdfUrl || 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/examples/learning/helloworld.pdf',
+    featured: Boolean(meta.featured),
+    description: meta.description || 'ACES club technical publication.',
+    tags: meta.tags || ['ACES', 'Publication'],
+  };
+}
 
 /**
  * useMagazines Hook
- * Provides plug-and-play state management, academic year filtering,
- * search filtering, and CRUD operations for ACES club magazines.
- * Future backend integration: Replace localStorage with axios/fetch calls.
+ * Provides state management, academic year filtering, search filtering,
+ * and CRUD operations connected directly to API (collection_name="Magazines").
  */
 export function useMagazines() {
-  const [magazines, setMagazines] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.warn('Failed to load magazines from localStorage', e);
-    }
-    return INITIAL_MAGAZINES;
-  });
-
+  const [magazines, setMagazines] = useState(DEFAULT_MAGAZINES);
   const [selectedYear, setSelectedYear] = useState('All Years');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMagazine, setSelectedMagazine] = useState(null);
   const [viewingPdfMagazine, setViewingPdfMagazine] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Sync to localStorage
-  useEffect(() => {
+  // Fetch magazines from backend API on mount
+  const fetchFromApi = useCallback(async () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(magazines));
+      setIsLoading(true);
+      const apiItems = await galleryApi.getItems({ collection_name: 'Magazines' });
+      if (Array.isArray(apiItems) && apiItems.length > 0) {
+        setMagazines(apiItems.map(normalizeMagazine));
+      }
     } catch (e) {
-      console.warn('Failed to save magazines to localStorage', e);
+      console.info('[Magazines Hook] API fetch warning:', e.message);
+    } finally {
+      setIsLoading(false);
     }
-  }, [magazines]);
+  }, []);
+
+  useEffect(() => {
+    fetchFromApi();
+  }, [fetchFromApi]);
 
   // Filtered and sorted magazines list
   const filteredMagazines = useMemo(() => {
@@ -74,15 +118,16 @@ export function useMagazines() {
   }, [magazines]);
 
   // Add Magazine Edition
-  const addMagazine = (newMagData) => {
-    const newMag = {
-      id: `aces-mag-${Date.now().toString().slice(-4)}`,
-      title: newMagData.title.trim(),
+  const addMagazine = async (newMagData) => {
+    setIsLoading(true);
+    const title = newMagData.title.trim();
+    const coverImage =
+      newMagData.coverImage?.trim() ||
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80';
+
+    const metadataPayload = {
       edition: newMagData.edition?.trim() || 'Volume 12, Issue 1',
       academicYear: newMagData.academicYear || '2026-27',
-      coverImage:
-        newMagData.coverImage?.trim() ||
-        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
       publishedDate: newMagData.publishedDate || new Date().toISOString().split('T')[0],
       editor: newMagData.editor?.trim() || 'ACES Editorial Team',
       pageCount: Number(newMagData.pageCount) || 50,
@@ -92,44 +137,81 @@ export function useMagazines() {
         newMagData.pdfUrl?.trim() ||
         'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/examples/learning/helloworld.pdf',
       featured: Boolean(newMagData.featured),
-      description:
-        newMagData.description?.trim() ||
-        'Official ACES club technical publication featuring student engineering articles and design showcases.',
-      tags: newMagData.tags || ['ACES', 'Publication', newMagData.academicYear || '2026-27'],
+      description: newMagData.description?.trim() || 'Official ACES club publication.',
+      tags: newMagData.tags || ['ACES', 'Publication'],
+      coverImage,
     };
 
-    setMagazines((prev) => [newMag, ...prev]);
-    return newMag;
+    try {
+      const apiResult = await galleryApi.createItem({
+        title,
+        caption: JSON.stringify(metadataPayload),
+        media_url: coverImage,
+        media_type: 'image',
+        collection_name: 'Magazines',
+      });
+      const newMag = normalizeMagazine(apiResult);
+      setMagazines((prev) => [newMag, ...prev]);
+      return newMag;
+    } catch (e) {
+      console.error('[Magazines Hook] API add magazine failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Update Magazine Edition
-  const updateMagazine = (id, updatedData) => {
-    setMagazines((prev) =>
-      prev.map((mag) => {
-        if (mag.id === id) {
-          return {
-            ...mag,
-            title: updatedData.title ? updatedData.title.trim() : mag.title,
-            edition: updatedData.edition ? updatedData.edition.trim() : mag.edition,
-            academicYear: updatedData.academicYear || mag.academicYear,
-            coverImage: updatedData.coverImage ? updatedData.coverImage.trim() : mag.coverImage,
-            publishedDate: updatedData.publishedDate || mag.publishedDate,
-            editor: updatedData.editor ? updatedData.editor.trim() : mag.editor,
-            pageCount: updatedData.pageCount !== undefined ? Number(updatedData.pageCount) : mag.pageCount,
-            pdfUrl: updatedData.pdfUrl ? updatedData.pdfUrl.trim() : mag.pdfUrl,
-            featured: updatedData.featured !== undefined ? Boolean(updatedData.featured) : mag.featured,
-            description: updatedData.description !== undefined ? updatedData.description.trim() : mag.description,
-            tags: updatedData.tags || mag.tags,
-          };
-        }
-        return mag;
-      })
-    );
+  const updateMagazine = async (id, updatedData) => {
+    setIsLoading(true);
+    const existing = magazines.find((m) => m.id === id);
+    if (!existing) return;
+
+    const merged = { ...existing, ...updatedData };
+    const metadataPayload = {
+      edition: merged.edition,
+      academicYear: merged.academicYear,
+      publishedDate: merged.publishedDate,
+      editor: merged.editor,
+      pageCount: merged.pageCount,
+      downloadsCount: merged.downloadsCount,
+      readsCount: merged.readsCount,
+      pdfUrl: merged.pdfUrl,
+      featured: merged.featured,
+      description: merged.description,
+      tags: merged.tags,
+      coverImage: merged.coverImage,
+    };
+
+    try {
+      const apiResult = await galleryApi.updateItem(id, {
+        title: merged.title,
+        caption: JSON.stringify(metadataPayload),
+        media_url: merged.coverImage,
+        collection_name: 'Magazines',
+      });
+      const updated = normalizeMagazine(apiResult);
+      setMagazines((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    } catch (e) {
+      console.error('[Magazines Hook] API update magazine failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Delete Magazine
-  const deleteMagazine = (id) => {
-    setMagazines((prev) => prev.filter((m) => m.id !== id));
+  const deleteMagazine = async (id) => {
+    setIsLoading(true);
+    try {
+      await galleryApi.deleteItem(id);
+      setMagazines((prev) => prev.filter((m) => m.id !== id));
+    } catch (e) {
+      console.error('[Magazines Hook] API delete magazine failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Increment download / read counters
@@ -164,6 +246,8 @@ export function useMagazines() {
     updateMagazine,
     deleteMagazine,
     trackDownload,
+    isLoading,
+    refreshMagazines: fetchFromApi,
   };
 }
 

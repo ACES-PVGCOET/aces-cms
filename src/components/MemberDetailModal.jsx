@@ -14,17 +14,14 @@ import { InstagramIcon, LinkedinIcon, GithubIcon } from './SocialIcons';
 export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
   if (!isOpen || !member) return null;
 
-  const {
-    name,
-    role,
-    email,
-    team,
-    avatar,
-    socials = {},
-    joinedDate,
-    bio,
-    skills = [],
-  } = member;
+  const name = member.name || 'Unnamed Member';
+  const position = member.position || member.role || 'Member';
+  const email = member.email || '';
+  const team = member.team || 'Web Team';
+  const status = member.status || 'ACTIVE';
+  const roles = member.roles || [];
+  const photoUrl = member.profile_photo_url || member.avatar;
+  const socialLinks = member.social_links || member.socials || {};
 
   return (
     <div
@@ -40,7 +37,7 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
           <div className="flex items-center justify-between gap-4 mb-4">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold bg-white/20 text-white">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>ACES Guild Profile</span>
+              <span>ACES Member Profile</span>
             </span>
 
             <button
@@ -56,7 +53,7 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
           <div className="flex items-center gap-4">
             <div className="relative shrink-0">
               <img
-                src={avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`}
+                src={photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`}
                 alt={name}
                 className="w-16 h-16 rounded-xl object-cover ring-2 ring-white/90 shadow-md bg-black/20"
                 onError={(e) => {
@@ -64,7 +61,11 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
                   e.target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
                 }}
               />
-              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-black/40" />
+              <span
+                className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full ring-2 ring-black/40 ${
+                  status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-amber-400'
+                }`}
+              />
             </div>
 
             <div className="flex-1 min-w-0 space-y-1">
@@ -77,7 +78,7 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
                 </span>
               </div>
               <p className="text-xs leading-4 sm:text-sm sm:leading-5 text-white/90 font-bold">
-                {role}
+                {position}
               </p>
             </div>
           </div>
@@ -86,11 +87,6 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
         {/* Content Body */}
         <div className="p-6 space-y-4">
           
-          {/* Bio Box */}
-          <div className="p-4 rounded-xl glass-panel-subtle text-xs leading-4 sm:text-sm sm:leading-5 opacity-90 font-medium">
-            {bio || 'ACES Engineering Club active contributor and technology enthusiast.'}
-          </div>
-
           {/* Details Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs leading-4">
             <div className="p-3 rounded-xl glass-panel-subtle space-y-0.5">
@@ -106,27 +102,28 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
             <div className="p-3 rounded-xl glass-panel-subtle space-y-0.5">
               <div className="flex items-center gap-1.5 text-[10px] opacity-60 font-bold uppercase tracking-wider">
                 <Calendar className="w-3 h-3 opacity-80" />
-                <span>Member Since</span>
+                <span>Status</span>
               </div>
-              <div className="font-extrabold">
-                {joinedDate || '2024'}
+              <div className="font-extrabold flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                <span>{status}</span>
               </div>
             </div>
           </div>
 
-          {/* Technical Proficiencies */}
-          {skills && skills.length > 0 && (
+          {/* Assigned System Roles */}
+          {roles && roles.length > 0 && (
             <div className="space-y-1.5">
               <span className="text-[11px] font-bold opacity-70 uppercase tracking-wider">
-                Technical Proficiencies
+                System Roles
               </span>
               <div className="flex flex-wrap gap-1">
-                {skills.map((skill, idx) => (
+                {roles.map((r, idx) => (
                   <span
                     key={idx}
-                    className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold btn-secondary"
+                    className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold btn-secondary uppercase"
                   >
-                    {skill}
+                    {r}
                   </span>
                 ))}
               </div>
@@ -136,9 +133,9 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
           {/* Social Links & Action Bar */}
           <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5">
-              {socials.linkedin && (
+              {socialLinks.linkedin && (
                 <a
-                  href={socials.linkedin.startsWith('http') ? socials.linkedin : `https://linkedin.com/in/${socials.linkedin}`}
+                  href={socialLinks.linkedin.startsWith('http') ? socialLinks.linkedin : `https://linkedin.com/in/${socialLinks.linkedin}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 rounded-lg btn-secondary flex items-center justify-center hover:text-blue-500 transition-colors cursor-pointer"
@@ -147,9 +144,9 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
                   <LinkedinIcon className="w-3.5 h-3.5" />
                 </a>
               )}
-              {socials.instagram && (
+              {socialLinks.instagram && (
                 <a
-                  href={socials.instagram.startsWith('http') ? socials.instagram : `https://instagram.com/${socials.instagram}`}
+                  href={socialLinks.instagram.startsWith('http') ? socialLinks.instagram : `https://instagram.com/${socialLinks.instagram}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 rounded-lg btn-secondary flex items-center justify-center hover:text-pink-500 transition-colors cursor-pointer"
@@ -158,9 +155,9 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
                   <InstagramIcon className="w-3.5 h-3.5" />
                 </a>
               )}
-              {socials.github && (
+              {socialLinks.github && (
                 <a
-                  href={socials.github.startsWith('http') ? socials.github : `https://github.com/${socials.github}`}
+                  href={socialLinks.github.startsWith('http') ? socialLinks.github : `https://github.com/${socialLinks.github}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 rounded-lg btn-secondary flex items-center justify-center hover:opacity-100 transition-colors cursor-pointer"

@@ -3,9 +3,9 @@ import {
   Users, 
   CalendarDays, 
   Megaphone, 
-  BookOpen,
+  FolderKanban,
+  ClipboardList,
   Sparkles,
-  ShieldCheck,
   ExternalLink
 } from 'lucide-react';
 
@@ -40,20 +40,27 @@ export function SidebarNavigation({ currentView, onSelectView, counts = {} }) {
       description: 'Sessions & schedule',
     },
     {
+      id: 'forms',
+      label: 'Forms Engine',
+      shortLabel: 'Forms',
+      icon: ClipboardList,
+      badge: counts.forms || null,
+      description: 'Custom forms & responses',
+    },
+    {
       id: 'announcements',
       label: 'Announcements',
       shortLabel: 'Announcements',
       icon: Megaphone,
-      badge: 'Beta',
       description: 'Public releases',
     },
     {
-      id: 'magazine',
-      label: 'Magazine Archive',
-      shortLabel: 'Magazine',
-      icon: BookOpen,
-      badge: counts.magazines || null,
-      description: 'Annual publications',
+      id: 'showcase',
+      label: 'Media Showcase',
+      shortLabel: 'Showcase',
+      icon: FolderKanban,
+      badge: counts.showcaseCollections || counts.collections || null,
+      description: 'Media & collections',
     },
   ];
 
@@ -68,8 +75,8 @@ export function SidebarNavigation({ currentView, onSelectView, counts = {} }) {
         {/* Top: Brand Header */}
         <div className="relative z-10 space-y-4">
           <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-10 h-10 rounded-xl btn-primary flex items-center justify-center font-black text-lg shadow-sm">
-              <span>A</span>
+            <div className="w-10 h-10 rounded-xl bg-white/10 p-1 flex items-center justify-center shadow-md ring-1 ring-white/20 shrink-0">
+              <img src="/logo.png" alt="ACES Logo" className="w-full h-full object-contain drop-shadow" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -144,22 +151,8 @@ export function SidebarNavigation({ currentView, onSelectView, counts = {} }) {
           </nav>
         </div>
 
-        {/* Bottom: Cloud Status & Public Site Link */}
+        {/* Bottom: Public Site Link */}
         <div className="relative z-10 space-y-2.5 pt-3 border-t border-white/10">
-          {/* Status Pill */}
-          <div className="px-3 py-2 rounded-xl glass-panel-subtle flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs leading-4 font-bold opacity-90">
-                Connected to ACES Cloud
-              </span>
-            </div>
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          </div>
-
           {/* Visit public site link */}
           <a
             href="https://acesclub.org"

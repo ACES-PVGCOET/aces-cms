@@ -1,36 +1,29 @@
 import { 
   X, 
-  Calendar, 
-  MapPin, 
   Edit3, 
-  Users 
+  Trash2,
+  FileText,
+  ClipboardList,
+  Sparkles
 } from 'lucide-react';
 import MediaViewer from './MediaViewer';
 
 /**
  * EventDetailModal Component
- * Multi-Theme dynamic event detail view modal.
+ * Strictly adheres to backend Event API model (overview, description, terms, reg_form_id, banner_url, isHighlight).
  */
-export function EventDetailModal({ event, isOpen, onClose, onEdit }) {
+export function EventDetailModal({ event, isOpen, onClose, onEdit, onDelete }) {
   if (!isOpen || !event) return null;
 
   const {
-    title,
-    description,
-    date,
-    time,
-    mode,
-    status,
-    venue,
-    attendeesCount = 0,
-    capacity = 100,
-    banner,
-    organizerTeam,
-    tags = [],
-    featured = false,
+    id,
+    overview = '',
+    description = '',
+    terms = '',
+    reg_form_id = null,
+    banner_url = '',
+    isHighlight = false,
   } = event;
-
-  const rsvpPercentage = Math.min(100, Math.round((attendeesCount / capacity) * 100));
 
   return (
     <div
@@ -40,11 +33,11 @@ export function EventDetailModal({ event, isOpen, onClose, onEdit }) {
     >
       <div className="acrylic-dialog w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden relative my-auto animate-in zoom-in-95 duration-200">
         
-        {/* Banner with Badges */}
-        <div className="h-48 relative overflow-hidden bg-black/40">
+        {/* Banner Header with Highlight Badge */}
+        <div className="h-52 relative overflow-hidden bg-black/40">
           <MediaViewer
-            src={banner}
-            alt={title}
+            src={banner_url}
+            alt={overview}
             className="w-full h-full object-cover"
             showVideoBadge={true}
             controls={true}
@@ -54,114 +47,94 @@ export function EventDetailModal({ event, isOpen, onClose, onEdit }) {
           <button
             onClick={onClose}
             className="absolute top-3 right-3 p-1.5 rounded-lg bg-black/40 hover:bg-black/60 text-white z-10 cursor-pointer"
+            aria-label="Close modal"
           >
             <X className="w-4 h-4" />
           </button>
 
-          <div className="absolute bottom-3 left-4 right-4 text-white">
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-md text-xs leading-4 font-bold btn-primary shadow-sm">
-                {status}
+          <div className="absolute bottom-3 left-4 right-4 text-white space-y-1">
+            {isHighlight && (
+              <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold bg-amber-500 text-black shadow-sm inline-flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                <span>Highlighted Event</span>
               </span>
-              <span className="px-2 py-0.5 rounded-md text-xs leading-4 font-bold btn-secondary">
-                {mode}
-              </span>
-              {featured && (
-                <span className="px-2 py-0.5 rounded-md text-xs leading-4 font-bold bg-amber-500 text-black shadow-sm">
-                  Spotlight
-                </span>
-              )}
-            </div>
-            <h2 className="text-xl leading-7 font-black truncate mt-1">
-              {title}
+            )}
+            <h2 className="text-xl leading-7 font-black truncate">
+              {overview}
             </h2>
-            <div className="text-xs leading-4 opacity-80 mt-0.5 font-bold">
-              Organized by {organizerTeam || 'ACES Central'}
-            </div>
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="p-6 space-y-4">
+        {/* Content Body strictly per API Model */}
+        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
           
-          <p className="text-xs leading-4 sm:text-sm sm:leading-5 opacity-80 font-medium">
-            {description}
-          </p>
-
-          {/* Details Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs leading-4">
-            <div className="p-3 rounded-xl glass-panel-subtle space-y-0.5">
-              <div className="flex items-center gap-1.5 opacity-60 font-bold text-[10px] uppercase">
-                <Calendar className="w-3.5 h-3.5 opacity-80" />
-                <span>Date & Time</span>
-              </div>
-              <div className="font-extrabold">
-                {date} ({time})
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl glass-panel-subtle space-y-0.5">
-              <div className="flex items-center gap-1.5 opacity-60 font-bold text-[10px] uppercase">
-                <MapPin className="w-3.5 h-3.5 opacity-80" />
-                <span>Venue Location</span>
-              </div>
-              <div className="font-extrabold truncate">
-                {venue}
-              </div>
-            </div>
+          {/* Description */}
+          <div className="space-y-1">
+            <h3 className="text-xs leading-4 font-extrabold uppercase tracking-wider opacity-60">Description</h3>
+            <p className="text-xs leading-4 sm:text-sm sm:leading-5 opacity-90 font-medium whitespace-pre-wrap">
+              {description}
+            </p>
           </div>
 
-          {/* Attendance Capacity */}
-          <div className="space-y-2 p-3 rounded-xl glass-panel-subtle">
-            <div className="flex items-center justify-between text-xs leading-4">
-              <div className="flex items-center gap-1.5 font-bold">
-                <Users className="w-3.5 h-3.5 opacity-80" />
-                <span>RSVP Capacity Metrics</span>
+          {/* Terms */}
+          {terms && (
+            <div className="p-3.5 rounded-xl glass-panel-subtle space-y-1.5 text-xs leading-4">
+              <div className="flex items-center gap-1.5 opacity-80 font-bold text-[10px] uppercase text-amber-400">
+                <FileText className="w-3.5 h-3.5" />
+                <span>Terms & Conditions</span>
               </div>
-              <span className="font-extrabold">
-                {attendeesCount} / {capacity} ({rsvpPercentage}%)
-              </span>
+              <p className="opacity-90 font-medium whitespace-pre-wrap">{terms}</p>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
-              <div
-                className="h-full btn-primary rounded-full transition-all duration-300"
-                style={{ width: `${rsvpPercentage}%` }}
-              />
-            </div>
-          </div>
+          )}
 
-          {/* Tags */}
-          {tags && tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="px-2.5 py-0.5 rounded text-[10px] font-bold btn-secondary"
-                >
-                  #{tag}
-                </span>
-              ))}
+          {/* Registration Form ID */}
+          {reg_form_id && (
+            <div className="p-3.5 rounded-xl glass-panel-subtle flex items-center justify-between text-xs leading-4">
+              <div className="flex items-center gap-1.5 opacity-80 font-bold">
+                <ClipboardList className="w-3.5 h-3.5 opacity-80 text-indigo-400" />
+                <span>Registration Form ID</span>
+              </div>
+              <code className="text-[11px] font-mono bg-black/20 px-2 py-1 rounded text-indigo-400 font-bold select-all">
+                {reg_form_id}
+              </code>
             </div>
           )}
 
           {/* Footer Actions */}
-          <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm leading-5 font-medium btn-secondary cursor-pointer"
-            >
-              Close
-            </button>
-            <button
-              onClick={() => {
-                onClose();
-                onEdit(event);
-              }}
-              className="px-4 py-2 rounded-lg text-sm leading-5 font-medium btn-primary flex items-center gap-2 cursor-pointer shadow-sm"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit Event</span>
-            </button>
+          <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+            {/* Delete Action */}
+            {onDelete && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onDelete(id, overview);
+                }}
+                className="px-3 py-2 rounded-lg text-xs leading-4 font-bold text-rose-400 hover:text-white hover:bg-rose-600 transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Delete Event"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Event</span>
+              </button>
+            )}
+
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg text-sm leading-5 font-medium btn-secondary cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  onClose();
+                  onEdit(event);
+                }}
+                className="px-4 py-2 rounded-lg text-sm leading-5 font-medium btn-primary flex items-center gap-2 cursor-pointer shadow-sm"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit Event</span>
+              </button>
+            </div>
           </div>
 
         </div>
@@ -172,3 +145,5 @@ export function EventDetailModal({ event, isOpen, onClose, onEdit }) {
 }
 
 export default EventDetailModal;
+
+

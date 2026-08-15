@@ -6,8 +6,10 @@ import {
   Check, 
   Upload, 
   Trash2, 
-  Link as LinkIcon 
+  Link as LinkIcon,
+  Loader2
 } from 'lucide-react';
+import { uploadToCloudinary } from '../services/api';
 import { GALLERY_CATEGORIES } from '../hooks/useGallery';
 import MediaViewer from './MediaViewer';
 
@@ -40,11 +42,12 @@ export function AddMediaModal({ isOpen, onClose, onSubmit }) {
   });
 
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState({});
 
   if (!isOpen) return null;
 
-  const handleMediaUpload = (e) => {
+  const handleMediaUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
       const isImg = file.type.startsWith('image/');
@@ -67,17 +70,21 @@ export function AddMediaModal({ isOpen, onClose, onSubmit }) {
       }
 
       const detectedType = isVid ? 'video' : 'image';
-      const reader = new FileReader();
-      reader.onload = (event) => {
+      try {
+        setIsUploading(true);
+        setErrors((prev) => ({ ...prev, src: '' }));
+        const cdnUrl = await uploadToCloudinary(file, 'gallery', detectedType);
         setFormData((prev) => ({
           ...prev,
-          src: event.target.result,
-          videoUrl: isVid ? event.target.result : '',
+          src: cdnUrl,
+          videoUrl: isVid ? cdnUrl : '',
           type: detectedType,
         }));
-        setErrors((prev) => ({ ...prev, src: '' }));
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        setErrors((prev) => ({ ...prev, src: err.message || 'Failed to upload media to Cloudinary' }));
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -260,11 +267,21 @@ export function AddMediaModal({ isOpen, onClose, onSubmit }) {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
+                  disabled={isUploading}
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold btn-secondary cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold btn-secondary cursor-pointer disabled:opacity-50"
                 >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>Upload File</span>
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600 dark:text-indigo-400" />
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload File</span>
+                    </>
+                  )}
                 </button>
 
                 <button

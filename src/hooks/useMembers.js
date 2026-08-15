@@ -1,40 +1,53 @@
-import { useState, useEffect, useMemo } from 'react';
-import { INITIAL_MEMBERS } from '../data/mockData';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { membersApi } from '../services/api';
 
-const STORAGE_KEY = 'aces_cms_members_data';
+function normalizeMember(m) {
+  return {
+    id: m.id || m._id,
+    name: m.name || '',
+    email: m.email || '',
+    team: m.team || 'Web Team',
+    position: m.position || m.role || 'Member',
+    status: m.status || 'ACTIVE',
+    roles: Array.isArray(m.roles) ? m.roles : [],
+    profile_photo_url: m.profile_photo_url || m.avatar || '',
+    social_links: {
+      linkedin: m.social_links?.linkedin || m.socials?.linkedin || '',
+      instagram: m.social_links?.instagram || m.socials?.instagram || '',
+      github: m.social_links?.github || m.socials?.github || '',
+    },
+  };
+}
 
 /**
  * useMembers Hook
- * Provides plug-and-play Member state management, search filtering,
- * team tab categorization, and CRUD operations.
- * Future backend integration: Replace localStorage with axios/fetch calls.
+ * Fetches real member records directly from backend API (/iam/members).
  */
 export function useMembers() {
-  const [members, setMembers] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.warn('Failed to load members from localStorage', e);
-    }
-    return INITIAL_MEMBERS;
-  });
-
+  const [members, setMembers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('All Teams');
   const [sortBy, setSortBy] = useState('name-asc');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync to localStorage
-  useEffect(() => {
+  // Fetch members from backend API on mount
+  const fetchFromApi = useCallback(async () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
+      setIsLoading(true);
+      const apiData = await membersApi.getAll();
+      if (Array.isArray(apiData)) {
+        setMembers(apiData.map(normalizeMember));
+      }
     } catch (e) {
-      console.warn('Failed to save members to localStorage', e);
+      console.warn('[Members Hook] API fetch members error:', e.message);
+    } finally {
+      setIsLoading(false);
     }
-  }, [members]);
+  }, []);
+
+  useEffect(() => {
+    fetchFromApi();
+  }, [fetchFromApi]);
 
   // Filtered and sorted members list
   const filteredMembers = useMemo(() => {
@@ -45,32 +58,29 @@ export function useMembers() {
           return false;
         }
 
-        // Search query filter (name, role, email, team, skills)
+        // Search query filter (name, position, email, team, roles)
         if (searchQuery.trim() !== '') {
           const q = searchQuery.toLowerCase().trim();
-          const matchesName = member.name.toLowerCase().includes(q);
-          const matchesRole = member.role.toLowerCase().includes(q);
-          const matchesEmail = member.email.toLowerCase().includes(q);
-          const matchesTeam = member.team.toLowerCase().includes(q);
-          const matchesSkills = member.skills?.some((s) => s.toLowerCase().includes(q));
+          const matchesName = (member.name || '').toLowerCase().includes(q);
+          const matchesPosition = (member.position || '').toLowerCase().includes(q);
+          const matchesEmail = (member.email || '').toLowerCase().includes(q);
+          const matchesTeam = (member.team || '').toLowerCase().includes(q);
+          const matchesRoles = member.roles?.some((r) => r.toLowerCase().includes(q));
 
-          return matchesName || matchesRole || matchesEmail || matchesTeam || matchesSkills;
+          return matchesName || matchesPosition || matchesEmail || matchesTeam || matchesRoles;
         }
 
         return true;
       })
       .sort((a, b) => {
         if (sortBy === 'name-asc') {
-          return a.name.localeCompare(b.name);
+          return (a.name || a.email).localeCompare(b.name || b.email);
         }
         if (sortBy === 'name-desc') {
-          return b.name.localeCompare(a.name);
+          return (b.name || b.email).localeCompare(a.name || a.email);
         }
         if (sortBy === 'team') {
-          return a.team.localeCompare(b.team);
-        }
-        if (sortBy === 'newest') {
-          return new Date(b.joinedDate || 0) - new Date(a.joinedDate || 0);
+          return (a.team || '').localeCompare(b.team || '');
         }
         return 0;
       });
@@ -81,11 +91,11 @@ export function useMembers() {
     const totalMembers = members.length;
     
     // Unique teams with members
-    const uniqueTeams = new Set(members.map((m) => m.team)).size;
+    const uniqueTeams = new Set(members.map((m) => m.team).filter(Boolean)).size;
     
     // Socials pending (missing either linkedin or instagram)
     const socialsPending = members.filter(
-      (m) => !m.socials?.linkedin || !m.socials?.instagram
+      (m) => !m.social_links?.linkedin || !m.social_links?.instagram
     ).length;
 
     return {
@@ -96,71 +106,49 @@ export function useMembers() {
   }, [members]);
 
   // Add Member
-  const addMember = (newMemberData) => {
+  const addMember = async (newMemberData) => {
     setIsLoading(true);
-    const newMember = {
-      id: `aces-mem-${Date.now().toString().slice(-4)}`,
-      name: newMemberData.name.trim(),
-      role: newMemberData.role.trim(),
-      email: newMemberData.email.trim(),
-      team: newMemberData.team || 'Web Team',
-      avatar:
-        newMemberData.avatar?.trim() ||
-        `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(newMemberData.name)}`,
-      socials: {
-        instagram: newMemberData.instagram?.trim() || '',
-        linkedin: newMemberData.linkedin?.trim() || '',
-        github: newMemberData.github?.trim() || '',
-      },
-      joinedDate: new Date().toISOString().split('T')[0],
-      status: 'Active',
-      bio: newMemberData.bio?.trim() || 'ACES Club member passionate about engineering and technology.',
-      skills: newMemberData.skills || ['Engineering', 'Collaboration'],
-    };
-
-    setMembers((prev) => [newMember, ...prev]);
-    setIsLoading(false);
-    return newMember;
+    try {
+      const apiResult = await membersApi.register(newMemberData);
+      const added = normalizeMember(apiResult);
+      setMembers((prev) => [added, ...prev]);
+      return added;
+    } catch (e) {
+      console.error('[Members Hook] API register member failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Update Member
-  const updateMember = (id, updatedData) => {
+  const updateMember = async (id, updatedData) => {
     setIsLoading(true);
-    setMembers((prev) =>
-      prev.map((mem) => {
-        if (mem.id === id) {
-          return {
-            ...mem,
-            name: updatedData.name ? updatedData.name.trim() : mem.name,
-            role: updatedData.role ? updatedData.role.trim() : mem.role,
-            email: updatedData.email ? updatedData.email.trim() : mem.email,
-            team: updatedData.team || mem.team,
-            avatar: updatedData.avatar ? updatedData.avatar.trim() : mem.avatar,
-            socials: {
-              instagram: updatedData.instagram !== undefined ? updatedData.instagram.trim() : mem.socials.instagram,
-              linkedin: updatedData.linkedin !== undefined ? updatedData.linkedin.trim() : mem.socials.linkedin,
-              github: updatedData.github !== undefined ? updatedData.github.trim() : mem.socials.github,
-            },
-            bio: updatedData.bio !== undefined ? updatedData.bio.trim() : mem.bio,
-            skills: updatedData.skills || mem.skills,
-          };
-        }
-        return mem;
-      })
-    );
-    setIsLoading(false);
+    try {
+      const apiResult = await membersApi.updateProfile(id, updatedData);
+      const updatedNorm = normalizeMember(apiResult);
+      setMembers((prev) => prev.map((mem) => (mem.id === id ? updatedNorm : mem)));
+      return updatedNorm;
+    } catch (e) {
+      console.error('[Members Hook] API update member failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Delete Member
-  const deleteMember = (id) => {
+  const deleteMember = async (id) => {
     setIsLoading(true);
-    setMembers((prev) => prev.filter((m) => m.id !== id));
-    setIsLoading(false);
-  };
-
-  // Reset to default mock data
-  const resetMembersData = () => {
-    setMembers(INITIAL_MEMBERS);
+    try {
+      await membersApi.delete(id);
+      setMembers((prev) => prev.filter((m) => m.id !== id));
+    } catch (e) {
+      console.error('[Members Hook] API delete member failed:', e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return {
@@ -176,7 +164,9 @@ export function useMembers() {
     addMember,
     updateMember,
     deleteMember,
-    resetMembersData,
     isLoading,
+    refreshMembers: fetchFromApi,
   };
 }
+
+export default useMembers;

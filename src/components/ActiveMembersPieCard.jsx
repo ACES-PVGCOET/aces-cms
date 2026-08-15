@@ -43,7 +43,7 @@ function computeDonutSlices(teamsData, totalActive) {
  * Multi-Theme dynamic active members donut breakdown.
  */
 export function ActiveMembersPieCard({ members = [] }) {
-  const activeMembers = useMemo(() => members.filter((m) => m.status === 'Active'), [members]);
+  const activeMembers = useMemo(() => members.filter((m) => m.status === 'ACTIVE' || m.status === 'Active'), [members]);
   const totalActive = activeMembers.length || members.length || 1;
 
   const teamsData = useMemo(() => {

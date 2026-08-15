@@ -1,10 +1,10 @@
 import { 
   Users, 
   Layers, 
-  Share2, 
   Plus, 
   Search, 
-  ArrowUpDown
+  ArrowUpDown,
+  FileSpreadsheet
 } from 'lucide-react';
 import StatCard from './StatCard';
 import MemberCard from './MemberCard';
@@ -25,7 +25,9 @@ export function MembersView({
   sortBy,
   onSortChange,
   memberStats,
+  isAdmin = true,
   onOpenAddMember,
+  onOpenBatchRegister,
   onViewMember,
   onEditMember,
   onDeleteMember,
@@ -57,20 +59,36 @@ export function MembersView({
           </p>
         </div>
 
-        {/* Primary Button Primitive */}
-        <button
-          id="members-add-btn"
-          onClick={onOpenAddMember}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm leading-5 font-medium btn-primary self-start sm:self-auto shrink-0 transition-all duration-300 cursor-pointer shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Member</span>
-        </button>
+        {/* Primary Button Primitives - Admin Register & Batch Import */}
+        {isAdmin ? (
+          <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto shrink-0">
+            <button
+              id="members-batch-btn"
+              onClick={onOpenBatchRegister}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm leading-5 font-bold btn-secondary transition-all duration-300 cursor-pointer border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+              <span>Batch Import (Sheet)</span>
+            </button>
+            <button
+              id="members-add-btn"
+              onClick={onOpenAddMember}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm leading-5 font-bold btn-primary transition-all duration-300 cursor-pointer shadow-md bg-indigo-600 hover:bg-indigo-500 text-white"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Register New Member</span>
+            </button>
+          </div>
+        ) : (
+          <div className="text-xs opacity-60 font-semibold px-3 py-1.5 rounded-lg glass-panel-subtle self-start sm:self-auto">
+            <span>Admin authorization required to register members</span>
+          </div>
+        )}
       </div>
 
-      {/* 2. 3 Statistics Cards (12-Col Grid) */}
+      {/* 2. Key Statistics Cards (12-Col Grid) */}
       <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 md:col-span-4">
+        <div className="col-span-12 md:col-span-6">
           <StatCard
             title="Total Members"
             value={memberStats.totalMembers}
@@ -80,22 +98,12 @@ export function MembersView({
           />
         </div>
 
-        <div className="col-span-12 md:col-span-4">
+        <div className="col-span-12 md:col-span-6">
           <StatCard
             title="Guilds Tracking"
             value={memberStats.teamsTracking}
             description="Core technical & operational divisions"
             icon={<Layers className="w-5 h-5" />}
-            hideDescription={false}
-          />
-        </div>
-
-        <div className="col-span-12 md:col-span-4">
-          <StatCard
-            title="Socials Pending"
-            value={memberStats.socialsPending}
-            description="Members missing LinkedIn or Instagram links"
-            icon={<Share2 className="w-5 h-5" />}
             hideDescription={false}
           />
         </div>
@@ -115,7 +123,7 @@ export function MembersView({
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Filter by member name, role, email, skill..."
+              placeholder="Filter by member name, position, email, team..."
               className="w-full pl-9 pr-8 py-2 text-sm leading-5 glass-input rounded-lg placeholder-slate-400 focus:outline-none transition-all duration-300 font-medium"
             />
             {searchQuery && (
@@ -142,7 +150,6 @@ export function MembersView({
                 <option value="name-asc">Name (A-Z)</option>
                 <option value="name-desc">Name (Z-A)</option>
                 <option value="team">Team Guild</option>
-                <option value="newest">Recently Joined</option>
               </select>
             </div>
           </div>
@@ -189,7 +196,7 @@ export function MembersView({
       {filteredMembers.length > 0 ? (
         <div className="grid grid-cols-12 gap-6">
           {filteredMembers.map((member) => (
-            <div key={member.id} className="col-span-12 sm:col-span-6 lg:col-span-4">
+            <div key={member.id} className="col-span-12 sm:col-span-6 lg:col-span-4 xl:col-span-3">
               <MemberCard
                 member={member}
                 onView={onViewMember}

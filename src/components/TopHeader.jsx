@@ -1,14 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { 
   Search, 
-  Bell, 
   ChevronDown, 
   Sparkles, 
-  RefreshCw, 
   UserCheck, 
-  Settings, 
   LogOut, 
-  ExternalLink,
+  User,
+  UserPlus,
+  LogIn,
   Command
 } from 'lucide-react';
 import ThemeSelector from './ThemeSelector';
@@ -20,12 +19,14 @@ import ThemeSelector from './ThemeSelector';
 export function TopHeader({
   searchQuery,
   onSearchChange,
-  onSyncWebsite,
-  isSyncing = false,
-  onOpenNotifications,
-  unreadCount = 2,
   currentTheme = 'deep-midnight',
   onSelectTheme,
+  user,
+  isAdmin,
+  onOpenLogin,
+  onOpenProfile,
+  onOpenRegister,
+  onLogout,
 }) {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -43,7 +44,7 @@ export function TopHeader({
   }, []);
 
   return (
-    <header className="sticky top-0 z-20 w-full px-6 py-4">
+    <header className="sticky top-0 z-20 w-full max-w-7xl mx-auto px-6 sm:px-8 py-4">
       <div className="glass-panel rounded-2xl px-5 py-3 flex items-center justify-between gap-4 shadow-sm backdrop-blur-md">
         
         {/* Left: Global Search Input */}
@@ -83,120 +84,109 @@ export function TopHeader({
           </div>
         </div>
 
-        {/* Right: Multi-Theme Switcher, Sync, Notifications, and Admin Avatar */}
+        {/* Right: Multi-Theme Switcher and User Profile / Login */}
         <div className="flex items-center gap-2 sm:gap-3">
           
-          {/* 1. 3-Theme Selector */}
+          {/* Theme Selector */}
           <ThemeSelector
             currentTheme={currentTheme}
             onSelectTheme={onSelectTheme}
           />
 
-          {/* 2. Sync to Public ACES Website Button */}
-          <button
-            id="sync-website-btn"
-            onClick={onSyncWebsite}
-            disabled={isSyncing}
-            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm leading-5 font-bold btn-secondary transition-all duration-200 cursor-pointer shadow-xs"
-            title="Publish all approved live records to the public ACES website"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Syncing...' : 'Sync Website'}</span>
-          </button>
-
-          {/* 3. Notification Bell with Badge */}
-          <button
-            id="notification-bell-btn"
-            onClick={onOpenNotifications}
-            className="relative p-2 rounded-xl btn-secondary transition-colors duration-200 cursor-pointer"
-            aria-label="View notifications"
-          >
-            <Bell className="w-4 h-4" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-            )}
-          </button>
-
-          {/* 4. Admin Profile Avatar & Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              id="admin-profile-btn"
-              onClick={() => setIsAdminMenuOpen(!isAdminMenuOpen)}
-              className="flex items-center gap-2.5 p-1 pr-2.5 rounded-xl btn-secondary transition-colors duration-200 cursor-pointer"
-              aria-expanded={isAdminMenuOpen}
-            >
-              <div className="relative">
-                <img
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-                  alt="Admin Avatar"
-                  className="w-7 h-7 rounded-lg object-cover ring-1 ring-white/20"
-                />
-                <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 ring-1 ring-black/40" />
-              </div>
-              <div className="hidden sm:block text-left">
-                <div className="text-xs leading-4 font-bold">
-                  Aarav Sharma
+          {/* User Profile Dropdown or Login Button */}
+          {user ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                id="admin-profile-btn"
+                onClick={() => setIsAdminMenuOpen(!isAdminMenuOpen)}
+                className="flex items-center gap-2.5 p-1 pr-2.5 rounded-xl btn-secondary transition-colors duration-200 cursor-pointer"
+                aria-expanded={isAdminMenuOpen}
+              >
+                <div className="relative">
+                  <img
+                    src={user.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`}
+                    alt={user.name || 'User Avatar'}
+                    className="w-7 h-7 rounded-lg object-cover ring-1 ring-white/20"
+                  />
+                  <span className={`absolute bottom-0 right-0 w-2 h-2 rounded-full ring-1 ring-black/40 ${isAdmin ? 'bg-emerald-500' : 'bg-indigo-400'}`} />
                 </div>
-                <div className="text-[10px] leading-3 opacity-70 font-semibold mt-0.5">
-                  Super Admin
-                </div>
-              </div>
-              <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${isAdminMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* Admin Dropdown Menu */}
-            {isAdminMenuOpen && (
-              <div className="absolute right-0 mt-2 w-64 acrylic-dialog rounded-xl p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-150 z-50">
-                <div className="p-3 glass-panel-subtle rounded-lg mb-1.5">
-                  <div className="text-xs leading-4 font-bold">Aarav Sharma</div>
-                  <div className="text-[11px] leading-4 opacity-70 font-medium">lead.admin@acesclub.org</div>
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    <UserCheck className="w-3 h-3 text-emerald-500" />
-                    <span>Root Access Granted</span>
+                <div className="hidden sm:block text-left">
+                  <div className="text-xs leading-4 font-bold max-w-[120px] truncate">
+                    {user.name || 'Member'}
+                  </div>
+                  <div className="text-[10px] leading-3 opacity-70 font-semibold mt-0.5 max-w-[120px] truncate">
+                    {user.position || 'Member'}
                   </div>
                 </div>
+                <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${isAdminMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-                <div className="space-y-0.5 text-xs leading-4 font-semibold">
-                  <button
-                    onClick={() => {
-                      setIsAdminMenuOpen(false);
-                      alert('ACES CMS System Status: All cluster nodes operational, 0 errors.');
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
-                  >
-                    <Settings className="w-4 h-4 opacity-70" />
-                    <span>Club Settings & Guilds</span>
-                  </button>
-
-                  <a
-                    href="https://acesclub.org/docs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/10 transition-colors"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Sparkles className="w-4 h-4 text-indigo-400" />
-                      <span>ACES CMS Docs</span>
+              {/* Profile Dropdown Menu */}
+              {isAdminMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 acrylic-dialog rounded-xl p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-150 z-50">
+                  <div className="p-3 glass-panel-subtle rounded-lg mb-1.5">
+                    <div className="text-xs leading-4 font-bold truncate">{user.name || 'Member Profile'}</div>
+                    <div className="text-[11px] leading-4 opacity-70 font-medium truncate">{user.email}</div>
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                      <UserCheck className="w-3 h-3 text-indigo-400" />
+                      <span>{isAdmin ? 'Admin Clearance' : `${user.team || 'Member'}`}</span>
                     </div>
-                    <ExternalLink className="w-3 h-3 opacity-60" />
-                  </a>
+                  </div>
 
-                  <div className="my-1 border-t border-white/10" />
+                  <div className="space-y-0.5 text-xs leading-4 font-semibold">
+                    
+                    {/* Edit Profile */}
+                    <button
+                      onClick={() => {
+                        setIsAdminMenuOpen(false);
+                        if (onOpenProfile) onOpenProfile();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                    >
+                      <User className="w-4 h-4 opacity-70 text-indigo-400" />
+                      <span>My Profile & Details</span>
+                    </button>
 
-                  <button
-                    onClick={() => {
-                      setIsAdminMenuOpen(false);
-                      alert('You are authenticated in Super Admin mode.');
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer"
-                  >
-                    <LogOut className="w-4 h-4 text-rose-500" />
-                    <span>Switch Session</span>
-                  </button>
+                    {/* Admin Only: Register New Member */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          setIsAdminMenuOpen(false);
+                          if (onOpenRegister) onOpenRegister();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 transition-colors cursor-pointer"
+                      >
+                        <UserPlus className="w-4 h-4 text-indigo-400" />
+                        <span>Register New Member</span>
+                      </button>
+                    )}
+
+                    <div className="my-1 border-t border-white/10" />
+
+                    {/* Log Out */}
+                    <button
+                      onClick={() => {
+                        setIsAdminMenuOpen(false);
+                        if (onLogout) onLogout();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4 text-rose-500" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={onOpenLogin}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl btn-primary text-xs font-bold shadow-md cursor-pointer"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Log In</span>
+            </button>
+          )}
 
         </div>
 
@@ -206,3 +196,4 @@ export function TopHeader({
 }
 
 export default TopHeader;
+

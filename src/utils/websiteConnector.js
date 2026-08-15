@@ -15,24 +15,16 @@ export const ACES_PUBLIC_API_CONFIG = {
  * Format events specifically for the public ACES website schedule component
  */
 export function formatPublicEvents(events = []) {
-  return events
-    .filter((e) => e.status !== 'Draft')
-    .map((e) => ({
-      id: e.id,
-      title: e.title,
-      description: e.description,
-      date: e.date,
-      time: e.time,
-      mode: e.mode,
-      status: e.status,
-      venue: e.venue,
-      capacity: e.capacity,
-      attendeesCount: e.attendeesCount,
-      banner: e.banner,
-      tags: e.tags,
-      featured: e.featured,
-      syncTimestamp: new Date().toISOString(),
-    }));
+  return events.map((e) => ({
+    id: e.id,
+    overview: e.overview,
+    description: e.description,
+    terms: e.terms,
+    reg_form_id: e.reg_form_id,
+    banner_url: e.banner_url,
+    isHighlight: e.isHighlight,
+    syncTimestamp: new Date().toISOString(),
+  }));
 }
 
 /**
@@ -40,19 +32,20 @@ export function formatPublicEvents(events = []) {
  */
 export function formatPublicMembers(members = []) {
   return members
-    .filter((m) => m.status === 'Active')
+    .filter((m) => m.status === 'ACTIVE' || m.status === 'Active')
     .map((m) => ({
       id: m.id,
       name: m.name,
-      role: m.role,
+      email: m.email,
       team: m.team,
-      avatar: m.avatar,
-      bio: m.bio,
-      skills: m.skills,
-      socials: {
-        instagram: m.socials?.instagram || null,
-        linkedin: m.socials?.linkedin || null,
-        github: m.socials?.github || null,
+      position: m.position || m.role || 'Member',
+      status: m.status || 'ACTIVE',
+      roles: m.roles || [],
+      profile_photo_url: m.profile_photo_url || m.avatar || '',
+      social_links: {
+        instagram: m.social_links?.instagram || m.socials?.instagram || '',
+        linkedin: m.social_links?.linkedin || m.socials?.linkedin || '',
+        github: m.social_links?.github || m.socials?.github || '',
       },
     }));
 }

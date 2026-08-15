@@ -5,8 +5,10 @@ import {
   Check, 
   Upload, 
   Trash2, 
-  Link as LinkIcon 
+  Link as LinkIcon,
+  Loader2
 } from 'lucide-react';
+import { uploadToCloudinary } from '../services/api';
 import { InstagramIcon, LinkedinIcon, GithubIcon } from './SocialIcons';
 import { TEAMS_LIST } from '../data/mockData';
 
@@ -31,50 +33,49 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
 
   const [formData, setFormData] = useState({
     name: '',
-    role: '',
+    position: 'Member',
     email: '',
     team: 'Web Team',
-    avatar: '',
+    status: 'ACTIVE',
+    profile_photo_url: '',
     instagram: '',
     linkedin: '',
     github: '',
-    bio: '',
-    skills: '',
   });
 
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (initialMember) {
       setFormData({
         name: initialMember.name || '',
-        role: initialMember.role || '',
+        position: initialMember.position || initialMember.role || 'Member',
         email: initialMember.email || '',
         team: initialMember.team || 'Web Team',
-        avatar: initialMember.avatar || '',
-        instagram: initialMember.socials?.instagram || '',
-        linkedin: initialMember.socials?.linkedin || '',
-        github: initialMember.socials?.github || '',
-        bio: initialMember.bio || '',
-        skills: Array.isArray(initialMember.skills) ? initialMember.skills.join(', ') : '',
+        status: initialMember.status || 'ACTIVE',
+        profile_photo_url: initialMember.profile_photo_url || initialMember.avatar || '',
+        instagram: initialMember.social_links?.instagram || initialMember.socials?.instagram || '',
+        linkedin: initialMember.social_links?.linkedin || initialMember.socials?.linkedin || '',
+        github: initialMember.social_links?.github || initialMember.socials?.github || '',
       });
     } else {
       setFormData({
         name: '',
-        role: '',
+        position: 'Member',
         email: '',
         team: 'Web Team',
-        avatar: '',
+        status: 'ACTIVE',
+        profile_photo_url: '',
         instagram: '',
         linkedin: '',
         github: '',
-        bio: '',
-        skills: 'React 19, TypeScript, UI/UX',
       });
     }
     setErrors({});
     setShowUrlInput(false);
+    setIsUploading(false);
   }, [initialMember, isOpen]);
 
   if (!isOpen) return null;
@@ -82,7 +83,7 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
   const validate = () => {
     const nextErrors = {};
     if (!formData.name.trim()) nextErrors.name = 'Full name is required';
-    if (!formData.role.trim()) nextErrors.role = 'Role is required';
+    if (!formData.position.trim()) nextErrors.position = 'Position is required';
     if (!formData.email.trim()) {
       nextErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -92,26 +93,25 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-      setErrors((prev) => ({ ...prev, avatar: 'Only JPG and PNG formats are supported' }));
+    if (file.size > 10 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, profile_photo_url: 'File size must be under 10MB' }));
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, avatar: 'File size must be under 5MB' }));
-      return;
+    try {
+      setIsUploading(true);
+      setErrors((prev) => ({ ...prev, profile_photo_url: '' }));
+      const cdnUrl = await uploadToCloudinary(file, 'profile_photos', 'image');
+      setFormData((prev) => ({ ...prev, profile_photo_url: cdnUrl }));
+    } catch (err) {
+      setErrors((prev) => ({ ...prev, profile_photo_url: err.message || 'Failed to upload photo to Cloudinary' }));
+    } finally {
+      setIsUploading(false);
     }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setFormData((prev) => ({ ...prev, avatar: event.target?.result }));
-      setErrors((prev) => ({ ...prev, avatar: '' }));
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSubmit = (e) => {
@@ -120,20 +120,16 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
 
     const payload = {
       name: formData.name.trim(),
-      role: formData.role.trim(),
+      position: formData.position.trim(),
       email: formData.email.trim(),
       team: formData.team,
-      avatar: formData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(formData.name.trim())}`,
-      socials: {
+      status: formData.status,
+      profile_photo_url: formData.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(formData.name.trim())}`,
+      social_links: {
         instagram: formData.instagram.trim(),
         linkedin: formData.linkedin.trim(),
         github: formData.github.trim(),
       },
-      bio: formData.bio.trim(),
-      skills: formData.skills
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
     };
 
     onSubmit(payload);
@@ -159,7 +155,7 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
                 {isEditing ? 'Update Member Profile' : 'Enroll New Member'}
               </h2>
               <p className="text-xs leading-4 opacity-70 font-medium">
-                {isEditing ? 'Modify guild privileges & credentials' : 'Register a new engineer or designer to ACES'}
+                {isEditing ? 'Modify guild credentials & status' : 'Register a new member to ACES database'}
               </p>
             </div>
           </div>
@@ -200,7 +196,7 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
               <div className="relative shrink-0">
                 <img
                   src={
-                    formData.avatar ||
+                    formData.profile_photo_url ||
                     `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
                       formData.name || 'Member'
                     )}`
@@ -208,10 +204,10 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
                   alt="Avatar preview"
                   className="w-16 h-16 rounded-xl object-cover ring-2 ring-white/20 bg-black/20"
                 />
-                {formData.avatar && (
+                {formData.profile_photo_url && (
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, avatar: '' })}
+                    onClick={() => setFormData({ ...formData, profile_photo_url: '' })}
                     className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-sm hover:bg-rose-600 cursor-pointer"
                     title="Remove Photo"
                     aria-label="Remove photo"
@@ -225,11 +221,21 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
                 <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
                   <button
                     type="button"
+                    disabled={isUploading}
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs leading-4 font-bold btn-secondary cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs leading-4 font-bold btn-secondary cursor-pointer disabled:opacity-50"
                   >
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Upload Image</span>
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Image</span>
+                      </>
+                    )}
                   </button>
 
                   <button
@@ -253,15 +259,15 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
                 <input
                   type="url"
                   placeholder="https://example.com/avatar.jpg"
-                  value={formData.avatar}
-                  onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                  value={formData.profile_photo_url}
+                  onChange={(e) => setFormData({ ...formData, profile_photo_url: e.target.value })}
                   className="w-full text-sm leading-5 glass-input px-3 py-2 rounded-lg placeholder-slate-400 focus:outline-none font-medium"
                 />
               </div>
             )}
 
-            {errors.avatar && (
-              <p className="text-xs leading-4 text-rose-500 font-bold">{errors.avatar}</p>
+            {errors.profile_photo_url && (
+              <p className="text-xs leading-4 text-rose-500 font-bold">{errors.profile_photo_url}</p>
             )}
 
             {/* Presets */}
@@ -272,9 +278,9 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => setFormData({ ...formData, avatar: preset })}
+                    onClick={() => setFormData({ ...formData, profile_photo_url: preset })}
                     className={`w-7 h-7 rounded-lg overflow-hidden border transition-transform hover:scale-105 shrink-0 cursor-pointer ${
-                      formData.avatar === preset
+                      formData.profile_photo_url === preset
                         ? 'ring-2 ring-indigo-500 border-transparent'
                         : 'border-white/20'
                     }`}
@@ -286,7 +292,7 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* Name & Role Inputs */}
+          {/* Name & Position Inputs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="block text-xs leading-4 font-bold opacity-80">
@@ -306,18 +312,18 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
 
             <div className="space-y-1">
               <label className="block text-xs leading-4 font-bold opacity-80">
-                Role <span className="text-rose-500">*</span>
+                Position <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
-                placeholder="e.g. Lead Frontend Architect"
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                placeholder="e.g. Head, Joint Head, Member, General Secretary"
+                value={formData.position}
+                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                 className={`w-full text-sm leading-5 glass-input px-3 py-2 rounded-lg placeholder-slate-400 focus:outline-none font-medium ${
-                  errors.role ? 'border-rose-500 ring-1 ring-rose-500' : ''
+                  errors.position ? 'border-rose-500 ring-1 ring-rose-500' : ''
                 }`}
               />
-              {errors.role && <p className="text-xs leading-4 text-rose-500 font-bold">{errors.role}</p>}
+              {errors.position && <p className="text-xs leading-4 text-rose-500 font-bold">{errors.position}</p>}
             </div>
           </div>
 
@@ -341,7 +347,7 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
 
             <div className="space-y-1">
               <label className="block text-xs leading-4 font-bold opacity-80">
-                Guild Division <span className="text-rose-500">*</span>
+                Team Affiliation <span className="text-rose-500">*</span>
               </label>
               <select
                 value={formData.team}
@@ -355,6 +361,21 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Status Select */}
+          <div className="space-y-1">
+            <label className="block text-xs leading-4 font-bold opacity-80">
+              Account Status <span className="text-rose-500">*</span>
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              className="w-full text-sm leading-5 glass-input px-3 py-2 rounded-lg font-bold focus:outline-none cursor-pointer"
+            >
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="NOT_ACTIVE">NOT_ACTIVE</option>
+            </select>
           </div>
 
           {/* Social Links */}
@@ -405,35 +426,6 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
                   className="w-full text-xs leading-4 glass-input px-3 py-2 rounded-lg placeholder-slate-400 focus:outline-none font-medium"
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Bio & Skills */}
-          <div className="space-y-2 pt-2 border-t border-white/10">
-            <div className="space-y-1">
-              <label className="block text-xs leading-4 font-bold opacity-80">
-                Short Bio
-              </label>
-              <textarea
-                rows={2}
-                placeholder="Briefly describe engineering focus, leadership contributions, or guild roles..."
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                className="w-full text-sm leading-5 glass-input px-3 py-2 rounded-lg placeholder-slate-400 focus:outline-none font-medium"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-xs leading-4 font-bold opacity-80">
-                Skills & Tech Stack <span className="opacity-60 font-medium">(Comma separated)</span>
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. React 19, TypeScript, Docker, Figma, UI/UX"
-                value={formData.skills}
-                onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                className="w-full text-sm leading-5 glass-input px-3 py-2 rounded-lg placeholder-slate-400 focus:outline-none font-medium"
-              />
             </div>
           </div>
 

@@ -1,30 +1,26 @@
 import { 
   Calendar, 
   CalendarCheck2, 
-  Clock, 
+  Sparkles, 
   Plus, 
   Search, 
   LayoutGrid, 
-  List, 
-  Users 
+  List 
 } from 'lucide-react';
 import StatCard from './StatCard';
 import EventCard from './EventCard';
 
 /**
  * EventsView Component
- * Multi-Theme dynamic event lineup manager.
- * Adheres strictly to 4px/8px Baseline Grid & Vertical Rhythm and 12-column CSS Grid.
+ * Dynamic event lineup manager strictly reflecting backend Event API model:
+ * overview, description, terms, reg_form_id, banner_url, isHighlight.
  */
 export function EventsView({
-  events = [],
   filteredEvents = [],
   searchQuery,
   onSearchChange,
-  statusFilter,
-  onStatusFilterChange,
-  modeFilter,
-  onModeFilterChange,
+  highlightFilter = 'All',
+  onHighlightFilterChange,
   viewMode = 'grid',
   onViewModeChange,
   eventStats,
@@ -41,59 +37,49 @@ export function EventsView({
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold btn-primary shadow-xs">
-              Event Orchestration
+              Event Management
             </span>
             <span className="text-xs leading-4 font-bold btn-secondary px-2.5 py-0.5 rounded-md">
-              {filteredEvents.length} sessions listed
+              {filteredEvents.length} events listed
             </span>
           </div>
           <h1 className="text-2xl leading-8 sm:text-3xl sm:leading-9 font-extrabold tracking-tight mt-1">
-            Event Lineup
+            Events Collection
           </h1>
           <p className="text-sm leading-5 opacity-70 font-medium">
-            Schedule hackathons, workshops, keynote panels, and track live RSVP attendance across campus.
+            Manage association events, descriptions, terms & conditions, registration forms, and spotlight highlights.
           </p>
         </div>
 
-        {/* Primary CTA Button Primitive */}
+        {/* Primary CTA Button */}
         <button
           id="events-schedule-btn"
           onClick={onOpenCreateEvent}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm leading-5 font-medium btn-primary self-start sm:self-auto shrink-0 transition-all duration-300 cursor-pointer shadow-sm"
         >
           <Plus className="w-4 h-4" />
-          <span>Schedule New Event</span>
+          <span>Create New Event</span>
         </button>
       </div>
 
-      {/* 2. 3 Statistics Cards (12-Col Grid) */}
+      {/* 2. Key Statistics Cards (12-Col Grid) */}
       <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 md:col-span-4">
+        <div className="col-span-12 md:col-span-6">
           <StatCard
-            title="Total Sessions"
-            value={eventStats.totalEvents}
-            description="Scheduled workshops, hackathons & mixers"
+            title="Total Events"
+            value={eventStats?.totalEvents || filteredEvents.length}
+            description="Active events registered in backend database"
             icon={<Calendar className="w-5 h-5" />}
             hideDescription={false}
           />
         </div>
 
-        <div className="col-span-12 md:col-span-4">
+        <div className="col-span-12 md:col-span-6">
           <StatCard
-            title="Active / Live"
-            value={eventStats.upcomingCount}
-            description="Sessions currently scheduled or broadcasting"
-            icon={<Clock className="w-5 h-5" />}
-            hideDescription={false}
-          />
-        </div>
-
-        <div className="col-span-12 md:col-span-4">
-          <StatCard
-            title="Total RSVPs Tracked"
-            value={eventStats.totalRSVPs}
-            description="Registered student attendees in ACES database"
-            icon={<Users className="w-5 h-5" />}
+            title="Highlighted Events"
+            value={eventStats?.highlightedCount || 0}
+            description="Featured homepage showcase sessions (Max 4)"
+            icon={<Sparkles className="w-5 h-5" />}
             hideDescription={false}
           />
         </div>
@@ -103,7 +89,7 @@ export function EventsView({
       <div className="glass-panel rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
           
-          {/* Event Search Input Primitive */}
+          {/* Event Search Input */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50" />
             <input
@@ -111,7 +97,7 @@ export function EventsView({
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search by event title, venue, organizer, or #tags..."
+              placeholder="Search by event overview, description, terms, or form ID..."
               className="w-full pl-9 pr-8 py-2 text-sm leading-5 glass-input rounded-lg placeholder-slate-400 focus:outline-none transition-all duration-300 font-medium"
             />
             {searchQuery && (
@@ -127,30 +113,18 @@ export function EventsView({
           {/* Filter Dropdowns & View Mode Toggle */}
           <div className="flex flex-wrap items-center gap-3">
             
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => onStatusFilterChange(e.target.value)}
-              className="px-3 py-2 rounded-lg btn-secondary text-sm leading-5 font-bold focus:outline-none cursor-pointer"
-            >
-              <option value="All Statuses">All Statuses</option>
-              <option value="Scheduled">Scheduled</option>
-              <option value="Live">Live Now</option>
-              <option value="Completed">Completed</option>
-              <option value="Draft">Draft</option>
-            </select>
-
-            {/* Mode Filter */}
-            <select
-              value={modeFilter}
-              onChange={(e) => onModeFilterChange(e.target.value)}
-              className="px-3 py-2 rounded-lg btn-secondary text-sm leading-5 font-bold focus:outline-none cursor-pointer"
-            >
-              <option value="All Modes">All Modes</option>
-              <option value="Offline">Offline</option>
-              <option value="Online">Online</option>
-              <option value="Hybrid">Hybrid</option>
-            </select>
+            {/* Highlight Filter */}
+            {onHighlightFilterChange && (
+              <select
+                value={highlightFilter}
+                onChange={(e) => onHighlightFilterChange(e.target.value)}
+                className="px-3 py-2 rounded-lg btn-secondary text-sm leading-5 font-bold focus:outline-none cursor-pointer"
+              >
+                <option value="All">All Events</option>
+                <option value="Highlighted">Highlighted Only</option>
+                <option value="Standard">Standard Only</option>
+              </select>
+            )}
 
             {/* Grid vs List View Toggle */}
             <div className="flex items-center p-1 rounded-lg btn-secondary">
@@ -213,20 +187,19 @@ export function EventsView({
             <CalendarCheck2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-base leading-6 font-extrabold">No scheduled events match</h3>
+            <h3 className="text-base leading-6 font-extrabold">No events match search criteria</h3>
             <p className="text-sm leading-5 opacity-70 max-w-sm mx-auto mt-1 font-medium">
-              Try resetting your filters or search keywords to view the complete club calendar.
+              Try clearing search keywords or resetting highlight filters.
             </p>
           </div>
           <button
             onClick={() => {
               onSearchChange('');
-              onStatusFilterChange('All Statuses');
-              onModeFilterChange('All Modes');
+              if (onHighlightFilterChange) onHighlightFilterChange('All');
             }}
             className="px-4 py-2 rounded-lg text-sm leading-5 font-medium btn-secondary inline-flex items-center gap-2 cursor-pointer transition-all duration-300"
           >
-            <span>Reset Event Filters</span>
+            <span>Reset Filters</span>
           </button>
         </div>
       )}
@@ -236,3 +209,4 @@ export function EventsView({
 }
 
 export default EventsView;
+
