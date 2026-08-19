@@ -130,32 +130,6 @@ export function LoginModal({ isOpen, onClose, onLogin }) {
             </div>
           </div>
 
-          {/* Quick Preset Buttons for Testing */}
-          <div className="pt-2">
-            <div className="text-[11px] font-bold opacity-60 mb-2 uppercase tracking-wider flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-400" />
-              <span>Quick Login Options</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={handleQuickLoginAdmin}
-                className="p-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-300 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Super Admin</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleQuickLoginMember}
-                className="p-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>Regular Member</span>
-              </button>
-            </div>
-          </div>
-
           {/* Action Buttons */}
           <div className="pt-4 flex items-center justify-end gap-3 border-t border-white/10">
             <button

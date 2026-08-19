@@ -26,6 +26,7 @@ export function MembersView({
   onSortChange,
   memberStats,
   isAdmin = true,
+  canAddMembers = true,
   onOpenAddMember,
   onOpenBatchRegister,
   onViewMember,
@@ -36,6 +37,8 @@ export function MembersView({
     if (teamName === 'All Teams') return members.length;
     return members.filter((m) => m.team === teamName).length;
   };
+
+  const allowAdd = canAddMembers || isAdmin;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -59,8 +62,8 @@ export function MembersView({
           </p>
         </div>
 
-        {/* Primary Button Primitives - Admin Register & Batch Import */}
-        {isAdmin ? (
+        {/* Primary Button Primitives - Admin & Team Admin Register & Batch Import */}
+        {allowAdd ? (
           <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto shrink-0">
             <button
               id="members-batch-btn"

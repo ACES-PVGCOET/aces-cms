@@ -20,6 +20,7 @@ import {
   FileCheck,
   Filter
 } from 'lucide-react';
+import { MediaPreviewModal } from './MediaPreviewModal';
 
 export function FormsView({
   forms,
@@ -47,6 +48,7 @@ export function FormsView({
   const [lookupIdInput, setLookupIdInput] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [lookupError, setLookupError] = useState('');
+  const [previewMediaUrl, setPreviewMediaUrl] = useState(null);
 
   // Fetch responses when opening form dashboard or switching to responses tab
   useEffect(() => {
@@ -390,11 +392,28 @@ export function FormsView({
                           <div className="space-y-1.5 text-xs">
                             <span className="text-[10px] font-bold opacity-60 uppercase">Recent Sample Responses:</span>
                             {item.sampleAnswers.length > 0 ? (
-                              item.sampleAnswers.map((ans, aIdx) => (
-                                <div key={aIdx} className="p-2 rounded-lg bg-black/20 border border-white/5 font-mono text-[11px] truncate">
-                                  {ans}
-                                </div>
-                              ))
+                              item.sampleAnswers.map((ans, aIdx) => {
+                                const isUrl = typeof ans === 'string' && (ans.startsWith('http://') || ans.startsWith('https://'));
+                                if (isUrl || item.type === 'file' || item.type === 'media') {
+                                  return (
+                                    <div key={aIdx} className="py-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => setPreviewMediaUrl(ans)}
+                                        className="px-2.5 py-1 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-xs font-bold flex items-center gap-1.5 border border-indigo-500/30 transition-all cursor-pointer"
+                                      >
+                                        <Eye className="w-3.5 h-3.5 text-indigo-400" />
+                                        <span>View Media Preview</span>
+                                      </button>
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <div key={aIdx} className="p-2 rounded-lg bg-black/20 border border-white/5 font-mono text-[11px] truncate">
+                                    {ans}
+                                  </div>
+                                );
+                              })
                             ) : (
                               <p className="opacity-50 text-[11px]">No text responses submitted.</p>
                             )}
@@ -419,7 +438,7 @@ export function FormsView({
                       <tr className="bg-white/5 border-b border-white/10 opacity-80 text-[11px] uppercase tracking-wider font-bold">
                         <th className="p-3">Response ID</th>
                         <th className="p-3">Submitted At</th>
-                        <th className="p-3">Submitted By</th>
+                        <th className="p-3">Filler Email</th>
                         {(activeForm.questions || []).map((q) => (
                           <th key={q.question_serial} className="p-3 max-w-xs truncate">
                             Q{q.question_serial}: {q.question_statement}
@@ -450,27 +469,59 @@ export function FormsView({
                               {r.submitted_at ? new Date(r.submitted_at).toLocaleString() : 'N/A'}
                             </td>
                             <td className="p-3 whitespace-nowrap">
-                              {r.submitted_by ? (
+                              {r.email ? (
+                                <div>
+                                  <div className="font-bold text-indigo-300">{r.email}</div>
+                                  {r.submitted_by?.name && (
+                                    <div className="text-[10px] opacity-60">{r.submitted_by.name}</div>
+                                  )}
+                                </div>
+                              ) : r.submitted_by ? (
                                 <div>
                                   <div className="font-bold">{r.submitted_by.name}</div>
                                   <div className="text-[10px] opacity-60">{r.submitted_by.email}</div>
                                 </div>
-                              ) : r.member_id ? (
-                                <span className="font-semibold text-indigo-400">Authenticated Member</span>
                               ) : (
-                                <span className="opacity-60 italic">Anonymous Respondent</span>
+                                <span className="opacity-60 italic">Anonymous</span>
                               )}
                             </td>
 
-                            {(activeForm.questions || []).map((q) => {
+                              {(activeForm.questions || []).map((q) => {
                               const serialKey = String(q.question_serial);
                               const ans = r.answers?.[serialKey] || r.answers?.[q.question_serial] || [];
-                              const ansStr = Array.isArray(ans) ? ans.join('; ') : String(ans);
+                              const ansArray = Array.isArray(ans) ? ans : ans ? [ans] : [];
+                              const ansStr = Array.isArray(ans) ? ans.join('; ') : String(ans || '');
+                              const isMediaQuestion = q.question_type === 'file' || q.question_type === 'media';
+                              
+                              const mediaUrls = ansArray.filter(
+                                (item) => typeof item === 'string' && (item.startsWith('http://') || item.startsWith('https://'))
+                              );
 
                               return (
-                                <td key={q.question_serial} className="p-3 max-w-xs truncate">
-                                  {ansStr ? (
-                                    <span title={ansStr}>{ansStr}</span>
+                                <td key={q.question_serial} className="p-3 max-w-xs">
+                                  {isMediaQuestion || mediaUrls.length > 0 ? (
+                                    mediaUrls.length > 0 ? (
+                                      <div className="flex flex-wrap gap-1.5 items-center">
+                                        {mediaUrls.map((url, uIdx) => (
+                                          <button
+                                            key={uIdx}
+                                            type="button"
+                                            onClick={() => setPreviewMediaUrl(url)}
+                                            className="px-2.5 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-xs font-bold flex items-center gap-1.5 border border-indigo-500/30 transition-all cursor-pointer shadow-xs"
+                                            title={`Preview attachment: ${url}`}
+                                          >
+                                            <Eye className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                            <span>{mediaUrls.length > 1 ? `Preview #${uIdx + 1}` : 'View Preview'}</span>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    ) : ansStr ? (
+                                      <span title={ansStr} className="truncate block">{ansStr}</span>
+                                    ) : (
+                                      <span className="opacity-40 italic">—</span>
+                                    )
+                                  ) : ansStr ? (
+                                    <span title={ansStr} className="truncate block">{ansStr}</span>
                                   ) : (
                                     <span className="opacity-40 italic">—</span>
                                   )}
@@ -674,6 +725,14 @@ export function FormsView({
         </div>
 
       )}
+
+      {/* Media Preview Lightbox Modal */}
+      <MediaPreviewModal
+        isOpen={Boolean(previewMediaUrl)}
+        onClose={() => setPreviewMediaUrl(null)}
+        mediaUrl={previewMediaUrl}
+        title="Form Response Media Preview"
+      />
 
     </div>
   );

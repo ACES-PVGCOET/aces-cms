@@ -45,13 +45,22 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // Derived Admin authorization flag
-  const isAdmin = Boolean(
+  // Derived Admin authorization flags
+  const isTrueAdmin = Boolean(
     currentUser &&
       (currentUser.roles?.includes('admin') ||
         currentUser.position?.toLowerCase().includes('admin') ||
         currentUser.team?.toLowerCase() === 'executive')
   );
+
+  const isTeamAdmin = Boolean(
+    currentUser && currentUser.roles?.includes('team_admin')
+  );
+
+  const canAddMembers = isTrueAdmin || isTeamAdmin;
+
+  // Backward compatibility alias for true admin
+  const isAdmin = isTrueAdmin;
 
   const isAuthenticated = Boolean(currentUser);
 
@@ -160,6 +169,9 @@ export function AuthProvider({ children }) {
         setCurrentUser,
         isLoading,
         isAdmin,
+        isTrueAdmin,
+        isTeamAdmin,
+        canAddMembers,
         isAuthenticated,
         login,
         logout,

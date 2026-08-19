@@ -26,6 +26,7 @@ import EventsView from './components/EventsView';
 import AnnouncementsView from './components/AnnouncementsView';
 import ShowcaseView from './components/ShowcaseView';
 import FormsView from './components/FormsView';
+import AdminPanelView from './components/AdminPanelView';
 
 // Modals & Auxiliary Elements
 import MemberModal from './components/MemberModal';
@@ -54,6 +55,9 @@ function AppContent() {
     currentUser, 
     isLoading,
     isAdmin, 
+    isTrueAdmin,
+    isTeamAdmin,
+    canAddMembers,
     login, 
     logout, 
     registerMember, 
@@ -223,7 +227,7 @@ function AppContent() {
 
   // --- MEMBER HANDLERS ---
   const handleOpenAddMember = () => {
-    if (isAdmin) {
+    if (canAddMembers) {
       setIsRegisterModalOpen(true);
     } else {
       setEditingMember(null);
@@ -440,8 +444,8 @@ function AppContent() {
     }
   };
 
-  const handleSubmitFormResponse = async (formId, answers) => {
-    const res = await formsHook.submitResponse(formId, answers);
+  const handleSubmitFormResponse = async (formId, answers, email) => {
+    const res = await formsHook.submitResponse(formId, answers, email);
     showToast('Form response submitted successfully!', 'success', 'Response Saved');
     return res;
   };
@@ -485,6 +489,7 @@ function AppContent() {
           setCurrentView(view);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
+        isTrueAdmin={isTrueAdmin}
         counts={{
           members: memberHook.members.length,
           events: eventHook.events.filter((e) => e.status === 'Scheduled' || e.status === 'Live').length,
@@ -543,11 +548,22 @@ function AppContent() {
                 onSortChange={memberHook.setSortBy}
                 memberStats={memberHook.memberStats}
                 isAdmin={isAdmin}
+                canAddMembers={canAddMembers}
                 onOpenAddMember={handleOpenAddMember}
                 onOpenBatchRegister={() => setIsBatchRegisterModalOpen(true)}
                 onViewMember={(member) => setViewingMember(member)}
                 onEditMember={handleOpenEditMember}
                 onDeleteMember={handleDeleteMember}
+              />
+            )}
+
+            {/* View 2b: Admin Panel (True Admin Only) */}
+            {currentView === 'admin-panel' && (
+              <AdminPanelView
+                members={memberHook.members}
+                isTrueAdmin={isTrueAdmin}
+                onUpdateMember={memberHook.updateMember}
+                showToast={showToast}
               />
             )}
 
@@ -645,6 +661,7 @@ function AppContent() {
         isOpen={isRegisterModalOpen}
         onClose={() => setIsRegisterModalOpen(false)}
         onRegister={handleRegisterMemberSubmit}
+        currentUser={currentUser}
         onStartOnboarding={(token) => {
           setOnboardingToken(token);
           setIsOnboardingModalOpen(true);

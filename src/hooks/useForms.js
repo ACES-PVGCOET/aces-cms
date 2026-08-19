@@ -170,9 +170,9 @@ export function useForms() {
   };
 
   // Submit Response to Form
-  const submitResponse = async (formId, answers) => {
+  const submitResponse = async (formId, answers, email) => {
     try {
-      const res = await formsApi.submitResponse(formId, answers);
+      const res = await formsApi.submitResponse(formId, answers, email);
       // Update response count locally if form exists in state
       setForms((prev) =>
         prev.map((f) => (f.id === formId ? { ...f, response_count: (f.response_count || 0) + 1 } : f))
@@ -180,6 +180,16 @@ export function useForms() {
       return res;
     } catch (e) {
       console.error('[Forms Hook] Submit response failed:', e.message);
+      throw e;
+    }
+  };
+
+  // Check whether response exists for an email
+  const checkResponseExists = async (formId, email) => {
+    try {
+      return await formsApi.checkResponseExists(formId, email);
+    } catch (e) {
+      console.error('[Forms Hook] Check response exists failed:', e.message);
       throw e;
     }
   };
@@ -207,8 +217,8 @@ export function useForms() {
     // Build rows
     const rows = responses.map((r) => {
       const submittedAt = r.submitted_at ? new Date(r.submitted_at).toLocaleString() : '';
-      const submitterName = r.submitted_by?.name || (r.member_id ? 'Authenticated Member' : 'Anonymous');
-      const submitterEmail = r.submitted_by?.email || '';
+      const submitterName = r.submitted_by?.name || (r.member_id ? 'Authenticated Member' : 'Form Filler');
+      const submitterEmail = r.email || r.submitted_by?.email || '';
 
       const answersObj = r.answers || {};
 
@@ -259,6 +269,7 @@ export function useForms() {
     updateForm,
     deleteForm,
     submitResponse,
+    checkResponseExists,
     exportToCSV,
     isLoading,
     isResponsesLoading,

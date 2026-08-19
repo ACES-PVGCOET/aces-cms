@@ -35,6 +35,8 @@ export function EventModal({ isOpen, initialEvent, onClose, onSubmit }) {
     description: '',
     terms: '',
     reg_form_id: '',
+    reg_st_dt: '',
+    reg_end_dt: '',
     banner_url: '',
     isHighlight: false,
   });
@@ -50,6 +52,8 @@ export function EventModal({ isOpen, initialEvent, onClose, onSubmit }) {
         description: initialEvent.description || '',
         terms: initialEvent.terms || '',
         reg_form_id: initialEvent.reg_form_id || '',
+        reg_st_dt: initialEvent.reg_st_dt ? new Date(initialEvent.reg_st_dt).toISOString().slice(0, 16) : '',
+        reg_end_dt: initialEvent.reg_end_dt ? new Date(initialEvent.reg_end_dt).toISOString().slice(0, 16) : '',
         banner_url: initialEvent.banner_url || initialEvent.banner || '',
         isHighlight: Boolean(initialEvent.isHighlight !== undefined ? initialEvent.isHighlight : initialEvent.featured),
       });
@@ -59,6 +63,8 @@ export function EventModal({ isOpen, initialEvent, onClose, onSubmit }) {
         description: '',
         terms: 'All attendees must present valid student ID. Code of Conduct applies.',
         reg_form_id: '',
+        reg_st_dt: '',
+        reg_end_dt: '',
         banner_url: '',
         isHighlight: false,
       });
@@ -75,6 +81,9 @@ export function EventModal({ isOpen, initialEvent, onClose, onSubmit }) {
     if (!formData.overview.trim()) nextErrors.overview = 'Event overview is required';
     if (!formData.description.trim()) nextErrors.description = 'Event description is required';
     if (!formData.terms.trim()) nextErrors.terms = 'Event terms & conditions are required';
+    if (formData.reg_st_dt && formData.reg_end_dt && new Date(formData.reg_end_dt) < new Date(formData.reg_st_dt)) {
+      nextErrors.reg_end_dt = 'Registration end date cannot be earlier than start date';
+    }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -110,6 +119,8 @@ export function EventModal({ isOpen, initialEvent, onClose, onSubmit }) {
       description: formData.description.trim(),
       terms: formData.terms.trim(),
       reg_form_id: formData.reg_form_id.trim() || null,
+      reg_st_dt: formData.reg_st_dt ? new Date(formData.reg_st_dt).toISOString() : null,
+      reg_end_dt: formData.reg_end_dt ? new Date(formData.reg_end_dt).toISOString() : null,
       banner_url: formData.banner_url.trim() || PRESET_BANNERS[0],
       isHighlight: Boolean(formData.isHighlight),
     };
@@ -219,6 +230,35 @@ export function EventModal({ isOpen, initialEvent, onClose, onSubmit }) {
               onChange={(e) => setFormData({ ...formData, reg_form_id: e.target.value })}
               className="w-full text-sm leading-5 glass-input px-3 py-2 rounded-lg placeholder-slate-400 focus:outline-none font-mono"
             />
+          </div>
+
+          {/* Registration Start & End Dates */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="block text-xs leading-4 font-bold opacity-80">
+                Registration Start Date <span className="opacity-60 font-medium">(reg_st_dt)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={formData.reg_st_dt}
+                onChange={(e) => setFormData({ ...formData, reg_st_dt: e.target.value })}
+                className="w-full text-sm leading-5 glass-input px-3 py-2 rounded-lg placeholder-slate-400 focus:outline-none font-medium"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-xs leading-4 font-bold opacity-80">
+                Registration End Date <span className="opacity-60 font-medium">(reg_end_dt)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={formData.reg_end_dt}
+                onChange={(e) => setFormData({ ...formData, reg_end_dt: e.target.value })}
+                className={`w-full text-sm leading-5 glass-input px-3 py-2 rounded-lg placeholder-slate-400 focus:outline-none font-medium ${
+                  errors.reg_end_dt ? 'border-rose-500 ring-1 ring-rose-500' : ''
+                }`}
+              />
+              {errors.reg_end_dt && <p className="text-xs leading-4 text-rose-500 font-bold">{errors.reg_end_dt}</p>}
+            </div>
           </div>
 
           {/* Media / Banner Dropzone */}

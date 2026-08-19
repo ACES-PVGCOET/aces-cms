@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { X, CheckCircle2, AlertCircle, UploadCloud, FileCheck, Send, Sparkles } from 'lucide-react';
-import { uploadToCloudinary } from '../services/api';
+import { X, CheckCircle2, AlertCircle, UploadCloud, FileCheck, Send, Sparkles, Mail } from 'lucide-react';
+import { uploadToCloudinary, formsApi } from '../services/api';
 
 export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
   const [answersMap, setAnswersMap] = useState({});
+  const [fillerEmail, setFillerEmail] = useState('');
+  const [emailCheckStatus, setEmailCheckStatus] = useState(null); // null | 'checking' | 'exists' | 'available'
+  const [emailCheckMsg, setEmailCheckMsg] = useState('');
   const [uploadingFiles, setUploadingFiles] = useState({});
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,6 +20,9 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
       });
       setAnswersMap(initialMap);
     }
+    setFillerEmail('');
+    setEmailCheckStatus(null);
+    setEmailCheckMsg('');
     setErrorMsg('');
     setIsSubmitting(false);
     setIsSubmittedSuccess(false);
@@ -26,6 +32,33 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
   if (!isOpen || !form) return null;
 
   const questions = [...(form.questions || [])].sort((a, b) => (a.question_serial || 0) - (b.question_serial || 0));
+
+  // Check response existence by email
+  const checkEmailExistence = async (emailVal) => {
+    const trimmed = (emailVal || '').trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setEmailCheckStatus(null);
+      setEmailCheckMsg('');
+      return;
+    }
+
+    try {
+      setEmailCheckStatus('checking');
+      const formId = form.form_id || form.id;
+      const res = await formsApi.checkResponseExists(formId, trimmed);
+      if (res && res.exists) {
+        setEmailCheckStatus('exists');
+        setEmailCheckMsg('A response has already been submitted with this email address.');
+      } else {
+        setEmailCheckStatus('available');
+        setEmailCheckMsg('');
+      }
+    } catch (err) {
+      console.warn('[FormSubmitModal] Check response exists error:', err.message);
+      setEmailCheckStatus(null);
+      setEmailCheckMsg('');
+    }
+  };
 
   // Textual input change
   const handleTextChange = (serial, val) => {
@@ -96,6 +129,24 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
     e.preventDefault();
     setErrorMsg('');
 
+    // Check for filler email
+    const trimmedEmail = fillerEmail.trim();
+    if (!trimmedEmail) {
+      setErrorMsg('Form filler email address is mandatory.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+
+    if (emailCheckStatus === 'exists') {
+      setErrorMsg('A response has already been submitted with this email address.');
+      return;
+    }
+
     // Check for any ongoing file upload
     if (Object.values(uploadingFiles).some(Boolean)) {
       setErrorMsg('Please wait for file upload to complete before submitting.');
@@ -114,7 +165,7 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
 
     try {
       setIsSubmitting(true);
-      await onSubmitResponse(form.form_id || form.id, answersMap);
+      await onSubmitResponse(form.form_id || form.id, answersMap, trimmedEmail);
       setIsSubmittedSuccess(true);
     } catch (err) {
       setErrorMsg(err.message || 'Submission failed. Please check your entries.');
@@ -163,7 +214,7 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
             </div>
             <h3 className="text-xl font-bold text-emerald-300">Response Successfully Recorded!</h3>
             <p className="text-xs opacity-80 max-w-md mx-auto">
-              Thank you for filling out &quot;{form.title}&quot;. Your response has been securely logged into the ACES Forms Engine.
+              Thank you for filling out &quot;{form.title}&quot;. Your response has been securely logged into the ACES Forms Engine for <span className="font-semibold text-emerald-400">{fillerEmail}</span>.
             </p>
             <div className="pt-4">
               <button
@@ -196,6 +247,56 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
 
             {/* Question Items */}
             <div className="space-y-5 max-h-[55vh] overflow-y-auto pr-1">
+              
+              {/* Mandatory Form Filler Identification Card */}
+              <div className="p-4 rounded-2xl glass-panel border border-indigo-500/30 bg-indigo-500/5 space-y-2">
+                <label className="block text-xs font-bold leading-5 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Mail className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <span>Form Filler Email Address</span>
+                    <span className="text-red-400 font-bold">*</span>
+                  </span>
+                  <span className="text-[10px] font-semibold text-indigo-300 bg-indigo-500/20 px-2 py-0.5 rounded-full border border-indigo-500/30">
+                    Mandatory Identification
+                  </span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  disabled={!form.is_active}
+                  value={fillerEmail}
+                  onChange={(e) => {
+                    setFillerEmail(e.target.value);
+                    if (emailCheckStatus) setEmailCheckStatus(null);
+                  }}
+                  onBlur={(e) => checkEmailExistence(e.target.value)}
+                  placeholder="Enter your email address (e.g. filler@example.com)"
+                  className={`w-full px-3.5 py-2.5 rounded-xl bg-black/20 border text-xs font-medium focus:outline-none disabled:opacity-50 transition-colors ${
+                    emailCheckStatus === 'exists'
+                      ? 'border-red-500 text-red-300 bg-red-500/10'
+                      : emailCheckStatus === 'available'
+                      ? 'border-emerald-500/50 text-emerald-300 bg-emerald-500/5'
+                      : 'border-white/10 focus:border-indigo-500'
+                  }`}
+                />
+                {emailCheckStatus === 'checking' && (
+                  <p className="text-[10px] text-indigo-300">Checking submission record for this email...</p>
+                )}
+                {emailCheckStatus === 'exists' && (
+                  <p className="text-[10px] text-red-400 font-medium flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{emailCheckMsg}</span>
+                  </p>
+                )}
+                {emailCheckStatus === 'available' && (
+                  <p className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Email verified. No prior response submitted for this form.</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Dynamic Form Questions */}
               {questions.map((q) => {
                 const serialKey = String(q.question_serial);
                 const currentAns = answersMap[serialKey] || [];
@@ -329,7 +430,7 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
 
               <button
                 type="submit"
-                disabled={!form.is_active || isSubmitting || Object.values(uploadingFiles).some(Boolean)}
+                disabled={!form.is_active || isSubmitting || emailCheckStatus === 'exists' || Object.values(uploadingFiles).some(Boolean)}
                 className="btn-primary px-6 py-2 rounded-xl text-xs font-bold shadow-lg flex items-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (

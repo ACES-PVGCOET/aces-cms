@@ -214,7 +214,7 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
                 <input
                   type="email"
                   required
-                  placeholder="e.g. yashjawle440@gmail.com"
+                  placeholder="e.g. your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-white/90 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all shadow-xs"
@@ -242,36 +242,6 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
                     className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Quick Login Options */}
-              <div className="pt-2">
-                <div className="text-[11px] font-extrabold text-slate-500 mb-2 uppercase tracking-wider flex items-center justify-between">
-                  <span className="flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Quick Demo Login</span>
-                  </span>
-                  <span className="text-[10px] text-purple-600 font-bold">Auto-fill & Sign In</span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={handleQuickLoginAdmin}
-                    className="p-3 rounded-xl bg-purple-50 hover:bg-purple-100/80 border border-purple-200 text-purple-800 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] shadow-xs"
-                  >
-                    <ShieldCheck className="w-4 h-4 text-purple-600" />
-                    <span>Super Admin</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleQuickLoginMember}
-                    className="p-3 rounded-xl bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] shadow-xs"
-                  >
-                    <User className="w-4 h-4 text-emerald-600" />
-                    <span>Member</span>
                   </button>
                 </div>
               </div>

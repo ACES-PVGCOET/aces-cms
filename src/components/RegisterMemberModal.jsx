@@ -20,6 +20,7 @@ const TEAMS = [
   'Web Team',
   'Design Team',
   'Event Team',
+  'Editorial Team',
   'Production Team',
   'Technical Team',
   'Media Team',
@@ -38,11 +39,14 @@ const POSITIONS = [
   'Faculty',
 ];
 
-export function RegisterMemberModal({ isOpen, onClose, onRegister, onStartOnboarding }) {
+export function RegisterMemberModal({ isOpen, onClose, onRegister, onStartOnboarding, currentUser = null }) {
   const fileInputRef = useRef(null);
+  const isTeamAdmin = currentUser?.roles?.includes('team_admin') && !currentUser?.roles?.includes('admin');
+  const defaultTeam = (isTeamAdmin && currentUser?.team) ? currentUser.team : 'Web Team';
+
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [team, setTeam] = useState('Web Team');
+  const [team, setTeam] = useState(defaultTeam);
   const [position, setPosition] = useState('Member');
   const [photoUrl, setPhotoUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,7 +61,7 @@ export function RegisterMemberModal({ isOpen, onClose, onRegister, onStartOnboar
     if (isOpen) {
       setEmail('');
       setName('');
-      setTeam('Web Team');
+      setTeam(defaultTeam);
       setPosition('Member');
       setPhotoUrl('');
       setError('');
@@ -65,7 +69,7 @@ export function RegisterMemberModal({ isOpen, onClose, onRegister, onStartOnboar
       setCopied(false);
       setIsUploading(false);
     }
-  }, [isOpen]);
+  }, [isOpen, defaultTeam]);
 
   if (!isOpen) return null;
 
@@ -209,7 +213,8 @@ export function RegisterMemberModal({ isOpen, onClose, onRegister, onStartOnboar
                   <select
                     value={team}
                     onChange={(e) => setTeam(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold focus:outline-none bg-slate-900/80 text-white"
+                    disabled={isTeamAdmin}
+                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold focus:outline-none bg-slate-900/80 text-white disabled:opacity-75 disabled:cursor-not-allowed"
                   >
                     {TEAMS.map((t) => (
                       <option key={t} value={t} className="bg-slate-900 text-white">{t}</option>

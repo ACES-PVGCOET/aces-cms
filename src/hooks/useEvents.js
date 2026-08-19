@@ -12,6 +12,8 @@ function normalizeEvent(evt) {
     description: evt.description || '',
     terms: evt.terms || 'Standard ACES student guidelines apply.',
     reg_form_id: evt.reg_form_id || null,
+    reg_st_dt: evt.reg_st_dt || null,
+    reg_end_dt: evt.reg_end_dt || null,
     banner_url,
     isHighlight,
   };
@@ -20,7 +22,7 @@ function normalizeEvent(evt) {
 /**
  * useEvents Hook
  * Provides Event state management strictly adhering to backend Event API model:
- * overview, description, terms, reg_form_id, banner_url, isHighlight.
+ * overview, description, terms, reg_form_id, reg_st_dt, reg_end_dt, banner_url, isHighlight.
  */
 export function useEvents() {
   const [events, setEvents] = useState([]);
@@ -98,6 +100,8 @@ export function useEvents() {
         description,
         terms,
         reg_form_id: eventData.reg_form_id || null,
+        reg_st_dt: eventData.reg_st_dt || null,
+        reg_end_dt: eventData.reg_end_dt || null,
         banner_url,
         isHighlight,
       });
@@ -121,6 +125,8 @@ export function useEvents() {
         description: updatedData.description !== undefined ? updatedData.description.trim() : undefined,
         terms: updatedData.terms !== undefined ? updatedData.terms.trim() : undefined,
         reg_form_id: updatedData.reg_form_id !== undefined ? updatedData.reg_form_id : undefined,
+        reg_st_dt: updatedData.reg_st_dt !== undefined ? updatedData.reg_st_dt : undefined,
+        reg_end_dt: updatedData.reg_end_dt !== undefined ? updatedData.reg_end_dt : undefined,
         banner_url: updatedData.banner_url,
         isHighlight: updatedData.isHighlight !== undefined ? Boolean(updatedData.isHighlight) : undefined,
       });

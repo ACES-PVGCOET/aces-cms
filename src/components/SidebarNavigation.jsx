@@ -6,7 +6,8 @@ import {
   FolderKanban,
   ClipboardList,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  UserCog
 } from 'lucide-react';
 
 /**
@@ -14,7 +15,7 @@ import {
  * Multi-Theme dynamic sidebar for Deep Midnight, Pastel Aurora, and Cyber Emerald.
  * Adheres strictly to 4px/8px Baseline Grid & Vertical Rhythm.
  */
-export function SidebarNavigation({ currentView, onSelectView, counts = {} }) {
+export function SidebarNavigation({ currentView, onSelectView, counts = {}, isTrueAdmin = false }) {
   const navItems = [
     {
       id: 'dashboard',
@@ -31,6 +32,18 @@ export function SidebarNavigation({ currentView, onSelectView, counts = {} }) {
       badge: counts.members || null,
       description: 'Guilds & directory',
     },
+    ...(isTrueAdmin
+      ? [
+          {
+            id: 'admin-panel',
+            label: 'Admin Panel',
+            shortLabel: 'Governance',
+            icon: UserCog,
+            badge: 'Admin',
+            description: 'Roles & activation status',
+          },
+        ]
+      : []),
     {
       id: 'events',
       label: 'Event Lineup',

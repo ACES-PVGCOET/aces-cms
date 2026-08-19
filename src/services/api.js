@@ -254,11 +254,15 @@ export const formsApi = {
     });
     return res.data;
   },
-  submitResponse: async (formId, answers) => {
+  submitResponse: async (formId, answers, email) => {
     const res = await request(`/forms/${formId}/responses`, {
       method: 'POST',
-      body: JSON.stringify({ answers }),
+      body: JSON.stringify({ email, answers }),
     });
+    return res.data;
+  },
+  checkResponseExists: async (formId, email) => {
+    const res = await request(`/forms/${formId}/responses/check?email=${encodeURIComponent(email)}`);
     return res.data;
   },
   getResponses: async (formId) => {

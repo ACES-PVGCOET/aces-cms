@@ -4,7 +4,8 @@ import {
   Trash2,
   FileText,
   ClipboardList,
-  Sparkles
+  Sparkles,
+  CalendarDays
 } from 'lucide-react';
 import MediaViewer from './MediaViewer';
 
@@ -84,6 +85,26 @@ export function EventDetailModal({ event, isOpen, onClose, onEdit, onDelete }) {
                 <span>Terms & Conditions</span>
               </div>
               <p className="opacity-90 font-medium whitespace-pre-wrap">{terms}</p>
+            </div>
+          )}
+
+          {/* Registration Dates */}
+          {(reg_st_dt || reg_end_dt) && (
+            <div className="p-3.5 rounded-xl glass-panel-subtle space-y-1.5 text-xs leading-4">
+              <div className="flex items-center gap-1.5 opacity-80 font-bold text-[10px] uppercase text-indigo-400">
+                <CalendarDays className="w-3.5 h-3.5" />
+                <span>Registration Timeline</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-medium">
+                <div>
+                  <span className="opacity-60 text-[10px] block">Starts:</span>
+                  <span>{reg_st_dt ? new Date(reg_st_dt).toLocaleString() : 'Not specified'}</span>
+                </div>
+                <div>
+                  <span className="opacity-60 text-[10px] block">Ends:</span>
+                  <span>{reg_end_dt ? new Date(reg_end_dt).toLocaleString() : 'Not specified'}</span>
+                </div>
+              </div>
             </div>
           )}
 
