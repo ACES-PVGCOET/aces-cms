@@ -160,7 +160,7 @@ export function MembersView({
         </div>
 
         {/* Clickable Team Tabs */}
-        <div className="pt-3 border-t border-white/10 overflow-x-auto pb-1">
+        <div className="pt-3 border-t border-white/10 overflow-x-auto no-scrollbar pb-1">
           <div className="flex items-center gap-2 min-w-max">
             {TEAMS_LIST.map((teamName) => {
               const isActive = selectedTeam === teamName;

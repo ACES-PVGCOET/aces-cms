@@ -197,7 +197,7 @@ export function ShowcaseView({
 
           {/* If inside collection, show Type Filter Tabs (All / Photos / Videos / PDFs) */}
           {activeCollection && (
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/10 dark:bg-white/10 shrink-0 overflow-x-auto">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/10 dark:bg-white/10 shrink-0 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => onMediaTypeFilterChange('all')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${

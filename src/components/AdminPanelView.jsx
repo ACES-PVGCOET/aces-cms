@@ -245,7 +245,7 @@ export function AdminPanelView({
       </div>
 
       {/* 4. Members Governance Table / Cards */}
-      <div className="glass-panel rounded-2xl p-6 shadow-sm overflow-x-auto">
+      <div className="glass-panel rounded-2xl p-3 sm:p-6 shadow-sm overflow-x-auto no-scrollbar">
         {filteredMembers.length > 0 ? (
           <div className="space-y-4 min-w-[720px]">
             {filteredMembers.map((member) => {

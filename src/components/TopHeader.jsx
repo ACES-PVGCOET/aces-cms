@@ -8,7 +8,8 @@ import {
   User,
   UserPlus,
   LogIn,
-  Command
+  Command,
+  Menu
 } from 'lucide-react';
 import ThemeSelector from './ThemeSelector';
 
@@ -27,6 +28,7 @@ export function TopHeader({
   onOpenProfile,
   onOpenRegister,
   onLogout,
+  onToggleMobileSidebar,
 }) {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -44,13 +46,22 @@ export function TopHeader({
   }, []);
 
   return (
-    <header className="sticky top-0 z-20 w-full max-w-7xl mx-auto px-6 sm:px-8 py-4">
-      <div className="glass-panel rounded-2xl px-5 py-3 flex items-center justify-between gap-4 shadow-sm backdrop-blur-md">
+    <header className="sticky top-0 z-20 w-full max-w-7xl mx-auto px-3 sm:px-8 py-3 sm:py-4">
+      <div className="glass-panel rounded-2xl px-3.5 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4 shadow-sm backdrop-blur-md">
         
+        {/* Mobile Hamburger Toggle Button */}
+        <button
+          onClick={onToggleMobileSidebar}
+          className="lg:hidden p-2 rounded-xl btn-secondary transition-colors duration-200 cursor-pointer shrink-0"
+          aria-label="Open sidebar menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
         {/* Left: Global Search Input */}
         <div className="flex-1 max-w-md relative">
           <div
-            className={`flex items-center gap-2.5 px-3.5 py-2 rounded-xl transition-all duration-200 glass-input ${
+            className={`flex items-center gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl transition-all duration-200 glass-input ${
               isSearchFocused
                 ? 'ring-2 ring-indigo-500/20'
                 : ''

@@ -93,6 +93,7 @@ function AppContent() {
   // View Navigation State: 'dashboard' | 'members' | 'events' | 'announcements' | 'magazine'
   const [currentView, setCurrentView] = useState('dashboard');
   const [globalSearch, setGlobalSearch] = useState('');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Data Hooks
   const memberHook = useMembers();
@@ -482,7 +483,7 @@ function AppContent() {
   return (
     <div className={`aces-canvas theme-${theme} min-h-screen relative flex font-sans`}>
       
-      {/* 1. Fixed Left Sidebar Navigation */}
+      {/* 1. Left Sidebar Navigation (Fixed on Desktop, Off-Canvas Drawer on Mobile) */}
       <SidebarNavigation
         currentView={currentView}
         onSelectView={(view) => {
@@ -490,6 +491,8 @@ function AppContent() {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         isTrueAdmin={isTrueAdmin}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
         counts={{
           members: memberHook.members.length,
           events: eventHook.events.filter((e) => e.status === 'Scheduled' || e.status === 'Live').length,
@@ -499,7 +502,7 @@ function AppContent() {
       />
 
       {/* 2. Main Content Area */}
-      <div className="pl-64 lg:pl-72 w-full min-h-screen flex flex-col justify-between min-w-0">
+      <div className="pl-0 lg:pl-64 xl:pl-72 w-full min-h-screen flex flex-col justify-between min-w-0 transition-all duration-300">
         
         <div>
           {/* Top Header Bar with Auth Session Controls */}
@@ -514,10 +517,11 @@ function AppContent() {
             onOpenProfile={() => setIsProfileModalOpen(true)}
             onOpenRegister={() => setIsRegisterModalOpen(true)}
             onLogout={handleLogoutSubmit}
+            onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
           />
 
           {/* Active View Container */}
-          <main className="px-6 sm:px-8 pb-6 sm:pb-8 pt-2 max-w-7xl mx-auto w-full">
+          <main className="px-3 sm:px-8 pb-6 sm:pb-8 pt-2 max-w-7xl mx-auto w-full">
             
             {/* View 1: Launchpad Dashboard */}
             {currentView === 'dashboard' && (
