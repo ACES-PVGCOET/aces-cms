@@ -24,6 +24,8 @@ export function EventDetailModal({ event, isOpen, onClose, onEdit, onDelete }) {
     reg_form_id = null,
     banner_url = '',
     isHighlight = false,
+    reg_st_dt,
+    reg_end_dt
   } = event;
 
   return (
