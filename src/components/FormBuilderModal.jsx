@@ -11,8 +11,12 @@ import {
   ListOrdered, 
   UploadCloud,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Image as ImageIcon,
+  Loader2,
+  FileCheck
 } from 'lucide-react';
+import { uploadToCloudinary } from '../services/api';
 
 const DEFAULT_QUESTIONS = [
   {
@@ -20,6 +24,7 @@ const DEFAULT_QUESTIONS = [
     question_statement: 'Email Address',
     question_type: 'textual',
     is_required: true,
+    image_url: '',
     textual_policy: { max_len: 100 },
     multiple_choice_policy: { type: 'Single', options: [] },
     file_policy: { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
@@ -29,6 +34,7 @@ const DEFAULT_QUESTIONS = [
     question_statement: 'Phone Number',
     question_type: 'textual',
     is_required: false,
+    image_url: '',
     textual_policy: { max_len: 20 },
     multiple_choice_policy: { type: 'Single', options: [] },
     file_policy: { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
@@ -44,6 +50,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState({});
 
   useEffect(() => {
     if (initialForm) {
@@ -58,6 +65,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
             question_statement: q.question_statement || '',
             question_type: q.question_type || 'textual',
             is_required: q.is_required !== undefined ? Boolean(q.is_required) : true,
+            image_url: q.image_url || '',
             textual_policy: q.textual_policy || { max_len: 500 },
             multiple_choice_policy: q.multiple_choice_policy || { type: 'Single', options: ['Option 1', 'Option 2'] },
             file_policy: q.file_policy || { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
@@ -74,6 +82,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
     }
     setErrorMsg('');
     setIsPreviewMode(false);
+    setUploadingImages({});
   }, [initialForm, isOpen]);
 
   if (!isOpen) return null;
@@ -125,6 +134,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
       question_statement: '',
       question_type: 'textual',
       is_required: true,
+      image_url: '',
       textual_policy: { max_len: 500 },
       multiple_choice_policy: { type: 'Single', options: ['Option 1', 'Option 2'] },
       file_policy: { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
@@ -147,6 +157,28 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
     const updated = [...questions];
     updated[idx] = { ...updated[idx], [field]: value };
     setQuestions(updated);
+  };
+
+  // Upload Question Body Image to Cloudinary
+  const handleImageUpload = async (idx, file) => {
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg(`Image file "${file.name}" exceeds maximum size of 5MB.`);
+      return;
+    }
+
+    try {
+      setErrorMsg('');
+      setUploadingImages((prev) => ({ ...prev, [idx]: true }));
+      const uploadedUrl = await uploadToCloudinary(file, 'form_questions', 'image');
+      updateQuestionField(idx, 'image_url', uploadedUrl);
+    } catch (err) {
+      console.error('[FormBuilderModal] Question image upload failed:', err);
+      setErrorMsg(err.message || 'Question image upload failed. Please try again.');
+    } finally {
+      setUploadingImages((prev) => ({ ...prev, [idx]: false }));
+    }
   };
 
   // Update question policy object
@@ -190,6 +222,11 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
     e.preventDefault();
     setErrorMsg('');
 
+    if (Object.values(uploadingImages).some(Boolean)) {
+      setErrorMsg('Please wait for question image upload to finish before saving form.');
+      return;
+    }
+
     if (!title.trim()) {
       setErrorMsg('Form title is required.');
       return;
@@ -227,6 +264,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
           question_statement: q.question_statement.trim(),
           question_type: q.question_type,
           is_required: Boolean(q.is_required),
+          image_url: q.image_url ? q.image_url.trim() : '',
           textual_policy: q.textual_policy || { max_len: 500 },
           multiple_choice_policy: q.multiple_choice_policy || { type: 'Single', options: [] },
           file_policy: q.file_policy || { supported_types: ['pdf'], max_size_mb: 5 },
@@ -311,6 +349,12 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                     <span>Q{q.question_serial}: {q.question_statement || 'Question Prompt'}</span>
                     {q.is_required && <span className="text-red-400 font-bold ml-1">*</span>}
                   </label>
+
+                  {q.image_url && (
+                    <div className="my-2 rounded-xl overflow-hidden border border-white/10 max-h-48 bg-black/40">
+                      <img src={q.image_url} alt={`Question ${q.question_serial} body`} className="w-full h-full object-contain max-h-48" />
+                    </div>
+                  )}
 
                   {q.question_type === 'textual' && (
                     <input
@@ -482,6 +526,70 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                           <option value="multiple_choice" className="bg-slate-900 text-white">Multiple Choice</option>
                           <option value="file" className="bg-slate-900 text-white">File Upload</option>
                         </select>
+                      </div>
+
+                      {/* Question Body Image Upload Control */}
+                      <div className="bg-black/20 p-2.5 rounded-xl border border-white/5 space-y-2">
+                        {q.image_url ? (
+                          <div className="flex items-center justify-between gap-3 bg-black/40 p-2 rounded-lg border border-white/10">
+                            <div className="flex items-center gap-2.5 truncate">
+                              <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/20 shrink-0 bg-black/50">
+                                <img src={q.image_url} alt="Question diagram" className="w-full h-full object-cover" />
+                              </div>
+                              <div className="truncate text-xs">
+                                <p className="font-bold text-indigo-300 flex items-center gap-1">
+                                  <ImageIcon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                  <span>Question Image Attached</span>
+                                </p>
+                                <p className="text-[10px] opacity-60 truncate">{q.image_url}</p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <label className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 text-[11px] font-bold cursor-pointer transition-colors flex items-center gap-1">
+                                <span>Replace</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  disabled={uploadingImages[idx]}
+                                  onChange={(e) => handleImageUpload(idx, e.target.files?.[0])}
+                                  className="hidden"
+                                />
+                              </label>
+
+                              <button
+                                type="button"
+                                onClick={() => updateQuestionField(idx, 'image_url', '')}
+                                className="px-2.5 py-1 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 text-[11px] font-bold cursor-pointer transition-colors"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <label className="flex-1 p-2.5 border border-dashed border-white/20 hover:border-indigo-500/50 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all bg-black/30 hover:bg-indigo-500/10 text-xs">
+                              {uploadingImages[idx] ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
+                                  <span className="font-semibold text-indigo-300">Uploading Image to Cloudinary...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <UploadCloud className="w-4 h-4 text-indigo-400 shrink-0" />
+                                  <span className="font-medium text-slate-200">Upload Question Body Image (PNG, JPG, WEBP)</span>
+                                </>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                disabled={uploadingImages[idx]}
+                                onChange={(e) => handleImageUpload(idx, e.target.files?.[0])}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        )}
                       </div>
 
                       {/* Middle Row: Policies depending on Question Type */}

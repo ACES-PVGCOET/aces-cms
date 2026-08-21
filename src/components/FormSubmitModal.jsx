@@ -309,6 +309,12 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
                       {q.is_required && <span className="text-red-400 font-bold ml-1">*</span>}
                     </label>
 
+                    {q.image_url && (
+                      <div className="my-2 rounded-xl overflow-hidden border border-white/10 max-h-56 bg-black/30 flex items-center justify-center p-2">
+                        <img src={q.image_url} alt={`Question ${q.question_serial} diagram`} className="max-h-52 w-auto object-contain rounded-lg shadow-md" />
+                      </div>
+                    )}
+
                     {/* TEXTUAL QUESTION INPUT */}
                     {q.question_type === 'textual' && (
                       <div>
