@@ -185,7 +185,7 @@ export function BatchRegisterModal({ isOpen, onClose, onBulkRegister, onStartOnb
                   <div className="pt-3 border-t border-white/10 space-y-3 text-xs opacity-80 animate-in fade-in duration-200">
                     <div>
                       <h4 className="font-bold text-white mb-1">Supported Teams:</h4>
-                      <p className="text-[11px]">Web Team, Design Team, Events Team, Public Relations, Technical Lead, Executive</p>
+                      <p className="text-[11px]">Web Team, Design Team, Event Team (Events Team), Technical Team, Media Team, Marketing Team, Treasury Team, Editorial Team, Production Team, Leaders, Faculty, Executive</p>
                     </div>
                     <div>
                       <h4 className="font-bold text-white mb-1">Supported Positions:</h4>
