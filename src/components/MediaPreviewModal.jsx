@@ -18,10 +18,16 @@ export function MediaPreviewModal({ isOpen, onClose, mediaUrl, title = 'Media Pr
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const isDrive = mediaUrl.includes('drive.google.com');
+  const driveMatch = isDrive ? (mediaUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/) || mediaUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || mediaUrl.match(/\/d\/([a-zA-Z0-9_-]+)/)) : null;
+  const driveFileId = driveMatch ? driveMatch[1] : '';
+  const driveViewUrl = driveFileId ? `https://drive.google.com/file/d/${driveFileId}/view` : mediaUrl;
+  const drivePreviewUrl = driveFileId ? `https://drive.google.com/file/d/${driveFileId}/preview` : mediaUrl;
+
   const isVideo = isVideoMedia(mediaUrl);
   const ext = (mediaUrl.split('.').pop() || '').split('?')[0].toLowerCase();
-  const isImage = !isVideo && ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif'].includes(ext) || mediaUrl.includes('image/upload');
-  const isPdf = ext === 'pdf';
+  const isImage = !isDrive && (!isVideo && ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif'].includes(ext) || mediaUrl.includes('image/upload'));
+  const isPdf = !isDrive && ext === 'pdf';
 
   return (
     <div
@@ -60,7 +66,7 @@ export function MediaPreviewModal({ isOpen, onClose, mediaUrl, title = 'Media Pr
             </button>
 
             <a
-              href={mediaUrl}
+              href={driveViewUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-xl btn-primary text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer"
@@ -90,14 +96,35 @@ export function MediaPreviewModal({ isOpen, onClose, mediaUrl, title = 'Media Pr
                 This media file format could not be rendered directly inside the preview lightbox.
               </p>
               <a
-                href={mediaUrl}
+                href={driveViewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold mt-2"
               >
                 <Download className="w-4 h-4" />
-                <span>Download / Open File Directly</span>
+                <span>Open File in Google Drive</span>
               </a>
+            </div>
+          ) : isDrive ? (
+            <div className="w-full h-full flex flex-col items-center justify-center p-2 space-y-3">
+              <iframe
+                src={drivePreviewUrl}
+                title={title}
+                className="w-full h-[62vh] rounded-2xl border border-white/10 bg-slate-900"
+                allow="autoplay"
+              />
+              <div className="flex items-center justify-between w-full px-2">
+                <span className="text-xs opacity-70">Requires access to form responses Google Drive folder</span>
+                <a
+                  href={driveViewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-lg"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>Open Full Screen in Google Drive</span>
+                </a>
+              </div>
             </div>
           ) : isVideo ? (
             <video

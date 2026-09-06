@@ -8,6 +8,7 @@ import {
   Sparkles,
   ExternalLink,
   UserCog,
+  CheckCircle2,
   X
 } from 'lucide-react';
 
@@ -39,6 +40,14 @@ export function SidebarNavigation({
       icon: Users,
       badge: counts.members || null,
       description: 'Guilds & directory',
+    },
+    {
+      id: 'fee-verification',
+      label: 'Fee Verification',
+      shortLabel: 'Fees',
+      icon: CheckCircle2,
+      badge: counts.pendingFees ? `${counts.pendingFees} pending` : null,
+      description: 'Verify fees & receipts',
     },
     ...(isTrueAdmin
       ? [
