@@ -22,10 +22,12 @@ import {
   Receipt,
   Users,
   CreditCard,
-  Send
+  Send,
+  Loader2
 } from 'lucide-react';
 import StatCard from './StatCard';
 import MediaPreviewModal from './MediaPreviewModal';
+import ConfirmVerifyModal from './ConfirmVerifyModal';
 
 function getDriveFileId(url) {
   if (!url) return '';
@@ -69,6 +71,8 @@ export function FeeVerificationView({
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
   const [copiedId, setCopiedId] = useState(null);
   const [lightboxMedia, setLightboxMedia] = useState(null);
+  const [confirmItem, setConfirmItem] = useState(null);
+  const [processingVerifyId, setProcessingVerifyId] = useState(null);
 
   const handleCopy = (text, id) => {
     navigator.clipboard.writeText(text);
@@ -76,21 +80,17 @@ export function FeeVerificationView({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleQuickVerify = async (e, item) => {
+  const handleInitiateVerify = (e, item) => {
     e.stopPropagation();
+    setConfirmItem(item);
+  };
+
+  const handleExecuteVerify = async (id, payload) => {
     try {
-      await onVerifyRegistration(item.id, {
-        status: 'VERIFIED',
-        remarks: item.remarks || '',
-        amount: item.amount || 450,
-      });
-      if (showToast) {
-        showToast(`Fee for ${item.fullName} verified successfully!`, 'success', 'Fee Verified');
-      }
-    } catch (err) {
-      if (showToast) {
-        showToast(err.message || 'Failed to verify fee.', 'error', 'Error');
-      }
+      setProcessingVerifyId(id);
+      await onVerifyRegistration(id, payload);
+    } finally {
+      setProcessingVerifyId(null);
     }
   };
 
@@ -544,11 +544,19 @@ export function FeeVerificationView({
                           <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                             {isPend && (
                               <button
-                                onClick={(e) => handleQuickVerify(e, item)}
-                                className="px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white text-[11px] font-bold border border-emerald-500/40 cursor-pointer transition-colors"
-                                title="Quick 1-Click Verify"
+                                disabled={processingVerifyId === item.id}
+                                onClick={(e) => handleInitiateVerify(e, item)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white text-[11px] font-bold border border-emerald-500/40 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Verify Fee"
                               >
-                                Verify
+                                {processingVerifyId === item.id ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    <span>Verifying...</span>
+                                  </>
+                                ) : (
+                                  <span>Verify</span>
+                                )}
                               </button>
                             )}
 
@@ -673,10 +681,18 @@ export function FeeVerificationView({
                     </button>
                     {isPend && (
                       <button
-                        onClick={(e) => handleQuickVerify(e, item)}
-                        className="flex-1 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow"
+                        disabled={processingVerifyId === item.id}
+                        onClick={(e) => handleInitiateVerify(e, item)}
+                        className="flex-1 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                       >
-                        Verify
+                        {processingVerifyId === item.id ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Verifying...</span>
+                          </>
+                        ) : (
+                          <span>Verify</span>
+                        )}
                       </button>
                     )}
                   </div>
@@ -723,6 +739,18 @@ export function FeeVerificationView({
             )}
           </div>
         </div>
+      )}
+
+      {/* Customized Confirmation Prompt Modal */}
+      {confirmItem && (
+        <ConfirmVerifyModal
+          isOpen={Boolean(confirmItem)}
+          onClose={() => setConfirmItem(null)}
+          registration={confirmItem}
+          onConfirm={handleExecuteVerify}
+          onOpenMediaLightbox={(url, title) => setLightboxMedia({ url, title })}
+          showToast={showToast}
+        />
       )}
 
       {/* Media Lightbox Modal */}
