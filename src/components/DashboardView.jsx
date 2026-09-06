@@ -11,7 +11,8 @@ import {
   BookOpen, 
   Radio, 
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  CheckCircle2
 } from 'lucide-react';
 import StatCard from './StatCard';
 import ActiveMembersPieCard from './ActiveMembersPieCard';
@@ -151,6 +152,22 @@ export function DashboardView({
                   <div className="min-w-0">
                     <div className="text-xs leading-4 font-bold truncate">Forms Engine</div>
                     <div className="text-xs leading-4 opacity-60 truncate font-medium">Forms & CSV</div>
+                  </div>
+                </button>
+
+                {/* Fee Verification */}
+                <button
+                  id="quick-action-fees"
+                  onClick={() => onNavigate('fee-verification')}
+                  className="flex items-center gap-2 p-2 rounded-lg btn-secondary group text-left cursor-pointer border border-emerald-500/20 hover:border-emerald-500/40"
+                  title="Audit & verify membership fees"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs leading-4 font-bold truncate text-emerald-300">Fee Verification</div>
+                    <div className="text-xs leading-4 opacity-60 truncate font-medium">Audit & Receipts</div>
                   </div>
                 </button>
 

@@ -44,7 +44,12 @@ import ShowcaseRenameModal from './components/ShowcaseRenameModal';
 import ShowcasePdfModal from './components/ShowcasePdfModal';
 import FormBuilderModal from './components/FormBuilderModal';
 import FormSubmitModal from './components/FormSubmitModal';
+import FeeVerificationView from './components/FeeVerificationView';
+import VerifyFeeModal from './components/VerifyFeeModal';
+import AddMembershipModal from './components/AddMembershipModal';
+import ImportMembershipModal from './components/ImportMembershipModal';
 import Toast from './components/Toast';
+import { useMembership } from './hooks/useMembership';
 
 /**
  * Inner Application Content connected to Auth Context
@@ -101,6 +106,7 @@ function AppContent() {
   const announcementHook = useAnnouncements();
   const showcaseHook = useShowcase();
   const formsHook = useForms();
+  const membershipHook = useMembership();
 
   // Toast feedback state
   const [toast, setToast] = useState(null);
@@ -115,6 +121,12 @@ function AppContent() {
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [viewingMember, setViewingMember] = useState(null);
+
+  // Fee Verification Modal States
+  const [isVerifyFeeModalOpen, setIsVerifyFeeModalOpen] = useState(false);
+  const [inspectingRegistration, setInspectingRegistration] = useState(null);
+  const [isAddMembershipModalOpen, setIsAddMembershipModalOpen] = useState(false);
+  const [isImportMembershipModalOpen, setIsImportMembershipModalOpen] = useState(false);
 
   // Auth & Workflow Modals
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -162,6 +174,7 @@ function AppContent() {
     eventHook.setSearchQuery(query);
     showcaseHook.setSearchQuery(query);
     formsHook.setSearchQuery(query);
+    membershipHook.setSearchQuery(query);
   };
 
   // --- AUTH WORKFLOW HANDLERS ---
@@ -495,6 +508,7 @@ function AppContent() {
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         counts={{
           members: memberHook.members.length,
+          pendingFees: membershipHook.stats.pending,
           events: eventHook.events.filter((e) => e.status === 'Scheduled' || e.status === 'Live').length,
           showcaseCollections: showcaseHook.collections.length,
           forms: formsHook.forms.length,
@@ -567,6 +581,35 @@ function AppContent() {
                 members={memberHook.members}
                 isTrueAdmin={isTrueAdmin}
                 onUpdateMember={memberHook.updateMember}
+                showToast={showToast}
+              />
+            )}
+
+            {/* View 2c: Fee Verification Hub */}
+            {currentView === 'fee-verification' && (
+              <FeeVerificationView
+                registrations={membershipHook.registrations}
+                filteredRegistrations={membershipHook.filteredRegistrations}
+                stats={membershipHook.stats}
+                searchQuery={membershipHook.searchQuery}
+                onSearchChange={membershipHook.setSearchQuery}
+                statusFilter={membershipHook.statusFilter}
+                onStatusFilterChange={membershipHook.setStatusFilter}
+                classFilter={membershipHook.classFilter}
+                onClassFilterChange={membershipHook.setClassFilter}
+                paymentModeFilter={membershipHook.paymentModeFilter}
+                onPaymentModeFilterChange={membershipHook.setPaymentModeFilter}
+                sortBy={membershipHook.sortBy}
+                onSortChange={membershipHook.setSortBy}
+                isLoading={membershipHook.isLoading}
+                onRefresh={membershipHook.fetchRegistrations}
+                onOpenAddModal={() => setIsAddMembershipModalOpen(true)}
+                onOpenImportModal={() => setIsImportMembershipModalOpen(true)}
+                onInspectRegistration={(reg) => {
+                  setInspectingRegistration(reg);
+                  setIsVerifyFeeModalOpen(true);
+                }}
+                onVerifyRegistration={membershipHook.verifyRegistration}
                 showToast={showToast}
               />
             )}
@@ -803,7 +846,36 @@ function AppContent() {
         onSubmitResponse={handleSubmitFormResponse}
       />
 
-      {/* 14. Toast Feedback Alerts */}
+      {/* 14. Fee Verification Modal */}
+      <VerifyFeeModal
+        isOpen={isVerifyFeeModalOpen}
+        onClose={() => {
+          setIsVerifyFeeModalOpen(false);
+          setInspectingRegistration(null);
+        }}
+        registration={inspectingRegistration}
+        onVerify={membershipHook.verifyRegistration}
+        showToast={showToast}
+      />
+
+      {/* 15. Register Member Modal */}
+      <AddMembershipModal
+        isOpen={isAddMembershipModalOpen}
+        onClose={() => setIsAddMembershipModalOpen(false)}
+        onAddMember={membershipHook.addRegistration}
+        showToast={showToast}
+      />
+
+      {/* 16. Import Membership Spreadsheet Modal */}
+      <ImportMembershipModal
+        isOpen={isImportMembershipModalOpen}
+        onClose={() => setIsImportMembershipModalOpen(false)}
+        onImportLocal={membershipHook.importLocalSheet}
+        onBulkImport={membershipHook.bulkImport}
+        showToast={showToast}
+      />
+
+      {/* 17. Toast Feedback Alerts */}
       <Toast toast={toast} onClose={() => setToast(null)} />
 
     </div>
