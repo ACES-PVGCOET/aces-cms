@@ -14,9 +14,20 @@ import {
   AlertCircle,
   Image as ImageIcon,
   Loader2,
-  FileCheck
+  FileCheck,
+  QrCode,
+  CreditCard,
+  IndianRupee,
+  RefreshCw
 } from 'lucide-react';
 import { uploadToCloudinary } from '../services/api';
+
+export const generatePaymentStatement = (amount, hasFallback) => {
+  const amtStr = amount ? `₹${amount}` : '{amount}';
+  return hasFallback
+    ? `Please pay ${amtStr} using one of the following QR codes and upload your payment confirmation screenshot.`
+    : `Please pay ${amtStr} using the QR code below and upload your payment confirmation screenshot.`;
+};
 
 const DEFAULT_QUESTIONS = [
   {
@@ -28,6 +39,7 @@ const DEFAULT_QUESTIONS = [
     textual_policy: { max_len: 100 },
     multiple_choice_policy: { type: 'Single', options: [] },
     file_policy: { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
+    payment_policy: { amount: '', primary_qr_url: '', fallback_qr_url: '' },
   },
   {
     question_serial: 2,
@@ -38,6 +50,7 @@ const DEFAULT_QUESTIONS = [
     textual_policy: { max_len: 20 },
     multiple_choice_policy: { type: 'Single', options: [] },
     file_policy: { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
+    payment_policy: { amount: '', primary_qr_url: '', fallback_qr_url: '' },
   },
 ];
 
@@ -51,6 +64,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingImages, setUploadingImages] = useState({});
+  const [uploadingQrs, setUploadingQrs] = useState({});
 
   useEffect(() => {
     if (initialForm) {
@@ -69,6 +83,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
             textual_policy: q.textual_policy || { max_len: 500 },
             multiple_choice_policy: q.multiple_choice_policy || { type: 'Single', options: ['Option 1', 'Option 2'] },
             file_policy: q.file_policy || { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
+            payment_policy: q.payment_policy || { amount: '', primary_qr_url: '', fallback_qr_url: '' },
           }))
         );
       } else {
@@ -83,6 +98,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
     setErrorMsg('');
     setIsPreviewMode(false);
     setUploadingImages({});
+    setUploadingQrs({});
   }, [initialForm, isOpen]);
 
   if (!isOpen) return null;
@@ -138,6 +154,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
       textual_policy: { max_len: 500 },
       multiple_choice_policy: { type: 'Single', options: ['Option 1', 'Option 2'] },
       file_policy: { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
+      payment_policy: { amount: '', primary_qr_url: '', fallback_qr_url: '' },
     };
     setQuestions([...questions, newQ]);
   };
@@ -156,6 +173,90 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
   const updateQuestionField = (idx, field, value) => {
     const updated = [...questions];
     updated[idx] = { ...updated[idx], [field]: value };
+    setQuestions(updated);
+  };
+
+  // Change Question Type (special logic for payment_acceptance)
+  const handleTypeChange = (idx, newType) => {
+    const updated = [...questions];
+    const currentQ = updated[idx];
+    const isPayment = newType === 'payment_acceptance';
+    const paymentPolicy = currentQ.payment_policy || { amount: '', primary_qr_url: '', fallback_qr_url: '' };
+    
+    let statement = currentQ.question_statement;
+    if (isPayment) {
+      statement = generatePaymentStatement(paymentPolicy.amount, Boolean(paymentPolicy.fallback_qr_url));
+    }
+
+    updated[idx] = {
+      ...currentQ,
+      question_type: newType,
+      is_required: isPayment ? true : currentQ.is_required, // Mandatory by default for payment_acceptance
+      question_statement: statement,
+      payment_policy: paymentPolicy,
+    };
+    setQuestions(updated);
+  };
+
+  // Update Payment Acceptance Amount
+  const handlePaymentAmountChange = (idx, amountVal) => {
+    const updated = [...questions];
+    const currentQ = updated[idx];
+    const policy = { ...(currentQ.payment_policy || {}), amount: amountVal };
+    const statement = generatePaymentStatement(amountVal, Boolean(policy.fallback_qr_url));
+    updated[idx] = {
+      ...currentQ,
+      payment_policy: policy,
+      question_statement: statement,
+    };
+    setQuestions(updated);
+  };
+
+  // Upload Primary / Fallback QR Code
+  const handleQrUpload = async (idx, qrKey, file) => {
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg(`QR Image file "${file.name}" exceeds maximum size of 5MB.`);
+      return;
+    }
+
+    const stateKey = `${idx}_${qrKey}`;
+    try {
+      setErrorMsg('');
+      setUploadingQrs((prev) => ({ ...prev, [stateKey]: true }));
+      const uploadedUrl = await uploadToCloudinary(file, 'form_qrs', 'image');
+
+      const updated = [...questions];
+      const currentQ = updated[idx];
+      const policy = { ...(currentQ.payment_policy || {}), [qrKey]: uploadedUrl };
+      const statement = generatePaymentStatement(policy.amount, Boolean(policy.fallback_qr_url));
+
+      updated[idx] = {
+        ...currentQ,
+        payment_policy: policy,
+        question_statement: statement,
+      };
+      setQuestions(updated);
+    } catch (err) {
+      console.error('[FormBuilderModal] QR image upload failed:', err);
+      setErrorMsg(err.message || 'QR image upload failed. Please try again.');
+    } finally {
+      setUploadingQrs((prev) => ({ ...prev, [stateKey]: false }));
+    }
+  };
+
+  // Remove Primary / Fallback QR Code
+  const handleQrRemove = (idx, qrKey) => {
+    const updated = [...questions];
+    const currentQ = updated[idx];
+    const policy = { ...(currentQ.payment_policy || {}), [qrKey]: '' };
+    const statement = generatePaymentStatement(policy.amount, Boolean(policy.fallback_qr_url));
+    updated[idx] = {
+      ...currentQ,
+      payment_policy: policy,
+      question_statement: statement,
+    };
     setQuestions(updated);
   };
 
@@ -222,8 +323,8 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
     e.preventDefault();
     setErrorMsg('');
 
-    if (Object.values(uploadingImages).some(Boolean)) {
-      setErrorMsg('Please wait for question image upload to finish before saving form.');
+    if (Object.values(uploadingImages).some(Boolean) || Object.values(uploadingQrs).some(Boolean)) {
+      setErrorMsg('Please wait for image/QR uploads to finish before saving form.');
       return;
     }
 
@@ -240,10 +341,24 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
     // Validate each question
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
-      if (!q.question_statement.trim()) {
-        setErrorMsg(`Question #${q.question_serial} statement cannot be empty.`);
-        return;
+      if (q.question_type === 'payment_acceptance') {
+        const policy = q.payment_policy || {};
+        const numAmount = Number(policy.amount);
+        if (!policy.amount || isNaN(numAmount) || numAmount <= 0) {
+          setErrorMsg(`Question #${q.question_serial} requires a valid payment amount greater than 0.`);
+          return;
+        }
+        if (!policy.primary_qr_url) {
+          setErrorMsg(`Question #${q.question_serial} requires a Primary QR code image.`);
+          return;
+        }
+      } else {
+        if (!q.question_statement.trim()) {
+          setErrorMsg(`Question #${q.question_serial} statement cannot be empty.`);
+          return;
+        }
       }
+
       if (q.question_type === 'multiple_choice') {
         const opts = q.multiple_choice_policy?.options || [];
         if (opts.length === 0 || opts.some((o) => !o.trim())) {
@@ -259,16 +374,29 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
         title: title.trim(),
         description: description.trim(),
         is_active: isActive,
-        questions: questions.map((q, idx) => ({
-          question_serial: idx + 1,
-          question_statement: q.question_statement.trim(),
-          question_type: q.question_type,
-          is_required: Boolean(q.is_required),
-          image_url: q.image_url ? q.image_url.trim() : '',
-          textual_policy: q.textual_policy || { max_len: 500 },
-          multiple_choice_policy: q.multiple_choice_policy || { type: 'Single', options: [] },
-          file_policy: q.file_policy || { supported_types: ['pdf'], max_size_mb: 5 },
-        })),
+        questions: questions.map((q, idx) => {
+          const isPayment = q.question_type === 'payment_acceptance';
+          const numAmount = Number(q.payment_policy?.amount || 0);
+          const statement = isPayment
+            ? (q.question_statement?.trim() || generatePaymentStatement(numAmount, Boolean(q.payment_policy?.fallback_qr_url)))
+            : q.question_statement.trim();
+
+          return {
+            question_serial: idx + 1,
+            question_statement: statement,
+            question_type: q.question_type,
+            is_required: Boolean(q.is_required),
+            image_url: q.image_url ? q.image_url.trim() : '',
+            textual_policy: q.textual_policy || { max_len: 500 },
+            multiple_choice_policy: q.multiple_choice_policy || { type: 'Single', options: [] },
+            file_policy: q.file_policy || { supported_types: ['pdf'], max_size_mb: 5 },
+            payment_policy: isPayment ? {
+              amount: numAmount,
+              primary_qr_url: q.payment_policy?.primary_qr_url || '',
+              fallback_qr_url: q.payment_policy?.fallback_qr_url || '',
+            } : undefined,
+          };
+        }),
       };
 
       await onSubmit(payload);
@@ -389,6 +517,39 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                       </span>
                     </div>
                   )}
+
+                  {q.question_type === 'payment_acceptance' && (
+                    <div className="space-y-3 bg-black/30 p-4 rounded-xl border border-indigo-500/30">
+                      <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                        <span className="text-xs font-semibold text-slate-300">Amount Due:</span>
+                        <span className="text-sm font-bold text-emerald-400 font-mono">
+                          ₹{q.payment_policy?.amount || '0'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
+                          <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider mb-2">Primary QR Code</p>
+                          {q.payment_policy?.primary_qr_url ? (
+                            <img src={q.payment_policy.primary_qr_url} alt="Primary QR" className="w-28 h-28 mx-auto object-contain bg-white rounded-lg p-1" />
+                          ) : (
+                            <div className="w-28 h-28 mx-auto border border-dashed border-white/20 rounded-lg flex items-center justify-center text-[10px] opacity-40">
+                              No Primary QR
+                            </div>
+                          )}
+                        </div>
+                        {q.payment_policy?.fallback_qr_url ? (
+                          <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
+                            <p className="text-[10px] font-bold text-amber-300 uppercase tracking-wider mb-2">Fallback QR Code</p>
+                            <img src={q.payment_policy.fallback_qr_url} alt="Fallback QR" className="w-28 h-28 mx-auto object-contain bg-white rounded-lg p-1" />
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="p-3 border-2 border-dashed border-white/20 rounded-xl flex items-center justify-center gap-2 opacity-60 text-xs">
+                        <UploadCloud className="w-4 h-4 text-indigo-400" />
+                        <span>Payment Confirmation Screenshot Upload Placeholder</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -507,24 +668,36 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                           {q.question_serial}
                         </span>
 
-                        <input
-                          type="text"
-                          required
-                          value={q.question_statement}
-                          onChange={(e) => updateQuestionField(idx, 'question_statement', e.target.value)}
-                          placeholder="Question prompt/statement (e.g. Select your domain track)"
-                          className="flex-1 px-3 py-1.5 rounded-lg bg-black/20 border border-white/10 focus:border-indigo-500 focus:outline-none text-xs font-semibold"
-                        />
+                        {q.question_type === 'payment_acceptance' ? (
+                          <div className="flex-1 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-xs font-semibold text-indigo-200 flex items-center justify-between gap-2">
+                            <span className="truncate" title={q.question_statement}>
+                              {q.question_statement || 'Auto-generated payment instruction prompt'}
+                            </span>
+                            <span className="shrink-0 text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                              Auto-Generated
+                            </span>
+                          </div>
+                        ) : (
+                          <input
+                            type="text"
+                            required
+                            value={q.question_statement}
+                            onChange={(e) => updateQuestionField(idx, 'question_statement', e.target.value)}
+                            placeholder="Question prompt/statement (e.g. Select your domain track)"
+                            className="flex-1 px-3 py-1.5 rounded-lg bg-black/20 border border-white/10 focus:border-indigo-500 focus:outline-none text-xs font-semibold"
+                          />
+                        )}
 
                         {/* Type Selector */}
                         <select
                           value={q.question_type}
-                          onChange={(e) => updateQuestionField(idx, 'question_type', e.target.value)}
+                          onChange={(e) => handleTypeChange(idx, e.target.value)}
                           className="px-2.5 py-1.5 rounded-lg bg-black/30 border border-white/10 text-xs font-bold focus:outline-none cursor-pointer"
                         >
                           <option value="textual" className="bg-slate-900 text-white">Textual Answer</option>
                           <option value="multiple_choice" className="bg-slate-900 text-white">Multiple Choice</option>
                           <option value="file" className="bg-slate-900 text-white">File Upload</option>
+                          <option value="payment_acceptance" className="bg-slate-900 text-white">Payment Acceptance</option>
                         </select>
                       </div>
 
@@ -703,6 +876,167 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                               className="w-16 px-2 py-1 rounded bg-black/40 border border-white/10 text-xs text-center font-bold"
                             />
                           </label>
+                        </div>
+                      )}
+
+                      {/* PAYMENT ACCEPTANCE POLICY */}
+                      {q.question_type === 'payment_acceptance' && (
+                        <div className="space-y-4 bg-black/30 p-4 rounded-xl border border-indigo-500/30">
+                          <div className="flex items-center gap-2 text-xs font-bold text-indigo-300 pb-2 border-b border-white/10">
+                            <CreditCard className="w-4 h-4 text-indigo-400" />
+                            <span>Payment Acceptance Configuration</span>
+                          </div>
+
+                          {/* Amount Input */}
+                          <div className="space-y-1.5 max-w-xs">
+                            <label className="block text-xs font-bold text-slate-300">
+                              Amount to Pay (₹) <span className="text-red-400">*</span>
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-indigo-400">₹</span>
+                              <input
+                                type="number"
+                                min="1"
+                                step="any"
+                                required
+                                value={q.payment_policy?.amount || ''}
+                                onChange={(e) => handlePaymentAmountChange(idx, e.target.value)}
+                                placeholder="e.g. 250"
+                                className="w-full pl-8 pr-3 py-2 rounded-xl bg-black/40 border border-white/10 focus:border-indigo-500 focus:outline-none text-xs font-bold text-emerald-400"
+                              />
+                            </div>
+                            <p className="text-[10px] opacity-60">This amount will be automatically updated in the payment instructions.</p>
+                          </div>
+
+                          {/* QR Codes: Primary & Fallback */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                            
+                            {/* PRIMARY QR (MANDATORY) */}
+                            <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                                  <QrCode className="w-4 h-4 text-emerald-400" />
+                                  <span>Primary QR Image</span>
+                                  <span className="text-red-400">*</span>
+                                </label>
+                                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">
+                                  Mandatory
+                                </span>
+                              </div>
+
+                              {q.payment_policy?.primary_qr_url ? (
+                                <div className="space-y-2">
+                                  <div className="w-32 h-32 mx-auto rounded-xl bg-white p-1.5 shadow-md flex items-center justify-center overflow-hidden border border-white/20">
+                                    <img src={q.payment_policy.primary_qr_url} alt="Primary QR" className="w-full h-full object-contain" />
+                                  </div>
+                                  <div className="flex items-center justify-center gap-2 pt-1">
+                                    <label className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 text-[11px] font-bold cursor-pointer transition-colors">
+                                      <span>Replace</span>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        disabled={uploadingQrs[`${idx}_primary_qr_url`]}
+                                        onChange={(e) => handleQrUpload(idx, 'primary_qr_url', e.target.files?.[0])}
+                                        className="hidden"
+                                      />
+                                    </label>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleQrRemove(idx, 'primary_qr_url')}
+                                      className="px-2.5 py-1 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 text-[11px] font-bold cursor-pointer transition-colors"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <label className="p-4 border border-dashed border-white/20 hover:border-indigo-500/50 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-black/20 hover:bg-indigo-500/10">
+                                  {uploadingQrs[`${idx}_primary_qr_url`] ? (
+                                    <div className="flex items-center gap-2 py-2 text-indigo-400">
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      <span className="text-xs font-semibold">Uploading QR to Cloudinary...</span>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <UploadCloud className="w-6 h-6 mb-1 text-emerald-400" />
+                                      <span className="text-xs font-semibold text-slate-200">Upload Primary QR Image</span>
+                                      <span className="text-[10px] opacity-60 mt-0.5">PNG, JPG, WEBP (Max 5MB)</span>
+                                    </>
+                                  )}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    disabled={uploadingQrs[`${idx}_primary_qr_url`]}
+                                    onChange={(e) => handleQrUpload(idx, 'primary_qr_url', e.target.files?.[0])}
+                                    className="hidden"
+                                  />
+                                </label>
+                              )}
+                            </div>
+
+                            {/* FALLBACK QR (OPTIONAL) */}
+                            <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                                  <QrCode className="w-4 h-4 text-amber-400" />
+                                  <span>Fallback QR Image</span>
+                                </label>
+                                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+                                  Optional Backup
+                                </span>
+                              </div>
+
+                              {q.payment_policy?.fallback_qr_url ? (
+                                <div className="space-y-2">
+                                  <div className="w-32 h-32 mx-auto rounded-xl bg-white p-1.5 shadow-md flex items-center justify-center overflow-hidden border border-white/20">
+                                    <img src={q.payment_policy.fallback_qr_url} alt="Fallback QR" className="w-full h-full object-contain" />
+                                  </div>
+                                  <div className="flex items-center justify-center gap-2 pt-1">
+                                    <label className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 text-[11px] font-bold cursor-pointer transition-colors">
+                                      <span>Replace</span>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        disabled={uploadingQrs[`${idx}_fallback_qr_url`]}
+                                        onChange={(e) => handleQrUpload(idx, 'fallback_qr_url', e.target.files?.[0])}
+                                        className="hidden"
+                                      />
+                                    </label>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleQrRemove(idx, 'fallback_qr_url')}
+                                      className="px-2.5 py-1 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 text-[11px] font-bold cursor-pointer transition-colors"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <label className="p-4 border border-dashed border-white/20 hover:border-amber-500/50 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-black/20 hover:bg-amber-500/10">
+                                  {uploadingQrs[`${idx}_fallback_qr_url`] ? (
+                                    <div className="flex items-center gap-2 py-2 text-amber-400">
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      <span className="text-xs font-semibold">Uploading QR to Cloudinary...</span>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <UploadCloud className="w-6 h-6 mb-1 text-amber-400" />
+                                      <span className="text-xs font-semibold text-slate-200">Upload Fallback QR Image</span>
+                                      <span className="text-[10px] opacity-60 mt-0.5">Optional backup QR (Max 5MB)</span>
+                                    </>
+                                  )}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    disabled={uploadingQrs[`${idx}_fallback_qr_url`]}
+                                    onChange={(e) => handleQrUpload(idx, 'fallback_qr_url', e.target.files?.[0])}
+                                    className="hidden"
+                                  />
+                                </label>
+                              )}
+                            </div>
+
+                          </div>
                         </div>
                       )}
 

@@ -320,6 +320,56 @@ export function FormsView({
                           File Upload (Allowed types: {(q.file_policy?.supported_types || []).join(', ') || 'Any'}, Max size: {q.file_policy?.max_size_mb || 5}MB)
                         </p>
                       )}
+
+                      {q.question_type === 'payment_acceptance' && (
+                        <div className="space-y-2">
+                          <p className="font-semibold text-emerald-400 font-mono">
+                            Fee Amount: ₹{q.payment_policy?.amount || 0}
+                          </p>
+                          <div className="flex flex-wrap gap-4 pt-1">
+                            {q.payment_policy?.primary_qr_url && (
+                              <div className="flex items-center gap-2 p-2 rounded-xl bg-black/30 border border-white/10">
+                                <img
+                                  src={q.payment_policy.primary_qr_url}
+                                  alt="Primary QR"
+                                  className="w-12 h-12 object-contain bg-white rounded p-0.5"
+                                />
+                                <div>
+                                  <span className="text-[10px] font-bold text-emerald-300 block">Primary QR</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewMediaUrl(q.payment_policy.primary_qr_url)}
+                                    className="text-[10px] text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    <span>Preview</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            {q.payment_policy?.fallback_qr_url && (
+                              <div className="flex items-center gap-2 p-2 rounded-xl bg-black/30 border border-white/10">
+                                <img
+                                  src={q.payment_policy.fallback_qr_url}
+                                  alt="Fallback QR"
+                                  className="w-12 h-12 object-contain bg-white rounded p-0.5"
+                                />
+                                <div>
+                                  <span className="text-[10px] font-bold text-amber-300 block">Fallback QR</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewMediaUrl(q.payment_policy.fallback_qr_url)}
+                                    className="text-[10px] text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    <span>Preview</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -491,7 +541,7 @@ export function FormsView({
                               const ans = r.answers?.[serialKey] || r.answers?.[q.question_serial] || [];
                               const ansArray = Array.isArray(ans) ? ans : ans ? [ans] : [];
                               const ansStr = Array.isArray(ans) ? ans.join('; ') : String(ans || '');
-                              const isMediaQuestion = q.question_type === 'file' || q.question_type === 'media';
+                              const isMediaQuestion = q.question_type === 'file' || q.question_type === 'media' || q.question_type === 'payment_acceptance';
                               
                               const mediaUrls = ansArray.filter(
                                 (item) => typeof item === 'string' && (item.startsWith('http://') || item.startsWith('https://'))
@@ -511,7 +561,11 @@ export function FormsView({
                                             title={`Preview attachment: ${url}`}
                                           >
                                             <Eye className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                                            <span>{mediaUrls.length > 1 ? `Preview #${uIdx + 1}` : 'View Preview'}</span>
+                                            <span>
+                                              {q.question_type === 'payment_acceptance'
+                                                ? (mediaUrls.length > 1 ? `Screenshot #${uIdx + 1}` : 'View Screenshot')
+                                                : (mediaUrls.length > 1 ? `Preview #${uIdx + 1}` : 'View Preview')}
+                                            </span>
                                           </button>
                                         ))}
                                       </div>
