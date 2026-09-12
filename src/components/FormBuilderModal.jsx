@@ -870,7 +870,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                             <input
                               type="number"
                               min={1}
-                              max={50}
+                              max={100}
                               value={q.file_policy?.max_size_mb || 5}
                               onChange={(e) => updateQuestionPolicy(idx, 'file_policy', 'max_size_mb', parseInt(e.target.value, 10) || 5)}
                               className="w-16 px-2 py-1 rounded bg-black/40 border border-white/10 text-xs text-center font-bold"
