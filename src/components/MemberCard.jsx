@@ -100,51 +100,58 @@ export function MemberCard({ member, onView, onEdit, onDelete }) {
         
         {/* Social Icons */}
         <div className="flex items-center gap-1">
+          {/* Instagram Link */}
           {socialLinks.instagram ? (
             <a
-              href={socialLinks.instagram.startsWith('http') ? socialLinks.instagram : `https://instagram.com/${socialLinks.instagram}`}
+              href={socialLinks.instagram.startsWith('http') ? socialLinks.instagram : `https://instagram.com/${socialLinks.instagram.replace('@', '')}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center hover:text-slate-900 dark:hover:text-pink-500 transition-colors cursor-pointer"
+              className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center text-[#E4405F] hover:bg-pink-50 dark:hover:bg-pink-950/40 transition-colors cursor-pointer"
               title="Instagram Profile"
               aria-label={`${name}'s Instagram`}
             >
               <InstagramIcon className="w-3.5 h-3.5" />
             </a>
           ) : (
-            <span className="w-7 h-7 rounded-lg flex items-center justify-center opacity-30 cursor-not-allowed">
+            <span className="w-7 h-7 rounded-lg flex items-center justify-center opacity-25 text-slate-400 cursor-not-allowed">
               <InstagramIcon className="w-3.5 h-3.5" />
             </span>
           )}
 
+          {/* LinkedIn Link */}
           {socialLinks.linkedin ? (
             <a
               href={socialLinks.linkedin.startsWith('http') ? socialLinks.linkedin : `https://linkedin.com/in/${socialLinks.linkedin}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center hover:text-blue-500 transition-colors cursor-pointer"
+              className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center text-[#0A66C2] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
               title="LinkedIn Profile"
               aria-label={`${name}'s LinkedIn`}
             >
               <LinkedinIcon className="w-3.5 h-3.5" />
             </a>
           ) : (
-            <span className="w-7 h-7 rounded-lg flex items-center justify-center opacity-30 cursor-not-allowed">
+            <span className="w-7 h-7 rounded-lg flex items-center justify-center opacity-25 text-slate-400 cursor-not-allowed">
               <LinkedinIcon className="w-3.5 h-3.5" />
             </span>
           )}
 
-          {socialLinks.github && (
+          {/* GitHub Link */}
+          {socialLinks.github ? (
             <a
               href={socialLinks.github.startsWith('http') ? socialLinks.github : `https://github.com/${socialLinks.github}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center hover:opacity-100 transition-colors cursor-pointer"
+              className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title="GitHub Profile"
               aria-label={`${name}'s GitHub`}
             >
               <GithubIcon className="w-3.5 h-3.5" />
             </a>
+          ) : (
+            <span className="w-7 h-7 rounded-lg flex items-center justify-center opacity-25 text-slate-400 cursor-not-allowed">
+              <GithubIcon className="w-3.5 h-3.5" />
+            </span>
           )}
         </div>
 

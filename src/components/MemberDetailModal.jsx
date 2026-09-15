@@ -138,21 +138,21 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
                   href={socialLinks.linkedin.startsWith('http') ? socialLinks.linkedin : `https://linkedin.com/in/${socialLinks.linkedin}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg btn-secondary flex items-center justify-center hover:text-blue-500 transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-lg btn-secondary flex items-center justify-center text-[#0A66C2] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
                   title="LinkedIn Profile"
                 >
-                  <LinkedinIcon className="w-3.5 h-3.5" />
+                  <LinkedinIcon className="w-4 h-4" />
                 </a>
               )}
               {socialLinks.instagram && (
                 <a
-                  href={socialLinks.instagram.startsWith('http') ? socialLinks.instagram : `https://instagram.com/${socialLinks.instagram}`}
+                  href={socialLinks.instagram.startsWith('http') ? socialLinks.instagram : `https://instagram.com/${socialLinks.instagram.replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg btn-secondary flex items-center justify-center hover:text-pink-500 transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-lg btn-secondary flex items-center justify-center text-[#E4405F] hover:bg-pink-50 dark:hover:bg-pink-950/40 transition-colors cursor-pointer"
                   title="Instagram Profile"
                 >
-                  <InstagramIcon className="w-3.5 h-3.5" />
+                  <InstagramIcon className="w-4 h-4" />
                 </a>
               )}
               {socialLinks.github && (
@@ -160,10 +160,10 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
                   href={socialLinks.github.startsWith('http') ? socialLinks.github : `https://github.com/${socialLinks.github}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg btn-secondary flex items-center justify-center hover:opacity-100 transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-lg btn-secondary flex items-center justify-center text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   title="GitHub Profile"
                 >
-                  <GithubIcon className="w-3.5 h-3.5" />
+                  <GithubIcon className="w-4 h-4" />
                 </a>
               )}
             </div>

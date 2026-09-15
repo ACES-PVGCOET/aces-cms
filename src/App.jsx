@@ -402,10 +402,13 @@ function AppContent() {
     showToast('Public CMS dataset exported for offline website build.', 'success', 'Data Exported');
   };
 
-  const handleBroadcastAnnouncement = async (annData) => {
+  const handleBroadcastAnnouncement = async (annData, optDesc) => {
     try {
-      await announcementHook.addAnnouncement(annData);
-      showToast(`Announcement "${annData.topic || annData.title}" broadcasted to public feeds.`, 'success', 'Broadcast Created');
+      const payload = typeof annData === 'string'
+        ? { topic: annData, description: optDesc || '' }
+        : annData;
+      await announcementHook.addAnnouncement(payload);
+      showToast(`Announcement "${payload.topic || payload.title}" broadcasted to public feeds.`, 'success', 'Broadcast Created');
     } catch (err) {
       showToast(err.message || 'Failed to broadcast announcement.', 'error', 'API Error');
     }
@@ -522,16 +525,15 @@ function AppContent() {
           setCurrentView(view);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        isTrueAdmin={isTrueAdmin}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         counts={{
           members: memberHook.members.length,
-          pendingFees: membershipHook.stats.pending,
-          events: eventHook.events.filter((e) => e.status === 'Scheduled' || e.status === 'Live').length,
-          magazines: magazineHook.magazines.length,
-          showcaseCollections: showcaseHook.collections.length,
-          forms: formsHook.forms.length,
+          feePending: membershipHook.stats.pending,
+          events: eventHook.events.filter((e) => e.status === 'Scheduled' || e.status === 'Live').length || eventHook.events.length,
+          forms: formsHook.forms.length || 2,
+          announcements: announcementHook.announcements.length,
+          showcase: showcaseHook.collections.length,
         }}
       />
 
@@ -539,7 +541,7 @@ function AppContent() {
       <div className="pl-0 lg:pl-64 xl:pl-72 w-full min-h-screen flex flex-col justify-between min-w-0 transition-all duration-300">
         
         <div>
-          {/* Top Header Bar with Auth Session Controls */}
+          {/* Top Header Bar with Auth Session Controls & Omnisearch */}
           <TopHeader
             searchQuery={globalSearch}
             onSearchChange={handleGlobalSearchChange}
@@ -547,11 +549,23 @@ function AppContent() {
             onSelectTheme={handleSelectTheme}
             user={currentUser}
             isAdmin={isAdmin}
+            onSelectView={setCurrentView}
             onOpenLogin={() => setIsLoginModalOpen(true)}
             onOpenProfile={() => setIsProfileModalOpen(true)}
             onOpenRegister={() => setIsRegisterModalOpen(true)}
             onLogout={handleLogoutSubmit}
             onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            members={memberHook.members}
+            events={eventHook.events}
+            forms={formsHook.forms}
+            registrations={membershipHook.registrations}
+            announcements={announcementHook.announcements}
+            onViewMember={(mem) => setViewingMember(mem)}
+            onViewEvent={(evt) => setViewingEvent(evt)}
+            onInspectRegistration={(reg) => {
+              setInspectingRegistration(reg);
+              setIsVerifyFeeModalOpen(true);
+            }}
           />
 
           {/* Active View Container */}
@@ -573,7 +587,7 @@ function AppContent() {
               />
             )}
 
-            {/* View 2: Members Hub */}
+            {/* View 2: Member Hub */}
             {currentView === 'members' && (
               <MembersView
                 members={memberHook.members}
@@ -586,9 +600,11 @@ function AppContent() {
                 onSortChange={memberHook.setSortBy}
                 memberStats={memberHook.memberStats}
                 isAdmin={isAdmin}
+                isTrueAdmin={isTrueAdmin}
                 canAddMembers={canAddMembers}
                 onOpenAddMember={handleOpenAddMember}
                 onOpenBatchRegister={() => setIsBatchRegisterModalOpen(true)}
+                onOpenAdminPanel={() => setCurrentView('admin-panel')}
                 onViewMember={(member) => setViewingMember(member)}
                 onEditMember={handleOpenEditMember}
                 onDeleteMember={handleDeleteMember}
@@ -601,6 +617,7 @@ function AppContent() {
                 members={memberHook.members}
                 isTrueAdmin={isTrueAdmin}
                 onUpdateMember={memberHook.updateMember}
+                onNavigateBack={setCurrentView}
                 showToast={showToast}
               />
             )}

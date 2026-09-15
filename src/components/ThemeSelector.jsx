@@ -17,7 +17,7 @@ export function ThemeSelector({ currentTheme = 'sky-white', onSelectTheme }) {
       id="theme-toggle-btn"
       onClick={handleToggle}
       className="flex items-center gap-2 px-3 py-1.5 rounded-xl btn-secondary transition-all duration-200 active:scale-95 cursor-pointer shadow-xs text-xs font-bold"
-      title={isDark ? 'Switch to Sky Light Theme' : 'Switch to Deep Midnight Dark Theme'}
+      title={isDark ? 'Switch to Purple Light Theme' : 'Switch to Deep Midnight Dark Theme'}
       aria-label="Toggle theme"
     >
       {isDark ? (
@@ -27,7 +27,7 @@ export function ThemeSelector({ currentTheme = 'sky-white', onSelectTheme }) {
         </>
       ) : (
         <>
-          <Moon className="w-3.5 h-3.5 text-indigo-500" />
+          <Moon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
           <span className="hidden sm:inline">Dark Mode</span>
         </>
       )}

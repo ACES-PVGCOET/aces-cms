@@ -89,7 +89,7 @@ export function DashboardView({
               title="Teams Collaborating"
               value={`${teamsCount} Guilds`}
               description="Faculty, Leaders, Technical, Web, Editorial, Design, Marketing, Media, Event & Treasury"
-              icon={<Layers className="w-5 h-5 text-sky-600 dark:text-indigo-400" />}
+              icon={<Layers className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
               hideDescription={false}
             />
           </div>
@@ -99,7 +99,7 @@ export function DashboardView({
             <div className="w-full h-full glass-panel rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-sky-600 dark:text-indigo-400" />
+                  <Activity className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <h2 className="text-sm leading-5 font-extrabold">
                     Quick Actions
                   </h2>
@@ -220,7 +220,7 @@ export function DashboardView({
 
             <button
               onClick={() => onNavigate('events')}
-              className="flex items-center gap-1.5 text-xs leading-4 font-extrabold text-sky-600 dark:text-indigo-400 hover:underline transition-colors cursor-pointer self-start sm:self-auto"
+              className="flex items-center gap-1.5 text-xs leading-4 font-extrabold text-purple-600 dark:text-purple-400 hover:underline transition-colors cursor-pointer self-start sm:self-auto"
             >
               <span>Explore All Events</span>
               <ArrowUpRight className="w-4 h-4" />

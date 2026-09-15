@@ -4,7 +4,8 @@ import {
   Plus, 
   Search, 
   ArrowUpDown,
-  FileSpreadsheet
+  FileSpreadsheet,
+  ShieldCheck
 } from 'lucide-react';
 import StatCard from './StatCard';
 import MemberCard from './MemberCard';
@@ -25,6 +26,8 @@ export function MembersView({
   memberStats = {},
   onOpenAddMember,
   onOpenBatchRegister,
+  onOpenAdminPanel,
+  isTrueAdmin = false,
   onViewMember,
   onEditMember,
   onDeleteMember,
@@ -71,31 +74,45 @@ export function MembersView({
           </p>
         </div>
 
-        {/* Primary Button Primitives - Admin & Team Admin Register & Batch Import */}
-        {allowAdd ? (
-          <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto shrink-0">
+        {/* Primary Button Primitives - Admin & Team Admin Register & Batch Import & Admin Governance */}
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto shrink-0">
+          {isTrueAdmin && onOpenAdminPanel && (
             <button
-              id="members-batch-btn"
-              onClick={onOpenBatchRegister}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm leading-5 font-black btn-secondary text-black dark:text-white transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
+              id="members-admin-panel-btn"
+              onClick={onOpenAdminPanel}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm leading-5 font-black bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
+              title="Open Admin Governance & Role Assignment Panel"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-500" />
-              <span>Batch Import (Sheet)</span>
+              <ShieldCheck className="w-4 h-4 text-purple-700 dark:text-purple-400" />
+              <span>Admin Governance</span>
             </button>
-            <button
-              id="members-add-btn"
-              onClick={onOpenAddMember}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm leading-5 font-black btn-primary text-white transition-all duration-200 cursor-pointer shadow-sm active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Register New Member</span>
-            </button>
-          </div>
-        ) : (
-          <div className="text-xs font-black text-black dark:text-white opacity-80 px-3 py-1.5 rounded-xl glass-panel-subtle self-start sm:self-auto border border-slate-200 dark:border-white/10">
-            <span>Admin authorization required to register members</span>
-          </div>
-        )}
+          )}
+
+          {allowAdd ? (
+            <>
+              <button
+                id="members-batch-btn"
+                onClick={onOpenBatchRegister}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm leading-5 font-black btn-secondary text-black dark:text-white transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-500" />
+                <span>Batch Import (Sheet)</span>
+              </button>
+              <button
+                id="members-add-btn"
+                onClick={onOpenAddMember}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm leading-5 font-black btn-primary text-white transition-all duration-200 cursor-pointer shadow-sm active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Register New Member</span>
+              </button>
+            </>
+          ) : (
+            <div className="text-xs font-black text-black dark:text-white opacity-80 px-3 py-1.5 rounded-xl glass-panel-subtle self-start sm:self-auto border border-slate-200 dark:border-white/10">
+              <span>Admin authorization required to register members</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 2. Key Statistics Cards (12-Col Grid) */}
