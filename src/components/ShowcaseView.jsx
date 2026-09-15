@@ -77,23 +77,25 @@ export function ShowcaseView({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300 text-black dark:text-white">
       
       {/* 1. Header & Primary CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md text-xs font-bold btn-primary shadow-xs">
+            <span className="px-2.5 py-0.5 rounded-md text-xs font-black btn-primary shadow-xs text-white">
               Media Showcase
             </span>
-            <span className="text-xs font-bold btn-secondary px-2.5 py-0.5 rounded-md">
+            <span className="text-xs font-black btn-secondary px-2.5 py-0.5 rounded-md text-black dark:text-white">
               {showcaseStats.totalCollections} Collections • {showcaseStats.totalItems} Assets
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
-            {activeCollection ? `Collection: ${activeCollection}` : 'Media Showcase'}
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-black dark:text-white mt-1">
+            <span className="classic-dotted-heading">
+              {activeCollection ? `Collection: ${activeCollection}` : 'Media Showcase'}
+            </span>
           </h1>
-          <p className="text-sm opacity-70 font-medium">
+          <p className="text-sm text-black dark:text-white opacity-80 font-semibold">
             {activeCollection
               ? `Browse, manage, and download visual media and PDF publications in '${activeCollection}'.`
               : 'Explore all media collections organized into interactive folders (images, videos, PDF publications).'}
@@ -105,7 +107,7 @@ export function ShowcaseView({
           {activeCollection && (
             <button
               onClick={() => onSelectCollection(null)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold btn-secondary cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black btn-secondary text-black dark:text-white cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Back to Folders</span>
@@ -115,7 +117,7 @@ export function ShowcaseView({
           <button
             id="showcase-add-btn"
             onClick={onOpenAddModal}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold btn-primary transition-all duration-300 cursor-pointer shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black btn-primary text-white transition-all duration-300 cursor-pointer shadow-sm"
           >
             <Plus className="w-4 h-4" />
             <span>Upload Media Item</span>
@@ -124,7 +126,7 @@ export function ShowcaseView({
       </div>
 
       {/* 2. Top Statistics Summary Cards */}
-      <div className="grid grid-cols-12 gap-5">
+      <div className="grid grid-cols-12 gap-5 text-black dark:text-white">
         <div className="col-span-12 sm:col-span-6 lg:col-span-3">
           <StatCard
             title="Media Collections"
@@ -250,24 +252,24 @@ export function ShowcaseView({
       {/* 4. MAIN CONTENT AREA */}
       {!activeCollection ? (
         /* ================= OVERVIEW MODE: COLLECTIONS FOLDER GRID ================= */
-        <div className="space-y-4">
+        <div className="space-y-4 text-black dark:text-white">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold flex items-center gap-2">
+            <h2 className="text-lg font-black flex items-center gap-2 text-black dark:text-white">
               <FolderOpen className="w-5 h-5 text-rose-600 dark:text-indigo-400" />
               <span>Media Collections ({filteredCollections.length})</span>
             </h2>
-            <span className="text-xs font-medium opacity-70">
+            <span className="text-xs font-semibold opacity-80 text-black dark:text-white">
               Click any folder to view items or use the rename option
             </span>
           </div>
 
           {filteredCollections.length > 0 ? (
-            <div className="grid grid-cols-12 gap-5">
+            <div className="grid grid-cols-12 gap-5 text-black dark:text-white">
               {filteredCollections.map((col) => (
                 <div key={col.collection_name} className="col-span-12 sm:col-span-6 lg:col-span-4">
                   <div
                     onClick={() => onSelectCollection(col.collection_name)}
-                    className="glass-card glass-card-hover rounded-2xl p-5 border border-white/10 cursor-pointer group transition-all duration-300 relative flex flex-col justify-between h-full shadow-sm"
+                    className="glass-card glass-card-hover rounded-2xl p-5 border border-slate-200 dark:border-white/10 cursor-pointer group transition-all duration-300 relative flex flex-col justify-between h-full shadow-sm text-black dark:text-white"
                   >
                     {/* Folder Header */}
                     <div className="flex items-start justify-between gap-3">
@@ -277,7 +279,7 @@ export function ShowcaseView({
                         </div>
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <h3 className="text-base font-black truncate max-w-[160px] group-hover:text-rose-600 dark:group-hover:text-indigo-400 transition-colors">
+                            <h3 className="text-base font-black truncate max-w-[160px] text-black dark:text-white group-hover:text-rose-600 dark:group-hover:text-indigo-400 transition-colors">
                               {col.collection_name}
                             </h3>
 
@@ -287,47 +289,47 @@ export function ShowcaseView({
                                 e.stopPropagation();
                                 onOpenRenameModal(col.collection_name);
                               }}
-                              className="p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition-opacity cursor-pointer"
+                              className="p-1 rounded-md opacity-80 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition-opacity cursor-pointer text-black dark:text-white"
                               title="Change collection name"
                               aria-label={`Rename collection ${col.collection_name}`}
                             >
-                              <Edit3 className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+                              <Edit3 className="w-3.5 h-3.5" />
                             </button>
                           </div>
 
-                          <p className="text-xs font-semibold opacity-60 mt-0.5">
+                          <p className="text-xs font-semibold opacity-80 mt-0.5 text-black dark:text-white">
                             {col.total_items || col.items?.length || 0} total media items
                           </p>
                         </div>
                       </div>
 
-                      <span className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity text-black dark:text-white">
                         <ArrowRight className="w-4 h-4" />
                       </span>
                     </div>
 
                     {/* Folder Preview Media Strip */}
-                    <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
-                      <div className="flex items-center gap-2 text-[11px] font-bold">
+                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/10 space-y-3">
+                      <div className="flex items-center gap-2 text-[11px] font-black">
                         {col.photos_count > 0 && (
-                          <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-slate-800 dark:text-indigo-300 border border-rose-200 dark:border-slate-700">
+                          <span className="px-2 py-0.5 rounded bg-rose-100 text-black dark:bg-slate-800 dark:text-indigo-300 border border-rose-200 dark:border-slate-700">
                             {col.photos_count} Photos
                           </span>
                         )}
                         {col.videos_count > 0 && (
-                          <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                          <span className="px-2 py-0.5 rounded bg-purple-100 text-black dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                             {col.videos_count} Videos
                           </span>
                         )}
                         {col.pdfs_count > 0 && (
-                          <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          <span className="px-2 py-0.5 rounded bg-emerald-100 text-black dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                             {col.pdfs_count} PDFs
                           </span>
                         )}
                       </div>
 
                       {/* Cover preview or thumbnails */}
-                      <div className="h-28 rounded-xl overflow-hidden bg-black/40 relative border border-white/10">
+                      <div className="h-28 rounded-xl overflow-hidden bg-black/40 relative border border-slate-200 dark:border-white/10">
                         {col.cover_image || col.items?.[0]?.cover_image || col.items?.[0]?.url ? (
                           <img
                             src={col.cover_image || col.items?.[0]?.cover_image || col.items?.[0]?.url}
@@ -335,12 +337,12 @@ export function ShowcaseView({
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs opacity-50 font-bold">
+                          <div className="w-full h-full flex items-center justify-center text-xs opacity-80 font-black text-black dark:text-white">
                             Folder empty
                           </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2.5">
-                          <span className="text-[11px] font-extrabold text-white flex items-center gap-1">
+                          <span className="text-[11px] font-black text-white flex items-center gap-1">
                             <span>Open Folder</span>
                             <ArrowRight className="w-3 h-3" />
                           </span>
@@ -353,19 +355,19 @@ export function ShowcaseView({
               ))}
             </div>
           ) : (
-            <div className="glass-card rounded-2xl p-12 text-center space-y-4">
-              <div className="w-12 h-12 rounded-xl btn-secondary flex items-center justify-center mx-auto">
+            <div className="glass-card rounded-2xl p-12 text-center space-y-4 text-black dark:text-white">
+              <div className="w-12 h-12 rounded-xl btn-secondary flex items-center justify-center mx-auto text-black dark:text-white">
                 <Folder className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-extrabold">No collections found</h3>
-                <p className="text-sm opacity-70 max-w-sm mx-auto mt-1 font-medium">
+                <h3 className="text-base font-black text-black dark:text-white">No collections found</h3>
+                <p className="text-sm opacity-80 max-w-sm mx-auto mt-1 font-semibold text-black dark:text-white">
                   Try adjusting search query or upload a new media item to create a collection folder.
                 </p>
               </div>
               <button
                 onClick={onOpenAddModal}
-                className="px-4 py-2 rounded-xl text-xs font-bold btn-primary inline-flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-black btn-primary text-white inline-flex items-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Create New Collection</span>
@@ -375,20 +377,20 @@ export function ShowcaseView({
         </div>
       ) : (
         /* ================= DRILL-DOWN MODE: ITEMS INSIDE SELECTED COLLECTION ================= */
-        <div className="space-y-4">
+        <div className="space-y-4 text-black dark:text-white">
           
           {/* Breadcrumb & Collection Rename Action Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl glass-panel-subtle border border-white/10">
-            <div className="flex items-center gap-2 text-xs font-extrabold">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl glass-panel-subtle border border-slate-200 dark:border-white/10 text-black dark:text-white">
+            <div className="flex items-center gap-2 text-xs font-black text-black dark:text-white">
               <button
                 onClick={() => onSelectCollection(null)}
-                className="opacity-70 hover:opacity-100 flex items-center gap-1 cursor-pointer"
+                className="opacity-80 hover:opacity-100 flex items-center gap-1 cursor-pointer text-black dark:text-white"
               >
                 <span>Collections</span>
               </button>
               <span className="opacity-40">/</span>
-              <span className="text-rose-600 dark:text-indigo-400 flex items-center gap-1.5">
-                <FolderOpen className="w-4 h-4" />
+              <span className="text-black dark:text-indigo-400 flex items-center gap-1.5 font-black">
+                <FolderOpen className="w-4 h-4 text-rose-600 dark:text-indigo-400" />
                 <span>{activeCollection}</span>
               </span>
             </div>
@@ -396,7 +398,7 @@ export function ShowcaseView({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onOpenRenameModal(activeCollection)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold btn-secondary cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black btn-secondary text-black dark:text-white cursor-pointer"
                 title="Change collection folder name"
               >
                 <Edit3 className="w-3.5 h-3.5" />
@@ -405,7 +407,7 @@ export function ShowcaseView({
 
               <button
                 onClick={onOpenAddModal}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold btn-primary cursor-pointer shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black btn-primary text-white cursor-pointer shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Item to '{activeCollection}'</span>
@@ -415,7 +417,7 @@ export function ShowcaseView({
 
           {/* Collection Items Grid */}
           {activeCollectionItems.length > 0 ? (
-            <div className="grid grid-cols-12 gap-5">
+            <div className="grid grid-cols-12 gap-5 text-black dark:text-white">
               {activeCollectionItems.map((item) => {
                 const itemType = item.type || item.media_type || 'image';
                 const isPdf = itemType === 'pdf';
@@ -424,7 +426,7 @@ export function ShowcaseView({
                 return (
                   <div key={item.id} className="col-span-12 sm:col-span-6 lg:col-span-4">
                     <div
-                      className="glass-card glass-card-hover rounded-2xl overflow-hidden border border-white/10 flex flex-col justify-between h-full group relative shadow-sm"
+                      className="glass-card glass-card-hover rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 flex flex-col justify-between h-full group relative shadow-sm text-black dark:text-white"
                       role="article"
                     >
                       {/* Media Card Top Thumbnail View */}
@@ -439,7 +441,7 @@ export function ShowcaseView({
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-rose-950/80 to-slate-900 text-rose-300 p-4 text-center">
                               <FileText className="w-12 h-12 mb-2 opacity-80" />
-                              <span className="text-xs font-bold line-clamp-2">{item.title}</span>
+                              <span className="text-xs font-black line-clamp-2 text-white">{item.title}</span>
                             </div>
                           )
                         ) : (
@@ -488,19 +490,19 @@ export function ShowcaseView({
                       </div>
 
                       {/* Card Content & Details */}
-                      <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                        <p className="text-xs font-medium opacity-80 line-clamp-2 leading-relaxed">
+                      <div className="p-4 flex-1 flex flex-col justify-between space-y-3 text-black dark:text-white">
+                        <p className="text-xs font-semibold text-black dark:text-white opacity-80 line-clamp-2 leading-relaxed">
                           {item.description || item.caption || 'No description provided.'}
                         </p>
 
                         {/* Actions Toolbar */}
-                        <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                        <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-between gap-2">
                           {isPdf ? (
                             <div className="flex items-center gap-1.5 flex-1">
                               {/* Dedicated Download PDF Button */}
                               <button
                                 onClick={(e) => handleDownloadPdf(e, item)}
-                                className="flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold btn-primary flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                                className="flex-1 py-1.5 px-2.5 rounded-xl text-xs font-black btn-primary text-white flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                                 title="Download PDF Document"
                               >
                                 <Download className="w-3.5 h-3.5" />
@@ -510,7 +512,7 @@ export function ShowcaseView({
                               {/* View PDF Modal Button */}
                               <button
                                 onClick={() => onOpenPdfModal(item)}
-                                className="p-1.5 rounded-xl btn-secondary text-slate-700 dark:text-slate-300 cursor-pointer"
+                                className="p-1.5 rounded-xl btn-secondary text-black dark:text-slate-300 cursor-pointer"
                                 title="Preview PDF"
                               >
                                 <Eye className="w-3.5 h-3.5" />
@@ -519,7 +521,7 @@ export function ShowcaseView({
                           ) : (
                             <button
                               onClick={() => setSelectedMediaPreview(item)}
-                              className="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold btn-secondary flex items-center justify-center gap-1.5 cursor-pointer"
+                              className="flex-1 py-1.5 px-3 rounded-xl text-xs font-black btn-secondary text-black dark:text-white flex items-center justify-center gap-1.5 cursor-pointer"
                             >
                               {isVideo ? <Play className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                               <span>View Asset</span>
@@ -529,7 +531,7 @@ export function ShowcaseView({
                           {/* Edit Item */}
                           <button
                             onClick={() => onOpenEditModal(item)}
-                            className="p-1.5 rounded-xl btn-secondary transition-colors cursor-pointer"
+                            className="p-1.5 rounded-xl btn-secondary text-black dark:text-white transition-colors cursor-pointer"
                             title="Edit Media Item"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -538,7 +540,7 @@ export function ShowcaseView({
                           {/* Delete Item */}
                           <button
                             onClick={() => onDeleteItem(item.id)}
-                            className="p-1.5 rounded-xl btn-secondary hover:text-rose-500 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-xl btn-secondary text-black dark:text-white hover:text-rose-500 transition-colors cursor-pointer"
                             title="Delete Item"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -552,13 +554,13 @@ export function ShowcaseView({
               })}
             </div>
           ) : (
-            <div className="glass-card rounded-2xl p-12 text-center space-y-4">
-              <div className="w-12 h-12 rounded-xl btn-secondary flex items-center justify-center mx-auto">
+            <div className="glass-card rounded-2xl p-12 text-center space-y-4 text-black dark:text-white">
+              <div className="w-12 h-12 rounded-xl btn-secondary flex items-center justify-center mx-auto text-black dark:text-white">
                 <FileText className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-extrabold">No items matched criteria</h3>
-                <p className="text-sm opacity-70 max-w-sm mx-auto mt-1 font-medium">
+                <h3 className="text-base font-black text-black dark:text-white">No items matched criteria</h3>
+                <p className="text-sm opacity-80 max-w-sm mx-auto mt-1 font-semibold text-black dark:text-white">
                   Try adjusting search keyword or reset the media type filter.
                 </p>
               </div>
@@ -567,7 +569,7 @@ export function ShowcaseView({
                   onSearchChange('');
                   onMediaTypeFilterChange('all');
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-bold btn-secondary cursor-pointer inline-flex items-center gap-2"
+                className="px-4 py-2 rounded-xl text-xs font-black btn-secondary text-black dark:text-white cursor-pointer inline-flex items-center gap-2"
               >
                 <span>Reset Filters</span>
               </button>

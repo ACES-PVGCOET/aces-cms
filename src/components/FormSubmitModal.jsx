@@ -231,10 +231,10 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
             <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
               <Sparkles className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold tracking-tight">{form.title}</h2>
-              <p className="text-xs opacity-70">Fill out and submit form response</p>
-            </div>
+              <h2 className="text-lg font-extrabold text-black dark:text-white tracking-tight">
+                <span className="classic-dotted-heading">{form.title}</span>
+              </h2>
+              <p className="text-xs text-black/70 dark:text-slate-300">Fill out and submit form response</p>
           </div>
 
           <button

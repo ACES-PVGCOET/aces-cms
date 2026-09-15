@@ -117,7 +117,7 @@ export function ConfirmVerifyModal({
               What will happen next:
             </span>
             <ul className="space-y-1.5 text-[11px] opacity-80 list-disc pl-4 leading-relaxed">
-              <li>Status will be marked as <span className="text-emerald-400 font-semibold">VERIFIED</span>.</li>
+              <li>Status will be marked as <span className="text-verified-black font-semibold">VERIFIED</span>.</li>
               <li>An official ACES receipt number will be generated.</li>
               <li>Receipt confirmation email will be dispatched to the student.</li>
             </ul>
@@ -125,8 +125,8 @@ export function ConfirmVerifyModal({
 
           {/* Error Message */}
           {errorMsg && !isProcessing && (
-            <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center gap-2 text-rose-200 text-xs">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+            <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center gap-2 text-rose-700 dark:text-white text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-white" />
               <span>{errorMsg}</span>
             </div>
           )}

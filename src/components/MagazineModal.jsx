@@ -177,10 +177,10 @@ export function MagazineModal({ isOpen, initialMagazine, onClose, onSubmit }) {
               <BookOpen className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base leading-6 font-extrabold">
-                {isEditing ? 'Update Publication Details' : 'Upload New Magazine Edition'}
+              <h2 className="text-base leading-6 font-extrabold text-black dark:text-white">
+                <span className="classic-dotted-heading">{isEditing ? 'Update Publication Details' : 'Upload New Magazine Edition'}</span>
               </h2>
-              <p className="text-xs leading-4 opacity-70 font-medium">
+              <p className="text-xs leading-4 text-black/70 dark:text-slate-300 font-medium">
                 {isEditing ? 'Modify volume details and digital assets' : 'Publish a new edition to the ACES digital archive'}
               </p>
             </div>

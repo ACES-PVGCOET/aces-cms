@@ -57,13 +57,13 @@ export function EventDetailModal({ event, isOpen, onClose, onEdit, onDelete }) {
 
           <div className="absolute bottom-3 left-4 right-4 text-white space-y-1">
             {isHighlight && (
-              <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold bg-amber-500 text-black shadow-sm inline-flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
+              <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold bg-white text-black shadow-sm inline-flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-black" />
                 <span>Highlighted Event</span>
               </span>
             )}
-            <h2 className="text-xl leading-7 font-black truncate">
-              {overview}
+            <h2 className="text-xl leading-7 font-black truncate text-white">
+              <span className="classic-dotted-heading">{overview}</span>
             </h2>
           </div>
         </div>

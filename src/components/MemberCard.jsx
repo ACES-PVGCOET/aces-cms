@@ -8,8 +8,8 @@ import { InstagramIcon, LinkedinIcon, GithubIcon } from './SocialIcons';
 
 /**
  * MemberCard Component
- * Multi-Theme dynamic member directory card.
- * Adheres strictly to 4px/8px Baseline Grid & Vertical Rhythm.
+ * Theme-adaptive member directory card.
+ * Switches seamlessly between Sky-White light theme and Deep Midnight dark theme.
  */
 export function MemberCard({ member, onView, onEdit, onDelete }) {
   const name = member.name || 'Unnamed Member';
@@ -22,7 +22,7 @@ export function MemberCard({ member, onView, onEdit, onDelete }) {
 
   return (
     <div
-      className="glass-card glass-card-hover rounded-2xl p-5 relative overflow-hidden transition-all duration-300 group flex flex-col justify-between h-full"
+      className="glass-card glass-card-hover rounded-2xl p-5 relative overflow-hidden transition-all duration-300 group flex flex-col justify-between h-full shadow-xs"
       role="article"
       aria-label={`Member card for ${name}`}
     >
@@ -36,7 +36,7 @@ export function MemberCard({ member, onView, onEdit, onDelete }) {
             <img
               src={photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`}
               alt={name}
-              className="w-12 h-12 rounded-xl object-cover ring-2 ring-white/10"
+              className="w-12 h-12 rounded-xl object-cover ring-2 ring-black/10 dark:ring-white/10"
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
@@ -44,21 +44,21 @@ export function MemberCard({ member, onView, onEdit, onDelete }) {
             />
             <span
               className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-black/40 ${
-                status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-amber-500'
+                status === 'ACTIVE' || status === 'Active' ? 'bg-emerald-500' : 'bg-amber-500'
               }`}
             />
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-black dark:text-white">
             <div className="flex items-center justify-between gap-1 mb-1">
-              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold btn-secondary truncate max-w-full">
+              <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black btn-secondary text-black dark:text-white truncate max-w-full">
                 {team}
               </span>
               <span
-                className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase ${
-                  status === 'ACTIVE'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${
+                  status === 'ACTIVE' || status === 'Active'
+                    ? 'bg-emerald-500/20 text-black dark:text-emerald-300 border border-emerald-500/30'
+                    : 'bg-amber-500/20 text-black dark:text-amber-300 border border-amber-500/30'
                 }`}
               >
                 {status}
@@ -66,14 +66,14 @@ export function MemberCard({ member, onView, onEdit, onDelete }) {
             </div>
 
             <h3 
-              className="text-sm leading-5 font-extrabold truncate group-hover:opacity-90 transition-opacity" 
+              className="text-sm leading-5 font-black text-black dark:text-white truncate group-hover:opacity-90 transition-opacity" 
               title={name}
             >
               {name}
             </h3>
 
             <p 
-              className="text-xs leading-4 font-semibold opacity-70 truncate mt-0.5" 
+              className="text-xs leading-4 font-bold text-black dark:text-white opacity-80 truncate mt-0.5" 
               title={position}
             >
               {position}
@@ -82,11 +82,11 @@ export function MemberCard({ member, onView, onEdit, onDelete }) {
         </div>
 
         {/* Email */}
-        <div className="flex items-center gap-2 text-xs leading-4 opacity-90 glass-panel-subtle px-3 py-2 rounded-lg truncate">
-          <Mail className="w-3.5 h-3.5 opacity-70 shrink-0" />
+        <div className="flex items-center gap-2 text-xs leading-4 text-black dark:text-white glass-panel-subtle px-3 py-2 rounded-xl truncate border border-slate-200 dark:border-white/10">
+          <Mail className="w-3.5 h-3.5 opacity-80 shrink-0 text-black dark:text-white" />
           <a
             href={`mailto:${email}`}
-            className="truncate hover:underline font-bold"
+            className="truncate hover:underline font-black text-black dark:text-white"
             title={email}
           >
             {email}
@@ -96,7 +96,7 @@ export function MemberCard({ member, onView, onEdit, onDelete }) {
       </div>
 
       {/* Footer: Socials and Action Buttons */}
-      <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+      <div className="mt-4 pt-3 border-t border-slate-200 dark:border-[var(--panel-border)] flex items-center justify-between gap-2 text-black dark:text-white">
         
         {/* Social Icons */}
         <div className="flex items-center gap-1">
@@ -105,7 +105,7 @@ export function MemberCard({ member, onView, onEdit, onDelete }) {
               href={socialLinks.instagram.startsWith('http') ? socialLinks.instagram : `https://instagram.com/${socialLinks.instagram}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center hover:text-pink-500 transition-colors cursor-pointer"
+              className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center hover:text-slate-900 dark:hover:text-pink-500 transition-colors cursor-pointer"
               title="Instagram Profile"
               aria-label={`${name}'s Instagram`}
             >

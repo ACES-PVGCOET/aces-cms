@@ -1,6 +1,6 @@
 /* ACES CMS - Multi-Theme Architecture
- * 1. 🌌 Deep Midnight: Dark Space & Sci-Fi (Indigo/Cyan/Obsidian)
- * 2. 🌸 Pastel Aurora: Dreamy Soft Nordic Aurora (Royal Lavender/Blush/Lilac)
+ * 1. 🌤️ Sky & White (Classic Light Aesthetic)
+ * 2. 🌌 Deep Midnight (Original Dark Space & Sci-Fi)
  */
 
 /* =========================================================
@@ -10,19 +10,73 @@
   min-height: 100vh;
   transition: background-color 0.25s ease, color 0.25s ease;
   background-attachment: fixed;
-  background-size: 100% 100%;
 }
 
 .aces-canvas *,
 .aces-canvas *::before,
 .aces-canvas *::after {
-  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
-  transition-duration: 200ms;
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow, transform;
+  transition-duration: 250ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* =========================================================
-   2. THEME 1: DEEP MIDNIGHT
+   2. THEME 1: SKY-BLUE & WHITE (CLASSIC LIGHT AESTHETIC)
+   ========================================================= */
+:root,
+.theme-sky-white,
+.theme-pastel-aurora {
+  --bg-canvas: #f8fafc;
+  --bg-radial: linear-gradient(180deg, #dbeafe 0%, #eff6ff 25%, #ffffff 75%);
+  
+  --panel-bg: #ffffff;
+  --panel-border: #cbd5e1;
+  --panel-subtle: #f1f5f9;
+  
+  --card-bg: #ffffff;
+  --card-hover: #ffffff;
+  --card-border: #e2e8f0;
+  --card-border-hover: #cbd5e1;
+  
+  --dialog-bg: #ffffff;
+  --dialog-border: #cbd5e1;
+
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --text-muted: #1e293b;
+
+  --btn-primary-bg: #0284c7;
+  --btn-primary-hover: #0369a1;
+  --btn-primary-border: #0284c7;
+  --btn-primary-text: #ffffff;
+
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-hover: #f1f5f9;
+  --btn-secondary-border: #cbd5e1;
+  --btn-secondary-text: #000000;
+
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-focus: #0284c7;
+  --input-ring: rgba(2, 132, 199, 0.15);
+  --input-text: #000000;
+  --input-placeholder: #475569;
+
+  --badge-brand-bg: #e0f2fe;
+  --badge-brand-border: #bae6fd;
+  --badge-brand-text: #0369a1;
+
+  --accent-color: #0284c7;
+  --accent-glow: rgba(2, 132, 199, 0.15);
+  --brand-gradient: linear-gradient(135deg, #0284c7, #0369a1);
+
+  background-color: var(--bg-canvas);
+  background-image: var(--bg-radial);
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   3. THEME 2: DEEP MIDNIGHT (PRESERVED ORIGINAL DARK THEME)
    ========================================================= */
 .theme-deep-midnight {
   --bg-canvas: #0b0f19;
@@ -60,6 +114,7 @@
   --input-focus: #6366f1;
   --input-ring: rgba(99, 102, 241, 0.25);
   --input-text: #ffffff;
+  --input-placeholder: #64748b;
 
   --badge-brand-bg: rgba(99, 102, 241, 0.15);
   --badge-brand-border: rgba(99, 102, 241, 0.35);
@@ -75,98 +130,68 @@
 }
 
 /* =========================================================
-   3. THEME 2: PASTEL AURORA
+   4. OPERA MODULAR BLOCK GEOMETRY & PRIMITIVES
+   Asymmetric Block Architecture:
+   - Top-Right: Sharp (3px)
+   - Bottom-Left: Sharp (3px)
+   - Top-Left: Smooth Rounded (22px)
+   - Bottom-Right: Smooth Rounded (22px)
    ========================================================= */
-.theme-pastel-aurora {
-  --bg-canvas: #faf7fd;
-  --bg-radial: radial-gradient(at 10% 10%, rgba(253, 230, 138, 0.35) 0px, transparent 40%),
-               radial-gradient(at 90% 10%, rgba(244, 114, 182, 0.25) 0px, transparent 40%),
-               radial-gradient(at 85% 85%, rgba(192, 132, 252, 0.28) 0px, transparent 40%),
-               radial-gradient(at 15% 85%, rgba(167, 243, 208, 0.3) 0px, transparent 40%),
-               radial-gradient(at 50% 50%, #faf7fd 0px, transparent 70%);
-  --panel-bg: #ffffff;
-  --panel-border: #ebdcf7;
-  --panel-subtle: #f9f4fd;
-  --card-bg: #ffffff;
-  --card-hover: #ffffff;
-  --card-border: #ebdcf7;
-  --card-border-hover: #d8b4fe;
-  --dialog-bg: #ffffff;
-  --dialog-border: #ebdcf7;
-
-  --text-primary: #1e1b4b;
-  --text-secondary: #581c87;
-  --text-muted: #7e22ce;
-
-  --btn-primary-bg: #8b5cf6;
-  --btn-primary-hover: #7c3aed;
-  --btn-primary-border: #7c3aed;
-  --btn-primary-text: #ffffff;
-
-  --btn-secondary-bg: #f5effe;
-  --btn-secondary-hover: #ece2fd;
-  --btn-secondary-border: #e9d5ff;
-  --btn-secondary-text: #5b21b6;
-
-  --input-bg: #ffffff;
-  --input-border: #d8b4fe;
-  --input-focus: #8b5cf6;
-  --input-ring: rgba(139, 92, 246, 0.2);
-  --input-text: #1e1b4b;
-
-  --badge-brand-bg: #f3e8ff;
-  --badge-brand-border: #d8b4fe;
-  --badge-brand-text: #6b21a8;
-
-  --accent-color: #8b5cf6;
-  --accent-glow: rgba(139, 92, 246, 0.25);
-  --brand-gradient: linear-gradient(135deg, #a855f7, #ec4899);
-
-  background-color: var(--bg-canvas);
-  background-image: var(--bg-radial);
-  color: var(--text-primary);
+.classic-dotted-heading {
+  display: inline-block;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  text-decoration-color: currentColor;
 }
 
-/* =========================================================
-   4. UNIFIED COMPONENT PRIMITIVES (Using CSS Variables)
-   ========================================================= */
-.glass-panel {
+.glass-panel,
+.opera-block {
   background-color: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  border-radius: 22px 3px 22px 3px !important;
 }
 
-.glass-panel-subtle {
+.glass-panel-subtle,
+.opera-tile {
   background-color: var(--panel-subtle);
   border: 1px solid var(--panel-border);
+  border-radius: 16px 3px 16px 3px !important;
 }
 
 .glass-card {
   background-color: var(--card-bg);
   border: 1px solid var(--card-border);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  transition: all 250ms ease-in-out;
+  border-radius: 20px 3px 20px 3px !important;
 }
 
 .glass-card-hover:hover {
   background-color: var(--card-hover);
   border-color: var(--card-border-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.07);
 }
 
 .acrylic-dialog {
   background-color: var(--dialog-bg);
   border: 1px solid var(--dialog-border);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+  border-radius: 24px 4px 24px 4px !important;
 }
 
-/* Primary Button */
+/* Primary Button with Opera Asymmetric Chamfer */
 .btn-primary {
   background-color: var(--btn-primary-bg);
   color: var(--btn-primary-text);
   border: 1px solid var(--btn-primary-border);
   font-weight: 700;
-  box-shadow: 0 1px 3px 0 var(--accent-glow);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 200ms ease-in-out;
+  border-radius: 12px 3px 12px 3px !important;
 }
 
 .btn-primary:hover {
@@ -174,40 +199,64 @@
   box-shadow: 0 4px 10px 0 var(--accent-glow);
 }
 
-/* Secondary Button */
+.btn-primary:active {
+  transform: scale(0.96);
+}
+
+/* Secondary Button with Opera Asymmetric Chamfer */
 .btn-secondary {
   background-color: var(--btn-secondary-bg);
   color: var(--btn-secondary-text);
   border: 1px solid var(--btn-secondary-border);
-  font-weight: 600;
+  font-weight: 700;
+  transition: all 200ms ease-in-out;
+  border-radius: 12px 3px 12px 3px !important;
 }
 
 .btn-secondary:hover {
   background-color: var(--btn-secondary-hover);
 }
 
-/* Inputs & Form Controls */
+.btn-secondary:active {
+  transform: scale(0.96);
+}
+
+/* Inputs & Form Controls with Opera Geometry */
 input,
 select,
 textarea {
   color: var(--input-text);
   background-color: var(--input-bg);
+  border-radius: 12px 3px 12px 3px !important;
 }
 
 .glass-input {
   background-color: var(--input-bg);
   border: 1px solid var(--input-border);
   color: var(--input-text);
+  transition: all 200ms ease-in-out;
+  border-radius: 12px 3px 12px 3px !important;
+}
+
+.glass-input::placeholder {
+  color: var(--input-placeholder);
 }
 
 .glass-input:focus {
   background-color: var(--input-bg);
   border-color: var(--input-focus);
-  box-shadow: 0 0 0 3px var(--input-ring);
+  box-shadow: 0 0 0 1px var(--input-focus);
   outline: none;
 }
 
-/* Line clamp helper */
+/* Helper Utilities */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -215,17 +264,22 @@ textarea {
   overflow: hidden;
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-/* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Theme-Adaptive Scrollbars */
+/* Subtle Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -235,69 +289,39 @@ textarea {
   background: transparent;
 }
 
-.theme-deep-midnight ::-webkit-scrollbar-thumb {
-  background: #334155;
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
   border-radius: 9999px;
 }
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.theme-deep-midnight ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
 .theme-deep-midnight ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
 
-.theme-pastel-aurora ::-webkit-scrollbar-thumb {
-  background: #d8b4fe;
-  border-radius: 9999px;
-}
-.theme-pastel-aurora ::-webkit-scrollbar-thumb:hover {
-  background: #c084fc;
-}
-
-/* =========================================================
-   5. FANCY GRAPHICS & ANIMATIONS FOR AUTH & ONBOARDING
-   ========================================================= */
+/* Classic Keyframe micro-animations */
 @keyframes float {
   0%, 100% {
-    transform: translateY(0px) rotate(0deg);
+    transform: translateY(0px);
   }
   50% {
-    transform: translateY(-16px) rotate(3deg);
+    transform: translateY(-8px);
   }
 }
 
 @keyframes float-delayed {
   0%, 100% {
-    transform: translateY(0px) rotate(0deg);
+    transform: translateY(0px);
   }
   50% {
-    transform: translateY(18px) rotate(-4deg);
-  }
-}
-
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.08);
-  }
-}
-
-@keyframes shimmer-slide {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
+    transform: translateY(8px);
   }
 }
 
@@ -306,33 +330,150 @@ textarea {
 }
 
 .animate-float-delayed {
-  animation: float-delayed 8s ease-in-out infinite;
+  animation: float-delayed 7s ease-in-out infinite;
 }
 
-.animate-spin-slow {
-  animation: spin-slow 25s linear infinite;
+/* =========================================================
+   5. LIGHT THEME READABILITY & SOLID PURE BLACK TEXT ENFORCEMENT
+   Strictly scoped to light theme: DOES NOT AFFECT DARK MODE
+   ========================================================= */
+
+/* Headings and primary text in light mode */
+body:not(.theme-deep-midnight):not(.dark),
+body:not(.theme-deep-midnight):not(.dark) .aces-canvas,
+body:not(.theme-deep-midnight):not(.dark) h1,
+body:not(.theme-deep-midnight):not(.dark) h2,
+body:not(.theme-deep-midnight):not(.dark) h3,
+body:not(.theme-deep-midnight):not(.dark) h4,
+body:not(.theme-deep-midnight):not(.dark) h5,
+body:not(.theme-deep-midnight):not(.dark) h6 {
+  color: #000000;
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 4s ease-in-out infinite;
+/* Body paragraphs, labels, spans, and table cells in light mode */
+body:not(.theme-deep-midnight):not(.dark) p,
+body:not(.theme-deep-midnight):not(.dark) label,
+body:not(.theme-deep-midnight):not(.dark) th,
+body:not(.theme-deep-midnight):not(.dark) td {
+  color: #000000;
 }
 
-.shimmer-badge {
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
-  background-size: 200% 100%;
-  animation: shimmer-slide 3s infinite;
+/* All navigation and panel text in light mode */
+body:not(.theme-deep-midnight):not(.dark) .glass-card,
+body:not(.theme-deep-midnight):not(.dark) .glass-panel,
+body:not(.theme-deep-midnight):not(.dark) .glass-panel-subtle,
+body:not(.theme-deep-midnight):not(.dark) .opera-block,
+body:not(.theme-deep-midnight):not(.dark) .opera-tile {
+  color: #000000;
 }
 
-/* Dynamic Grid Pattern Background */
-.bg-grid-pattern {
-  background-size: 40px 40px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+/* Override washed-out light grays / slates / zinc in light mode to solid black */
+body:not(.theme-deep-midnight):not(.dark) [class*="text-slate-"],
+body:not(.theme-deep-midnight):not(.dark) [class*="text-gray-"],
+body:not(.theme-deep-midnight):not(.dark) [class*="text-zinc-"],
+body:not(.theme-deep-midnight):not(.dark) [class*="text-neutral-"] {
+  color: #000000;
 }
 
-.bg-dot-pattern {
-  background-size: 24px 24px;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+/* NO PINK, ORANGE, OR LOW-CONTRAST COLORED TEXT IN LIGHT THEME - ONLY SOLID BLACK (EXCEPT PRIMARY BUTTON TEXT) */
+body:not(.theme-deep-midnight):not(.dark) [class*="text-pink-"],
+body:not(.theme-deep-midnight):not(.dark) [class*="text-fuchsia-"],
+body:not(.theme-deep-midnight):not(.dark) [class*="text-rose-"]:not(.btn-primary *):not(button.btn-primary),
+body:not(.theme-deep-midnight):not(.dark) [class*="text-orange-"],
+body:not(.theme-deep-midnight):not(.dark) [class*="text-amber-"],
+body:not(.theme-deep-midnight):not(.dark) [class*="text-yellow-"],
+body:not(.theme-deep-midnight):not(.dark) [class*="text-indigo-"]:not(.btn-primary *):not(button.btn-primary),
+body:not(.theme-deep-midnight):not(.dark) [class*="text-sky-"]:not(.btn-primary *):not(button.btn-primary),
+body:not(.theme-deep-midnight):not(.dark) [class*="text-blue-"]:not(.btn-primary *):not(button.btn-primary) {
+  color: #000000;
 }
+
+/* Light mode text opacities: prevent washed-out text */
+body:not(.theme-deep-midnight):not(.dark) .opacity-40,
+body:not(.theme-deep-midnight):not(.dark) .opacity-50,
+body:not(.theme-deep-midnight):not(.dark) .opacity-60 {
+  opacity: 0.90;
+}
+
+body:not(.theme-deep-midnight):not(.dark) .opacity-70,
+body:not(.theme-deep-midnight):not(.dark) .opacity-80 {
+  opacity: 0.96;
+}
+
+/* Input text and placeholder high contrast in light mode */
+body:not(.theme-deep-midnight):not(.dark) input,
+body:not(.theme-deep-midnight):not(.dark) textarea,
+body:not(.theme-deep-midnight):not(.dark) select {
+  color: #000000;
+  background-color: #ffffff;
+}
+
+body:not(.theme-deep-midnight):not(.dark) input::placeholder,
+body:not(.theme-deep-midnight):not(.dark) textarea::placeholder {
+  color: #334155 !important;
+  opacity: 1 !important;
+}
+
+/* Light mode secondary button crisp black text */
+body:not(.theme-deep-midnight):not(.dark) .btn-secondary {
+  color: #000000 !important;
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+}
+
+body:not(.theme-deep-midnight):not(.dark) .btn-secondary:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #000000 !important;
+}
+
+/* Light mode status badge text sharpness - KEEP BACKGROUNDS INTACT, MAKE TEXT SOLID BLACK */
+body:not(.theme-deep-midnight):not(.dark) .bg-amber-500\/20,
+body:not(.theme-deep-midnight):not(.dark) .bg-amber-50,
+body:not(.theme-deep-midnight):not(.dark) .bg-amber-100,
+body:not(.theme-deep-midnight):not(.dark) .bg-emerald-500\/20,
+body:not(.theme-deep-midnight):not(.dark) .bg-emerald-50,
+body:not(.theme-deep-midnight):not(.dark) .bg-emerald-100,
+body:not(.theme-deep-midnight):not(.dark) .bg-rose-500\/20,
+body:not(.theme-deep-midnight):not(.dark) .bg-rose-50,
+body:not(.theme-deep-midnight):not(.dark) .bg-rose-100,
+body:not(.theme-deep-midnight):not(.dark) .bg-blue-500\/20,
+body:not(.theme-deep-midnight):not(.dark) .bg-sky-500\/20,
+body:not(.theme-deep-midnight):not(.dark) .bg-purple-500\/20,
+body:not(.theme-deep-midnight):not(.dark) .bg-purple-100,
+body:not(.theme-deep-midnight):not(.dark) .bg-indigo-500\/20,
+body:not(.theme-deep-midnight):not(.dark) .bg-indigo-100 {
+  color: #000000 !important;
+  font-weight: 800;
+}
+
+/* =========================================================
+   6. VERIFIED STATUS SOLID BLACK TEXT & OPERA CORNER UTILITIES
+   ========================================================= */
+.text-verified-black {
+  color: #000000 !important;
+  font-weight: 800;
+}
+
+.theme-deep-midnight .text-verified-black {
+  color: #ffffff !important;
+  font-weight: 800;
+}
+
+.opera-corner-lg {
+  border-radius: 22px 3px 22px 3px !important;
+}
+
+.opera-corner-md {
+  border-radius: 16px 3px 16px 3px !important;
+}
+
+.opera-corner-sm {
+  border-radius: 10px 2px 10px 2px !important;
+}
+
+.opera-corner-xs {
+  border-radius: 6px 2px 6px 2px !important;
+}
+
 

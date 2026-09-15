@@ -30,10 +30,10 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
       aria-modal="true"
       aria-labelledby="member-detail-title"
     >
-      <div className="acrylic-dialog w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden relative my-auto animate-in zoom-in-95 duration-200">
+      <div className="acrylic-dialog w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden relative my-auto animate-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="p-6 relative btn-primary text-white">
+        <div className="p-6 relative bg-black dark:bg-slate-900 text-white border-b border-slate-800">
           <div className="flex items-center justify-between gap-4 mb-4">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold bg-white/20 text-white">
               <Sparkles className="w-3.5 h-3.5" />
@@ -42,7 +42,7 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
 
             <button
               onClick={onClose}
-              className="p-1 rounded-lg bg-black/20 hover:bg-black/40 text-white transition-colors cursor-pointer"
+              className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
               aria-label="Close modal"
             >
               <X className="w-4 h-4" />
@@ -71,7 +71,7 @@ export function MemberDetailModal({ member, isOpen, onClose, onEdit }) {
             <div className="flex-1 min-w-0 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 id="member-detail-title" className="text-xl leading-7 font-black text-white tracking-tight truncate max-w-full">
-                  {name}
+                  <span className="classic-dotted-heading">{name}</span>
                 </h2>
                 <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-white/25 text-white">
                   {team}

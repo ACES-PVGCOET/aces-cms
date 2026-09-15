@@ -418,10 +418,10 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold tracking-tight">
-                {initialForm ? 'Edit Custom Form' : 'Create Custom Form'}
+              <h2 className="text-xl font-extrabold tracking-tight text-black dark:text-white">
+                <span className="classic-dotted-heading">{initialForm ? 'Edit Custom Form' : 'Create Custom Form'}</span>
               </h2>
-              <p className="text-xs opacity-70">
+              <p className="text-xs text-black/70 dark:text-slate-300">
                 Design custom questions, set input policies & configure form availability
               </p>
             </div>

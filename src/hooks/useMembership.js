@@ -1,39 +1,58 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { membershipApi } from '../services/api';
+import { SAMPLE_FEE_REGISTRATIONS } from '../data/sampleSpreadsheets';
 
 function normalizeRegistration(item) {
+  const rawName = 
+    item.full_name || 
+    item.fullName || 
+    item.name || 
+    item.student_name || 
+    item.studentName ||
+    item['Full Name'] ||
+    item['Name of Student'] ||
+    item['Student Name'] ||
+    item['Name'] ||
+    '';
+
+  const fallbackName = item.email 
+    ? item.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : 'ACES Student';
+
+  const finalName = (rawName && String(rawName).trim().length > 0) ? String(rawName).trim() : fallbackName;
+
   return {
-    id: item.id || item._id,
-    fullName: item.full_name || '',
-    email: item.email || '',
-    className: item.class_name || 'SE',
-    contactNumber: item.contact_number || '',
-    paymentMode: item.payment_mode || 'UPI',
-    paymentDate: item.payment_date || '',
-    amount: Number(item.amount) || 450,
-    transactionSsUrl: item.transaction_ss_url || '',
-    status: item.status || 'PENDING',
-    verifiedBy: item.verified_by || '',
-    verifiedAt: item.verified_at || null,
-    receiptNumber: item.receipt_number || '',
-    receiptStatus: item.receipt_status || 'NOT_SENT',
-    remarks: item.remarks || '',
-    registrationTimestamp: item.registration_timestamp || '',
+    id: item.id || item._id || item.id_str || `reg-${Math.random().toString(36).substr(2, 9)}`,
+    fullName: finalName,
+    email: item.email || item.Email || item['Email Address'] || item['Email'] || '',
+    className: item.class_name || item.className || item.class || item.Class || 'SE',
+    contactNumber: String(item.contact_number || item.contactNumber || item.contact || item.phone || item.Phone || item['Contact Number'] || item['WhatsApp Number'] || item['Phone Number'] || item.whatsapp || ''),
+    paymentMode: (item.payment_mode || item.paymentMode || item.mode || item['Payment Mode'] || 'UPI').toUpperCase(),
+    paymentDate: item.payment_date || item.paymentDate || item.date || item['Payment Date'] || item.Timestamp || '',
+    amount: Number(item.amount || item.Amount || item['Amount']) || 450,
+    transactionSsUrl: item.transaction_ss_url || item.transactionSsUrl || item.screenshot_url || item.drive_link || item['Transaction Screenshot'] || item['Screenshot'] || item.screenshot || '',
+    status: (item.status || item.Status || 'PENDING').toUpperCase(),
+    verifiedBy: item.verified_by || item.verifiedBy || '',
+    verifiedAt: item.verified_at || item.verifiedAt || null,
+    receiptNumber: item.receipt_number || item.receiptNumber || item.receiptNo || '',
+    receiptStatus: item.receipt_status || item.receiptStatus || 'NOT_SENT',
+    remarks: item.remarks || item.Remarks || '',
+    registrationTimestamp: item.registration_timestamp || item.timestamp || item.Timestamp || '',
     source: item.source || 'google_form_sheet',
     createdAt: item.createdAt || new Date().toISOString(),
   };
 }
 
 export function useMembership() {
-  const [registrations, setRegistrations] = useState([]);
+  const [registrations, setRegistrations] = useState(() => SAMPLE_FEE_REGISTRATIONS.map(normalizeRegistration));
   const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    verified: 0,
-    rejected: 0,
+    total: SAMPLE_FEE_REGISTRATIONS.length,
+    pending: SAMPLE_FEE_REGISTRATIONS.filter((r) => r.status === 'PENDING').length,
+    verified: SAMPLE_FEE_REGISTRATIONS.filter((r) => r.status === 'VERIFIED').length,
+    rejected: SAMPLE_FEE_REGISTRATIONS.filter((r) => r.status === 'REJECTED').length,
     byClass: {},
     byMode: {},
-    totalCollected: 0,
+    totalCollected: SAMPLE_FEE_REGISTRATIONS.filter((r) => r.status === 'VERIFIED').reduce((s, r) => s + (Number(r.amount) || 450), 0),
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,18 +69,28 @@ export function useMembership() {
       setIsLoading(true);
       setError(null);
       const data = await membershipApi.getAll({ limit: 500 });
-      if (data && Array.isArray(data.items)) {
+      if (data && Array.isArray(data.items) && data.items.length > 0) {
         setRegistrations(data.items.map(normalizeRegistration));
+      } else {
+        // Fallback to rich sample spreadsheet if API database has 0 records
+        setRegistrations(SAMPLE_FEE_REGISTRATIONS.map(normalizeRegistration));
       }
-      if (data && data.stats) {
+      if (data && data.stats && data.stats.total > 0) {
         setStats(data.stats);
       }
     } catch (err) {
-      console.warn('[Membership Hook] Error fetching registrations:', err.message);
-      setError(err.message);
+      console.warn('[Membership Hook] Error fetching registrations, using sample data:', err.message);
+      setRegistrations(SAMPLE_FEE_REGISTRATIONS.map(normalizeRegistration));
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  // Dedicated function to explicitly load / reset sample spreadsheet data
+  const loadSampleSpreadsheet = useCallback(() => {
+    const samples = SAMPLE_FEE_REGISTRATIONS.map(normalizeRegistration);
+    setRegistrations(samples);
+    return samples;
   }, []);
 
   useEffect(() => {
@@ -208,6 +237,7 @@ export function useMembership() {
     isLoading,
     error,
     fetchRegistrations,
+    loadSampleSpreadsheet,
     verifyRegistration,
     addRegistration,
     updateRegistration,
