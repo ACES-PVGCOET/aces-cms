@@ -133,10 +133,10 @@ export function VerifyFeeModal({
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold shadow-md ${
               isVerified 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                ? 'bg-emerald-500/20 text-verified-black border border-emerald-500/40'
                 : isRejected
-                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                ? 'bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/40'
+                : 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/40'
             }`}>
               <Receipt className="w-5 h-5" />
             </div>
@@ -150,10 +150,10 @@ export function VerifyFeeModal({
                 </span>
                 <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${
                   isVerified
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    ? 'bg-emerald-500/20 text-verified-black border border-emerald-500/30'
                     : isRejected
-                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                    ? 'bg-rose-500/20 text-rose-700 dark:text-white border border-rose-500/30'
+                    : 'bg-amber-500/20 text-amber-700 dark:text-white border border-amber-500/30'
                 }`}>
                   {registration.status}
                 </span>

@@ -263,7 +263,7 @@ export function ProfileModal({ isOpen, user, isAdmin, onClose, onSaveProfile }) 
             <div className="space-y-2.5">
               
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-[#0A66C2] flex items-center justify-center shrink-0 border border-blue-500/30">
                   <LinkedinIcon className="w-4 h-4" />
                 </div>
                 <input
@@ -276,7 +276,7 @@ export function ProfileModal({ isOpen, user, isAdmin, onClose, onSaveProfile }) 
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-pink-500/20 text-pink-400 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-pink-500/15 text-[#E4405F] flex items-center justify-center shrink-0 border border-pink-500/30">
                   <InstagramIcon className="w-4 h-4" />
                 </div>
                 <input
@@ -289,7 +289,7 @@ export function ProfileModal({ isOpen, user, isAdmin, onClose, onSaveProfile }) 
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/15 text-purple-700 dark:text-purple-300 flex items-center justify-center shrink-0 border border-purple-500/30">
                   <GithubIcon className="w-4 h-4" />
                 </div>
                 <input

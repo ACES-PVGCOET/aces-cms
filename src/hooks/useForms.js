@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { formsApi } from '../services/api';
+import { SAMPLE_FORMS } from '../data/sampleSpreadsheets';
 
 function normalizeForm(f) {
   return {
@@ -9,10 +10,11 @@ function normalizeForm(f) {
     description: f.description || '',
     is_active: f.is_active !== undefined ? Boolean(f.is_active) : true,
     question_count: f.question_count || (f.questions ? f.questions.length : 0),
-    response_count: f.response_count || 0,
+    response_count: f.response_count || (f.sampleResponses ? f.sampleResponses.length : 0),
     created_at: f.created_at || f.createdAt || new Date().toISOString(),
     updated_at: f.updated_at || f.updatedAt || new Date().toISOString(),
     questions: f.questions || [],
+    sampleResponses: f.sampleResponses || [],
   };
 }
 
@@ -21,7 +23,7 @@ function normalizeForm(f) {
  * Comprehensive state management for Forms Engine (Google Forms-like engine).
  */
 export function useForms() {
-  const [forms, setForms] = useState([]);
+  const [forms, setForms] = useState(() => SAMPLE_FORMS.map(normalizeForm));
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Active' | 'Inactive'
   const [activeForm, setActiveForm] = useState(null);
@@ -35,12 +37,24 @@ export function useForms() {
       setIsLoading(true);
       const data = await formsApi.getAll();
       const rawList = data?.forms || (Array.isArray(data) ? data : []);
-      setForms(rawList.map(normalizeForm));
+      if (rawList.length > 0) {
+        setForms(rawList.map(normalizeForm));
+      } else {
+        setForms(SAMPLE_FORMS.map(normalizeForm));
+      }
     } catch (e) {
-      console.info('[Forms Hook] API fetch error:', e.message);
+      console.info('[Forms Hook] API fetch error, defaulting to sample forms:', e.message);
+      setForms(SAMPLE_FORMS.map(normalizeForm));
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  // Dedicated function to reload sample forms
+  const loadSampleForms = useCallback(() => {
+    const samples = SAMPLE_FORMS.map(normalizeForm);
+    setForms(samples);
+    return samples;
   }, []);
 
   useEffect(() => {
@@ -51,10 +65,22 @@ export function useForms() {
   const fetchFormById = useCallback(async (formId) => {
     try {
       setIsLoading(true);
-      const data = await formsApi.getById(formId);
-      const norm = normalizeForm(data);
-      setActiveForm(norm);
-      return norm;
+      // Check local sample forms first as fallback
+      const localSample = SAMPLE_FORMS.find((f) => f.id === formId || f.form_id === formId);
+      
+      try {
+        const data = await formsApi.getById(formId);
+        const norm = normalizeForm(data);
+        setActiveForm(norm);
+        return norm;
+      } catch (apiErr) {
+        if (localSample) {
+          const norm = normalizeForm(localSample);
+          setActiveForm(norm);
+          return norm;
+        }
+        throw apiErr;
+      }
     } catch (e) {
       console.error('[Forms Hook] Fetch form by ID failed:', e.message);
       throw e;
@@ -67,13 +93,31 @@ export function useForms() {
   const fetchFormResponses = useCallback(async (formId) => {
     try {
       setIsResponsesLoading(true);
-      const data = await formsApi.getResponses(formId);
-      const responsesList = data?.responses || [];
-      setActiveFormResponses(responsesList);
-      return responsesList;
+      const localSample = SAMPLE_FORMS.find((f) => f.id === formId || f.form_id === formId);
+
+      try {
+        const data = await formsApi.getResponses(formId);
+        const responsesList = data?.responses || [];
+        if (responsesList.length > 0) {
+          setActiveFormResponses(responsesList);
+          return responsesList;
+        } else if (localSample && localSample.sampleResponses) {
+          setActiveFormResponses(localSample.sampleResponses);
+          return localSample.sampleResponses;
+        } else {
+          setActiveFormResponses([]);
+          return [];
+        }
+      } catch (apiErr) {
+        if (localSample && localSample.sampleResponses) {
+          setActiveFormResponses(localSample.sampleResponses);
+          return localSample.sampleResponses;
+        }
+        setActiveFormResponses([]);
+        throw apiErr;
+      }
     } catch (e) {
       console.error('[Forms Hook] Fetch responses failed:', e.message);
-      setActiveFormResponses([]);
       throw e;
     } finally {
       setIsResponsesLoading(false);
@@ -263,6 +307,7 @@ export function useForms() {
     setActiveForm,
     activeFormResponses,
     fetchForms,
+    loadSampleForms,
     fetchFormById,
     fetchFormResponses,
     createForm,

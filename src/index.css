@@ -1,8 +1,14 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   :root {
     --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color-scheme: light;
+  }
+
+  :root.dark,
+  body.theme-deep-midnight {
     color-scheme: dark;
   }
 
@@ -10,15 +16,17 @@
     font-family: var(--font-sans);
     margin: 0;
     padding: 0;
-    background-color: #0b0f19;
-    color: #f8fafc;
+    background-color: var(--bg-canvas, #f8fafc);
+    background-image: var(--bg-radial, linear-gradient(180deg, #bfdbfe 0%, #eff6ff 30%, #ffffff 100%));
+    background-attachment: fixed;
+    color: var(--text-primary, #000000);
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Modern Clean Dark Scrollbars */
+/* Modern Clean Light Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -29,10 +37,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94a3b8;
 }

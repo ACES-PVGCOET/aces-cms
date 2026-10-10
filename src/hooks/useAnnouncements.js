@@ -17,8 +17,29 @@ function normalizeAnnouncement(item) {
  * useAnnouncements Hook
  * Provides announcements list and broadcasting interface strictly connected to API schema.
  */
+const DEFAULT_ANNOUNCEMENTS = [
+  {
+    id: 'ann-001',
+    topic: 'ACES HackNight 2026 Registration Open',
+    description: 'Registrations are officially open for our flagship 36-hour hackathon. Form submission link is active.',
+    created_at: '2026-09-10T10:00:00.000Z',
+  },
+  {
+    id: 'ann-002',
+    topic: 'Dino\'s Leaf Party Mixer Schedule Released',
+    description: 'Networking and coding showdown session begins this Saturday at 5 PM in the ACES Compute Lab.',
+    created_at: '2026-09-08T14:30:00.000Z',
+  },
+  {
+    id: 'ann-003',
+    topic: 'Annual Technical Magazine ByteCraft Vol 12 Archived',
+    description: 'Volume 12 featuring GenAI Frontiers is now accessible in the digital magazine archive with full PDF viewing.',
+    created_at: '2026-09-05T09:15:00.000Z',
+  },
+];
+
 export function useAnnouncements() {
-  const [announcements, setAnnouncements] = useState([]);
+  const [announcements, setAnnouncements] = useState(DEFAULT_ANNOUNCEMENTS);
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch announcements from API on mount
@@ -26,12 +47,12 @@ export function useAnnouncements() {
     try {
       setIsLoading(true);
       const apiData = await announcementsApi.getAll();
-      if (Array.isArray(apiData)) {
+      if (Array.isArray(apiData) && apiData.length > 0) {
         const normalized = apiData.map(normalizeAnnouncement);
         setAnnouncements(normalized);
       }
     } catch (e) {
-      console.info('[Announcements Hook] API fetch error:', e.message);
+      console.warn('[Announcements Hook] Backend offline, using default demo announcements');
     } finally {
       setIsLoading(false);
     }

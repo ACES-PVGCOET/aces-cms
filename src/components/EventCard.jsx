@@ -2,16 +2,16 @@ import {
   Edit3, 
   Trash2, 
   Eye, 
-  Sparkles,
-  FileText,
-  ClipboardList
+  Sparkles, 
+  FileText, 
+  ClipboardList 
 } from 'lucide-react';
 import MediaViewer from './MediaViewer';
 
 /**
  * EventCard Component
- * Multi-Theme dynamic event lineup card.
- * Strictly adheres to backend Event API model (overview, description, terms, reg_form_id, banner_url, isHighlight).
+ * Theme-adaptive event lineup card.
+ * Switches seamlessly between Sky-White light theme and Deep Midnight dark theme.
  */
 export function EventCard({ event, onView, onEdit, onDelete }) {
   const {
@@ -26,7 +26,7 @@ export function EventCard({ event, onView, onEdit, onDelete }) {
 
   return (
     <div
-      className="glass-card glass-card-hover rounded-2xl overflow-hidden relative transition-all duration-300 group flex flex-col justify-between h-full"
+      className="glass-card glass-card-hover rounded-2xl overflow-hidden relative transition-all duration-300 group flex flex-col justify-between h-full shadow-xs"
       role="article"
       aria-label={`Event card: ${overview}`}
     >
@@ -43,7 +43,7 @@ export function EventCard({ event, onView, onEdit, onDelete }) {
         {/* Highlight Tag */}
         {isHighlight && (
           <div className="absolute top-3 right-3">
-            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold btn-primary flex items-center gap-1 shadow-sm">
+            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold btn-primary flex items-center gap-1 shadow-sm">
               <Sparkles className="w-3 h-3" />
               <span>Highlighted</span>
             </span>
@@ -52,38 +52,38 @@ export function EventCard({ event, onView, onEdit, onDelete }) {
 
         {/* Overview Overlay */}
         <div className="absolute bottom-3 left-3 right-3 text-white">
-          <h3 className="text-base leading-6 font-black truncate mt-0.5">
+          <h3 className="text-base leading-6 font-black truncate">
             {overview}
           </h3>
         </div>
       </div>
 
       {/* Card Body Details */}
-      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+      <div className="p-5 flex-1 flex flex-col justify-between space-y-4 text-black dark:text-white">
         
         <div className="space-y-3">
-          <p className="text-xs leading-4 sm:text-sm sm:leading-5 opacity-80 line-clamp-3 font-medium">
+          <p className="text-xs leading-4 sm:text-sm sm:leading-5 text-black dark:text-white opacity-90 font-semibold line-clamp-3">
             {description}
           </p>
 
-          {/* Terms & Form Metadata strictly as per API */}
+          {/* Terms & Form Metadata */}
           {terms && (
-            <div className="space-y-1 text-xs leading-4 glass-panel-subtle p-3 rounded-xl">
-              <div className="flex items-center gap-1.5 opacity-70 font-bold text-[10px] uppercase">
+            <div className="space-y-1 text-xs leading-4 glass-panel-subtle p-3 rounded-xl text-black dark:text-white border border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-1.5 opacity-80 font-black text-[10px] uppercase text-black dark:text-white">
                 <FileText className="w-3 h-3 shrink-0" />
                 <span>Terms</span>
               </div>
-              <p className="opacity-80 line-clamp-2 font-medium">{terms}</p>
+              <p className="text-black dark:text-white opacity-90 line-clamp-2 font-medium">{terms}</p>
             </div>
           )}
 
           {reg_form_id && (
-            <div className="flex items-center justify-between text-xs leading-4 glass-panel-subtle p-2.5 rounded-xl">
-              <div className="flex items-center gap-1.5 opacity-70 font-bold text-[10px] uppercase">
+            <div className="flex items-center justify-between text-xs leading-4 glass-panel-subtle p-2.5 rounded-xl text-black dark:text-white border border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-1.5 opacity-80 font-black text-[10px] uppercase text-black dark:text-white">
                 <ClipboardList className="w-3 h-3 shrink-0" />
                 <span>Form Linked</span>
               </div>
-              <code className="text-[10px] font-mono bg-black/20 px-1.5 py-0.5 rounded text-indigo-400 font-bold truncate max-w-[140px]">
+              <code className="text-[10px] font-mono bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded font-black text-black dark:text-white truncate max-w-[140px]">
                 {reg_form_id}
               </code>
             </div>
@@ -91,10 +91,10 @@ export function EventCard({ event, onView, onEdit, onDelete }) {
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+        <div className="pt-3 border-t border-slate-200 dark:border-[var(--panel-border)] flex items-center justify-between gap-2">
           <button
             onClick={() => onView(event)}
-            className="flex-1 py-1.5 px-3 rounded-lg text-xs leading-4 font-bold btn-secondary flex items-center justify-center gap-1.5 cursor-pointer transition-all duration-300"
+            className="flex-1 py-1.5 px-3 rounded-xl text-xs leading-4 font-black btn-secondary text-black dark:text-white flex items-center justify-center gap-1.5 cursor-pointer transition-all duration-200 active:scale-95 shadow-2xs"
           >
             <Eye className="w-3.5 h-3.5 opacity-80" />
             <span>Details</span>
@@ -102,7 +102,7 @@ export function EventCard({ event, onView, onEdit, onDelete }) {
 
           <button
             onClick={() => onEdit(event)}
-            className="p-2 rounded-lg btn-secondary transition-colors cursor-pointer"
+            className="p-2 rounded-xl btn-secondary text-black dark:text-white transition-colors cursor-pointer active:scale-95 shadow-2xs"
             title="Edit Event"
             aria-label="Edit event"
           >
@@ -111,7 +111,7 @@ export function EventCard({ event, onView, onEdit, onDelete }) {
 
           <button
             onClick={() => onDelete(id, overview)}
-            className="p-2 rounded-lg btn-secondary hover:text-rose-500 transition-colors cursor-pointer"
+            className="p-2 rounded-xl btn-secondary text-black dark:text-white hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer active:scale-95 shadow-2xs"
             title="Delete Event"
             aria-label="Delete event"
           >
@@ -126,4 +126,3 @@ export function EventCard({ event, onView, onEdit, onDelete }) {
 }
 
 export default EventCard;
-

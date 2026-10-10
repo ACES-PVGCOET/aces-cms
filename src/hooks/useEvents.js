@@ -19,13 +19,51 @@ function normalizeEvent(evt) {
   };
 }
 
+const DEFAULT_EVENTS = [
+  {
+    id: 'evt-001',
+    overview: "Dino's Leaf Party",
+    description: "An exclusive tech networking mixer & gamified speed coding showdown bringing engineers together across campuses.",
+    terms: 'Bring your laptop, college ID, and student credentials. Code of conduct enforced.',
+    reg_form_id: 'aces-form-dino-2026',
+    banner_url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&auto=format&fit=crop&q=80',
+    isHighlight: true,
+  },
+  {
+    id: 'evt-002',
+    overview: 'ACES HackNight 2026',
+    description: '36-Hour continuous hackathon exploring next-generation web architectures, AI agents, and systems programming.',
+    terms: 'Teams of 2 to 4 members. Hardware and cloud infrastructure credits provided.',
+    reg_form_id: 'aces-form-hacknight',
+    banner_url: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&auto=format&fit=crop&q=80',
+    isHighlight: true,
+  },
+  {
+    id: 'evt-003',
+    overview: 'WebCraft Masterclass: React 19 & Tailwind 4',
+    description: 'Hands-on live coding workshop building modern distributed React 19 apps with reactive design token architectures.',
+    terms: 'Open to all registered computer engineering students.',
+    reg_form_id: 'aces-form-webcraft',
+    banner_url: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&auto=format&fit=crop&q=80',
+    isHighlight: false,
+  },
+  {
+    id: 'evt-004',
+    overview: 'Cloud & Bare-Metal Cluster Workshop',
+    description: 'Deep dive into Kubernetes bare-metal orchestration, eBPF telemetry, and high-concurrency microservices.',
+    terms: 'Prerequisite: Basic Linux terminal proficiency.',
+    reg_form_id: 'aces-form-cloud',
+    banner_url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&auto=format&fit=crop&q=80',
+    isHighlight: false,
+  },
+];
+
 /**
  * useEvents Hook
- * Provides Event state management strictly adhering to backend Event API model:
- * overview, description, terms, reg_form_id, reg_st_dt, reg_end_dt, banner_url, isHighlight.
+ * Provides Event state management strictly adhering to backend Event API model with offline fallback.
  */
 export function useEvents() {
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState(DEFAULT_EVENTS);
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightFilter, setHighlightFilter] = useState('All'); // 'All' | 'Highlighted' | 'Standard'
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
@@ -36,11 +74,11 @@ export function useEvents() {
     try {
       setIsLoading(true);
       const apiData = await eventsApi.getAll();
-      if (Array.isArray(apiData)) {
+      if (Array.isArray(apiData) && apiData.length > 0) {
         setEvents(apiData.map(normalizeEvent));
       }
     } catch (e) {
-      console.info('[Events Hook] API fetch error:', e.message);
+      console.warn('[Events Hook] Backend offline, using default demo events');
     } finally {
       setIsLoading(false);
     }
