@@ -131,11 +131,11 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
             {/* Main Headline */}
             <h1 className="text-4xl xl:text-5xl font-black tracking-tight leading-[1.15] text-slate-900">
               Orchestrate Campus <br />
-              <span className="text-[#7c3aed]">
+              <span className="text-[#9d4edd]">
                 Tech Leadership &amp;
               </span> <br />
-              <span className="text-[#db2777]">
-                Guilds
+              <span className="text-[#9d4edd]">
+                Teams
               </span>
             </h1>
 
@@ -148,15 +148,15 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
           {/* 3 Floating Feature Cards */}
           <div className="space-y-3.5 pt-2">
             
-            {/* Card 1: Guild Members Directory */}
+            {/* Card 1: Team Members Directory */}
             <div className="p-4 rounded-2xl bg-white border border-slate-100/90 shadow-lg shadow-purple-500/5 flex items-center justify-between gap-4 transition-transform hover:-translate-y-0.5">
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-purple-100/80 flex items-center justify-center text-purple-600 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-purple-100/80 flex items-center justify-center text-[#9d4edd] shrink-0">
                   <Layers className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">Guild Members Directory</h3>
-                  <p className="text-xs text-slate-400 font-medium">10 Specialized Technical &amp; Media Guilds</p>
+                  <h3 className="text-sm font-bold text-slate-900">Team Members Directory</h3>
+                  <p className="text-xs text-slate-400 font-medium">10 Specialized Technical &amp; Media Teams</p>
                 </div>
               </div>
               {/* Avatar Stack */}
@@ -224,10 +224,10 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
            ========================================================= */}
         <div className="lg:col-span-6 w-full max-w-[460px] mx-auto">
           
-          <div className="relative rounded-[2rem] p-8 sm:p-10 shadow-2xl bg-white border border-slate-100/80 overflow-hidden">
+          <div className="relative rounded-2xl p-8 sm:p-10 shadow-2xl bg-white border border-slate-100/80 overflow-hidden">
             
-            {/* Top Vibrant Gradient Line */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#7c3aed] via-[#a855f7] to-[#db2777]" />
+            {/* Top Vibrant Accent Line */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#9d4edd]" />
 
             {/* Center Glowing Logo */}
             <div className="flex flex-col items-center text-center mb-6">
@@ -326,7 +326,7 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-2 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#9333ea] to-[#db2777] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-500/25 hover:opacity-95 disabled:opacity-50 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99]"
+                className="w-full mt-2 py-3.5 px-6 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-500/25 disabled:opacity-50 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99]"
               >
                 {isSubmitting ? (
                   <span>Authenticating...</span>
@@ -344,11 +344,11 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
             {mode === 'forgot' && <form onSubmit={handleForgotPassword} className="space-y-4">
               <p className="text-sm text-slate-500">Enter your account email and we’ll send a 4-digit password reset code if the account exists.</p>
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-slate-700 flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-[#7c3aed]" /><span>Email Address</span></label>
+                <label className="block text-xs font-semibold mb-1.5 text-slate-700 flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-[#9d4edd]" /><span>Email Address</span></label>
                 <input type="email" required autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-[#b0bcc9] text-slate-900 placeholder-slate-500 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-[#bcc8d5] transition-all shadow-inner" />
               </div>
-              <button type="submit" disabled={isSubmitting} className="w-full py-3 rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#9333ea] to-[#db2777] text-white font-bold text-sm disabled:opacity-50">{isSubmitting ? 'Sending…' : 'Send reset code'}</button>
-              <button type="button" onClick={() => { setMode('login'); setError(''); setNotice(''); }} className="w-full text-xs font-bold text-slate-500 hover:text-slate-800">Back to sign in</button>
+              <button type="submit" disabled={isSubmitting} className="w-full py-3 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-bold text-sm disabled:opacity-50 cursor-pointer">{isSubmitting ? 'Sending…' : 'Send reset code'}</button>
+              <button type="button" onClick={() => { setMode('login'); setError(''); setNotice(''); }} className="w-full text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer">Back to sign in</button>
             </form>}
 
             {mode === 'verify' && <form onSubmit={handleResetPassword} className="space-y-4">
@@ -365,7 +365,7 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
                 <label className="block text-xs font-semibold mb-1.5 text-slate-700">Confirm new password</label>
                 <input type="password" required minLength={6} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-[#b0bcc9] text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner" />
               </div>
-              <button type="submit" disabled={isSubmitting || otp.length !== 4} className="w-full py-3 rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#9333ea] to-[#db2777] text-white font-bold text-sm disabled:opacity-50">{isSubmitting ? 'Updating…' : 'Update password'}</button>
+              <button type="submit" disabled={isSubmitting || otp.length !== 4} className="w-full py-3 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-bold text-sm disabled:opacity-50 cursor-pointer">{isSubmitting ? 'Updating…' : 'Update password'}</button>
               <button type="button" onClick={() => { setMode('forgot'); setError(''); setNotice(''); setOtp(''); }} className="w-full text-xs font-bold text-slate-500 hover:text-slate-800">Send a new code</button>
             </form>}
 

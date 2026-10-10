@@ -28,6 +28,7 @@ import {
 import StatCard from './StatCard';
 import MediaPreviewModal from './MediaPreviewModal';
 import ConfirmVerifyModal from './ConfirmVerifyModal';
+import Pagination from './Pagination';
 
 function getDriveFileId(url) {
   if (!url) return '';
@@ -49,6 +50,13 @@ const PAYMENT_MODES = ['ALL', 'UPI', 'CASH'];
 export function FeeVerificationView({
   registrations = [],
   filteredRegistrations = [],
+  paginatedRegistrations,
+  page = 1,
+  onPageChange,
+  pageSize = 25,
+  onPageSizeChange,
+  totalPages = 1,
+  totalCount,
   stats,
   searchQuery,
   onSearchChange,
@@ -74,6 +82,17 @@ export function FeeVerificationView({
   const [lightboxMedia, setLightboxMedia] = useState(null);
   const [confirmItem, setConfirmItem] = useState(null);
   const [processingVerifyId, setProcessingVerifyId] = useState(null);
+
+  const itemsToDisplay = useMemo(() => {
+    if (paginatedRegistrations && paginatedRegistrations.length > 0) {
+      return paginatedRegistrations;
+    }
+    if (onPageChange) {
+      const start = (page - 1) * pageSize;
+      return filteredRegistrations.slice(start, start + pageSize);
+    }
+    return filteredRegistrations;
+  }, [paginatedRegistrations, filteredRegistrations, onPageChange, page, pageSize]);
 
   const handleLoadSample = () => {
     if (onLoadSampleData) {
@@ -165,18 +184,10 @@ export function FeeVerificationView({
       {/* 1. Header & Primary CTAs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-black btn-primary shadow-xs">
-              Fee Auditing &amp; Verification
-            </span>
-            <span className="text-xs leading-4 font-black btn-secondary px-2.5 py-0.5 rounded-md text-black dark:text-white">
-              {filteredRegistrations.length} of {registrations.length} records
-            </span>
-          </div>
-          <h1 className="text-2xl leading-8 sm:text-3xl sm:leading-9 font-black tracking-tight mt-1 text-black dark:text-white">
-            Membership Fee Hub
+          <h1 className="text-2xl leading-8 sm:text-3xl sm:leading-9 font-black tracking-tight text-black dark:text-white">
+            <span className="classic-dotted-heading">Membership Fee Hub</span>
           </h1>
-          <p className="text-sm leading-5 text-black dark:text-white opacity-80 font-semibold">
+          <p className="text-sm leading-5 text-black dark:text-white opacity-80 font-semibold mt-1">
             Verify student fee transactions, inspect UPI payment receipts, and authorize ACES memberships.
           </p>
         </div>
@@ -395,24 +406,25 @@ export function FeeVerificationView({
 
       {/* 4. Main List / Table Area */}
       {filteredRegistrations.length > 0 ? (
-        viewMode === 'table' ? (
+        <>
+          {viewMode === 'table' ? (
           /* Table View */
-          <div className="glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-white/10">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-[11px] font-black uppercase tracking-wider text-black dark:text-slate-200">
+          <div className="glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-white/10 flex flex-col">
+            <div className="overflow-auto max-h-[calc(100vh-360px)] min-h-[360px] relative">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="sticky top-0 z-10 text-[11px] font-black uppercase tracking-wider text-black dark:text-slate-200 shadow-xs">
                   <tr>
-                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Student &amp; Class</th>
-                    <th className="py-3.5 px-4 text-black dark:text-slate-200">WhatsApp Contact</th>
-                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Payment Info</th>
-                    <th className="py-3.5 px-4 text-center text-black dark:text-slate-200">Payment Proof</th>
-                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Status</th>
-                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Audit / Receipt</th>
-                    <th className="py-3.5 px-4 text-right text-black dark:text-slate-200">Actions</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Student &amp; Class</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">WhatsApp Contact</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Payment Info</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-center text-black dark:text-slate-200">Payment Proof</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Status</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Audit / Receipt</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-right text-black dark:text-slate-200">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                  {filteredRegistrations.map((item) => {
+                  {itemsToDisplay.map((item) => {
                     const isVer = item.status === 'VERIFIED';
                     const isRej = item.status === 'REJECTED';
                     const isPend = item.status === 'PENDING';
@@ -601,7 +613,7 @@ export function FeeVerificationView({
         ) : (
           /* Cards Grid View */
           <div className="grid grid-cols-12 gap-4 sm:gap-6">
-            {filteredRegistrations.map((item) => {
+            {itemsToDisplay.map((item) => {
               const isVer = item.status === 'VERIFIED';
               const isRej = item.status === 'REJECTED';
               const isPend = item.status === 'PENDING';
@@ -724,7 +736,20 @@ export function FeeVerificationView({
               );
             })}
           </div>
-        )
+        )}
+
+        {/* Pagination Controls */}
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages || Math.max(1, Math.ceil(filteredRegistrations.length / pageSize))}
+          totalItems={totalCount !== undefined ? totalCount : filteredRegistrations.length}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          pageSizeOptions={[10, 25, 50, 100]}
+          itemLabel="registrations"
+        />
+        </>
       ) : (
         /* Empty State */
         <div className="glass-card rounded-2xl p-12 text-center space-y-4 text-black dark:text-white">

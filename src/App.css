@@ -49,9 +49,9 @@
   --text-secondary: #000000;
   --text-muted: #334155;
 
-  --btn-primary-bg: #7c3aed;
-  --btn-primary-hover: #6d28d9;
-  --btn-primary-border: #6d28d9;
+  --btn-primary-bg: #9d4edd;
+  --btn-primary-hover: #7b2cbf;
+  --btn-primary-border: #7b2cbf;
   --btn-primary-text: #ffffff;
 
   --btn-secondary-bg: #f5f3ff;
@@ -61,8 +61,8 @@
 
   --input-bg: #ffffff;
   --input-border: #ddd6fe;
-  --input-focus: #7c3aed;
-  --input-ring: rgba(124, 58, 237, 0.2);
+  --input-focus: #9d4edd;
+  --input-ring: rgba(157, 78, 221, 0.2);
   --input-text: #000000;
   --input-placeholder: #64748b;
 
@@ -70,9 +70,9 @@
   --badge-brand-border: #d8b4fe;
   --badge-brand-text: #6b21a8;
 
-  --accent-color: #7c3aed;
-  --accent-glow: rgba(124, 58, 237, 0.25);
-  --brand-gradient: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  --accent-color: #9d4edd;
+  --accent-glow: rgba(157, 78, 221, 0.25);
+  --brand-gradient: #9d4edd;
 
   background-color: var(--bg-canvas);
   background-image: var(--bg-radial);
@@ -103,9 +103,9 @@
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
 
-  --btn-primary-bg: #7c3aed;
-  --btn-primary-hover: #6d28d9;
-  --btn-primary-border: #6d28d9;
+  --btn-primary-bg: #9d4edd;
+  --btn-primary-hover: #7b2cbf;
+  --btn-primary-border: #7b2cbf;
   --btn-primary-text: #ffffff;
 
   --btn-secondary-bg: #1e293b;
@@ -115,18 +115,18 @@
 
   --input-bg: #020617;
   --input-border: #1e293b;
-  --input-focus: #7c3aed;
-  --input-ring: rgba(124, 58, 237, 0.25);
+  --input-focus: #9d4edd;
+  --input-ring: rgba(157, 78, 221, 0.25);
   --input-text: #ffffff;
   --input-placeholder: #64748b;
 
-  --badge-brand-bg: rgba(124, 58, 237, 0.15);
-  --badge-brand-border: rgba(124, 58, 237, 0.35);
-  --badge-brand-text: #c4b5fd;
+  --badge-brand-bg: rgba(157, 78, 221, 0.15);
+  --badge-brand-border: rgba(157, 78, 221, 0.35);
+  --badge-brand-text: #e0aaff;
 
-  --accent-color: #7c3aed;
-  --accent-glow: rgba(124, 58, 237, 0.3);
-  --brand-gradient: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  --accent-color: #9d4edd;
+  --accent-glow: rgba(157, 78, 221, 0.3);
+  --brand-gradient: #9d4edd;
 
   background-color: var(--bg-canvas);
   background-image: var(--bg-radial);
@@ -134,12 +134,8 @@
 }
 
 /* =========================================================
-   4. OPERA MODULAR BLOCK GEOMETRY & PRIMITIVES
-   Asymmetric Block Architecture:
-   - Top-Right: Sharp (3px)
-   - Bottom-Left: Sharp (3px)
-   - Top-Left: Smooth Rounded (22px)
-   - Bottom-Right: Smooth Rounded (22px)
+   4. MODULAR BLOCK GEOMETRY & PRIMITIVES
+   Consistent Symmetrical Rounding
    ========================================================= */
 .classic-dotted-heading {
   display: inline-block;
@@ -155,14 +151,14 @@
   background-color: var(--panel-bg);
   border: 1px solid var(--panel-border);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  border-radius: 22px 3px 22px 3px !important;
+  border-radius: 16px !important;
 }
 
 .glass-panel-subtle,
 .opera-tile {
   background-color: var(--panel-subtle);
   border: 1px solid var(--panel-border);
-  border-radius: 16px 3px 16px 3px !important;
+  border-radius: 12px !important;
 }
 
 .glass-card {
@@ -170,7 +166,7 @@
   border: 1px solid var(--card-border);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   transition: all 250ms ease-in-out;
-  border-radius: 20px 3px 20px 3px !important;
+  border-radius: 16px !important;
 }
 
 .glass-card-hover:hover {
@@ -184,10 +180,10 @@
   background-color: var(--dialog-bg);
   border: 1px solid var(--dialog-border);
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
-  border-radius: 24px 4px 24px 4px !important;
+  border-radius: 20px !important;
 }
 
-/* Primary Button with Opera Asymmetric Chamfer */
+/* Primary Button */
 .btn-primary {
   background-color: var(--btn-primary-bg);
   color: var(--btn-primary-text);
@@ -195,7 +191,7 @@
   font-weight: 700;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   transition: all 200ms ease-in-out;
-  border-radius: 12px 3px 12px 3px !important;
+  border-radius: 12px !important;
 }
 
 .btn-primary:hover {
@@ -207,14 +203,14 @@
   transform: scale(0.96);
 }
 
-/* Secondary Button with Opera Asymmetric Chamfer */
+/* Secondary Button */
 .btn-secondary {
   background-color: var(--btn-secondary-bg);
   color: var(--btn-secondary-text);
   border: 1px solid var(--btn-secondary-border);
   font-weight: 700;
   transition: all 200ms ease-in-out;
-  border-radius: 12px 3px 12px 3px !important;
+  border-radius: 12px !important;
 }
 
 .btn-secondary:hover {
@@ -225,13 +221,13 @@
   transform: scale(0.96);
 }
 
-/* Inputs & Form Controls with Opera Geometry */
+/* Inputs & Form Controls */
 input,
 select,
 textarea {
   color: var(--input-text);
   background-color: var(--input-bg);
-  border-radius: 12px 3px 12px 3px !important;
+  border-radius: 12px !important;
 }
 
 .glass-input {
@@ -239,7 +235,7 @@ textarea {
   border: 1px solid var(--input-border);
   color: var(--input-text);
   transition: all 200ms ease-in-out;
-  border-radius: 12px 3px 12px 3px !important;
+  border-radius: 12px !important;
 }
 
 .glass-input::placeholder {
@@ -465,19 +461,19 @@ body:not(.theme-deep-midnight):not(.dark) .bg-indigo-100 {
 }
 
 .opera-corner-lg {
-  border-radius: 22px 3px 22px 3px !important;
+  border-radius: 16px !important;
 }
 
 .opera-corner-md {
-  border-radius: 16px 3px 16px 3px !important;
+  border-radius: 12px !important;
 }
 
 .opera-corner-sm {
-  border-radius: 10px 2px 10px 2px !important;
+  border-radius: 8px !important;
 }
 
 .opera-corner-xs {
-  border-radius: 6px 2px 6px 2px !important;
+  border-radius: 6px !important;
 }
 
 

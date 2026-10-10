@@ -33,9 +33,13 @@ async function request(endpoint, options = {}) {
 
 // --- ANNOUNCEMENTS API ---
 export const announcementsApi = {
-  getAll: async () => {
-    const res = await request('/announcements');
-    return res.data?.announcements || res.data || [];
+  getAll: async (params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.append('page', params.page);
+    if (params.limit) searchParams.append('limit', params.limit);
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    const res = await request(`/announcements${qs}`);
+    return res.data;
   },
   getById: async (id) => {
     const res = await request(`/announcements/${id}`);
@@ -65,9 +69,16 @@ export const announcementsApi = {
 
 // --- EVENTS API ---
 export const eventsApi = {
-  getAll: async () => {
-    const res = await request('/events');
-    return res.data?.events || res.data || [];
+  getAll: async (params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.append('page', params.page);
+    if (params.limit) searchParams.append('limit', params.limit);
+    if (params.isHighlight !== undefined && params.isHighlight !== null && params.isHighlight !== '') {
+      searchParams.append('isHighlight', params.isHighlight);
+    }
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    const res = await request(`/events${qs}`);
+    return res.data;
   },
   getHighlights: async () => {
     const res = await request('/events/highlights');
@@ -101,9 +112,15 @@ export const eventsApi = {
 
 // --- MEMBERS / IAM API ---
 export const membersApi = {
-  getAll: async () => {
-    const res = await request('/iam/members');
-    return res.data?.members || res.data || [];
+  getAll: async (params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.append('page', params.page);
+    if (params.limit) searchParams.append('limit', params.limit);
+    if (params.team && params.team !== 'All Teams') searchParams.append('team', params.team);
+    if (params.status) searchParams.append('status', params.status);
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    const res = await request(`/iam/members${qs}`);
+    return res.data;
   },
   getProfile: async () => {
     const res = await request('/iam/me');
@@ -185,6 +202,8 @@ export const galleryApi = {
     if (params.collection_name) searchParams.append('collection_name', params.collection_name);
     if (params.media_type) searchParams.append('media_type', params.media_type);
     if (params.type) searchParams.append('type', params.type);
+    if (params.page) searchParams.append('page', params.page);
+    if (params.limit) searchParams.append('limit', params.limit);
     const queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
     const res = await request(`/gallery/items${queryString}`);
     return res.data;
@@ -280,8 +299,12 @@ export const formsApi = {
     const res = await request(`/forms/${formId}/responses/check?email=${encodeURIComponent(email)}`);
     return res.data;
   },
-  getResponses: async (formId) => {
-    const res = await request(`/forms/${formId}/responses`);
+  getResponses: async (formId, params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.append('page', params.page);
+    if (params.limit) searchParams.append('limit', params.limit);
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    const res = await request(`/forms/${formId}/responses${qs}`);
     return res.data;
   },
   getSingleResponse: async (formId, responseId) => {

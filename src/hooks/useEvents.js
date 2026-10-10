@@ -69,13 +69,33 @@ export function useEvents() {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [isLoading, setIsLoading] = useState(false);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(9);
+
+  const handleSearchChange = (val) => {
+    setSearchQuery(val);
+    setPage(1);
+  };
+
+  const handleHighlightFilterChange = (val) => {
+    setHighlightFilter(val);
+    setPage(1);
+  };
+
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
+
   // Fetch events from backend API on mount
   const fetchFromApi = useCallback(async () => {
     try {
       setIsLoading(true);
       const apiData = await eventsApi.getAll();
-      if (Array.isArray(apiData) && apiData.length > 0) {
-        setEvents(apiData.map(normalizeEvent));
+      const eventList = Array.isArray(apiData) ? apiData : apiData?.events || [];
+      if (Array.isArray(eventList) && eventList.length > 0) {
+        setEvents(eventList.map(normalizeEvent));
       }
     } catch (e) {
       console.warn('[Events Hook] Backend offline, using default demo events');
@@ -204,15 +224,30 @@ export function useEvents() {
     }
   };
 
+  // Paginated events
+  const totalPages = Math.max(1, Math.ceil(filteredEvents.length / limit));
+  const paginatedEvents = useMemo(() => {
+    const safePage = Math.max(1, Math.min(page, totalPages));
+    const start = (safePage - 1) * limit;
+    return filteredEvents.slice(start, start + limit);
+  }, [filteredEvents, page, limit, totalPages]);
+
   return {
     events,
     filteredEvents,
+    paginatedEvents,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchChange,
     highlightFilter,
-    setHighlightFilter,
+    setHighlightFilter: handleHighlightFilterChange,
     viewMode,
     setViewMode,
+    page,
+    setPage,
+    limit,
+    setLimit: handleLimitChange,
+    totalPages,
+    totalCount: filteredEvents.length,
     eventStats,
     createEvent,
     updateEvent,

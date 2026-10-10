@@ -31,6 +31,34 @@ export function useForms() {
   const [isLoading, setIsLoading] = useState(false);
   const [isResponsesLoading, setIsResponsesLoading] = useState(false);
 
+  // Pagination for Forms list
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(9);
+
+  // Pagination for Responses table
+  const [responsesPage, setResponsesPage] = useState(1);
+  const [responsesLimit, setResponsesLimit] = useState(10);
+
+  const handleSearchChange = (val) => {
+    setSearchQuery(val);
+    setPage(1);
+  };
+
+  const handleStatusFilterChange = (val) => {
+    setStatusFilter(val);
+    setPage(1);
+  };
+
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
+
+  const handleResponsesLimitChange = (newLimit) => {
+    setResponsesLimit(newLimit);
+    setResponsesPage(1);
+  };
+
   // Fetch all forms summary from API
   const fetchForms = useCallback(async () => {
     try {
@@ -295,13 +323,43 @@ export function useForms() {
     URL.revokeObjectURL(url);
   };
 
+  // Paginated forms
+  const totalPages = Math.max(1, Math.ceil(filteredForms.length / limit));
+  const paginatedForms = useMemo(() => {
+    const safePage = Math.max(1, Math.min(page, totalPages));
+    const start = (safePage - 1) * limit;
+    return filteredForms.slice(start, start + limit);
+  }, [filteredForms, page, limit, totalPages]);
+
+  // Paginated responses
+  const responsesTotalPages = Math.max(1, Math.ceil(activeFormResponses.length / responsesLimit));
+  const paginatedResponses = useMemo(() => {
+    const safePage = Math.max(1, Math.min(responsesPage, responsesTotalPages));
+    const start = (safePage - 1) * responsesLimit;
+    return activeFormResponses.slice(start, start + responsesLimit);
+  }, [activeFormResponses, responsesPage, responsesLimit, responsesTotalPages]);
+
   return {
     forms,
     filteredForms,
+    paginatedForms,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchChange,
     statusFilter,
-    setStatusFilter,
+    setStatusFilter: handleStatusFilterChange,
+    page,
+    setPage,
+    limit,
+    setLimit: handleLimitChange,
+    totalPages,
+    totalCount: filteredForms.length,
+    responsesPage,
+    setResponsesPage,
+    responsesLimit,
+    setResponsesLimit: handleResponsesLimitChange,
+    responsesTotalPages,
+    responsesTotalCount: activeFormResponses.length,
+    paginatedResponses,
     formStats,
     activeForm,
     setActiveForm,

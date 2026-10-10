@@ -8,6 +8,7 @@ import {
   Sparkles,
   Check
 } from 'lucide-react';
+import Pagination from './Pagination';
 
 /**
  * AnnouncementsView Component
@@ -15,9 +16,17 @@ import {
  */
 export function AnnouncementsView({ 
   announcements = [], 
+  paginatedAnnouncements,
+  page = 1,
+  onPageChange,
+  pageSize = 5,
+  onPageSizeChange,
+  totalPages = 1,
+  totalCount,
   onBroadcast, 
   onDeleteAnnouncement 
 }) {
+  const itemsToDisplay = paginatedAnnouncements || (onPageChange ? announcements.slice((page - 1) * pageSize, page * pageSize) : announcements);
   const [draftTopic, setDraftTopic] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
   const [broadcastSuccess, setBroadcastSuccess] = useState(false);
@@ -50,18 +59,10 @@ export function AnnouncementsView({
       {/* 1. Header & Quick Info */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-black btn-primary shadow-xs text-white">
-              Broadcast Suite
-            </span>
-            <span className="text-xs leading-4 font-black btn-secondary px-2.5 py-0.5 rounded-md text-black dark:text-white">
-              {announcements.length} Notices Active
-            </span>
-          </div>
-          <h1 className="text-2xl leading-8 sm:text-3xl sm:leading-9 font-black tracking-tight mt-1 text-black dark:text-white">
+          <h1 className="text-2xl leading-8 sm:text-3xl sm:leading-9 font-black tracking-tight text-black dark:text-white">
             <span className="classic-dotted-heading">Announcements</span>
           </h1>
-          <p className="text-sm leading-5 text-black dark:text-white opacity-80 font-semibold">
+          <p className="text-sm leading-5 text-black dark:text-white opacity-80 font-semibold mt-1">
             Broadcast notices, alerts, and official campus communications to members.
           </p>
         </div>
@@ -175,8 +176,8 @@ export function AnnouncementsView({
               </div>
 
               <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 text-black dark:text-white">
-                {announcements.length > 0 ? (
-                  announcements.map((item) => {
+                {itemsToDisplay.length > 0 ? (
+                  itemsToDisplay.map((item) => {
                     const itemTopic = item.topic || 'ACES Announcement';
                     const itemDesc = item.description || '';
                     const createdDate = item.created_at
@@ -229,6 +230,22 @@ export function AnnouncementsView({
                   </div>
                 )}
               </div>
+
+              {/* Feed Pagination */}
+              {announcements.length > 0 && (
+                <div className="pt-2">
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages || Math.max(1, Math.ceil(announcements.length / pageSize))}
+                    totalItems={totalCount !== undefined ? totalCount : announcements.length}
+                    pageSize={pageSize}
+                    onPageChange={onPageChange}
+                    onPageSizeChange={onPageSizeChange}
+                    pageSizeOptions={[5, 10, 20]}
+                    itemLabel="notices"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

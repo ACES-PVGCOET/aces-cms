@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import StatCard from './StatCard';
 import EventCard from './EventCard';
+import Pagination from './Pagination';
 
 /**
  * EventsView Component
@@ -16,6 +17,13 @@ import EventCard from './EventCard';
  */
 export function EventsView({
   filteredEvents = [],
+  paginatedEvents,
+  page = 1,
+  onPageChange,
+  pageSize = 9,
+  onPageSizeChange,
+  totalPages = 1,
+  totalCount,
   searchQuery,
   onSearchChange,
   highlightFilter = 'All',
@@ -28,24 +36,17 @@ export function EventsView({
   onEditEvent,
   onDeleteEvent,
 }) {
+  const itemsToDisplay = paginatedEvents || (onPageChange ? filteredEvents.slice((page - 1) * pageSize, page * pageSize) : filteredEvents);
   return (
     <div className="space-y-6 animate-in fade-in duration-300 text-black dark:text-white">
       
       {/* 1. Header & Primary CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-black btn-primary shadow-xs text-white">
-              Event Management
-            </span>
-            <span className="text-xs leading-4 font-black btn-secondary px-2.5 py-0.5 rounded-md text-black dark:text-white">
-              {filteredEvents.length} events listed
-            </span>
-          </div>
-          <h1 className="text-2xl leading-8 sm:text-3xl sm:leading-9 font-black tracking-tight mt-1 text-black dark:text-white">
+          <h1 className="text-2xl leading-8 sm:text-3xl sm:leading-9 font-black tracking-tight text-black dark:text-white">
             <span className="classic-dotted-heading">Events Collection</span>
           </h1>
-          <p className="text-sm leading-5 text-black dark:text-white opacity-80 font-semibold">
+          <p className="text-sm leading-5 text-black dark:text-white opacity-80 font-semibold mt-1">
             Manage association events, descriptions, terms &amp; conditions, registration forms, and spotlight highlights.
           </p>
         </div>
@@ -160,24 +161,38 @@ export function EventsView({
 
       {/* 4. Events 12-Column Grid */}
       {filteredEvents.length > 0 ? (
-        <div className="grid grid-cols-12 gap-6">
-          {filteredEvents.map((event) => (
-            <div
-              key={event.id}
-              className={
-                viewMode === 'grid'
-                  ? 'col-span-12 sm:col-span-6 lg:col-span-4'
-                  : 'col-span-12'
-              }
-            >
-              <EventCard
-                event={event}
-                onView={onViewEvent}
-                onEdit={onEditEvent}
-                onDelete={onDeleteEvent}
-              />
-            </div>
-          ))}
+        <div className="space-y-6">
+          <div className="grid grid-cols-12 gap-6">
+            {itemsToDisplay.map((event) => (
+              <div
+                key={event.id}
+                className={
+                  viewMode === 'grid'
+                    ? 'col-span-12 sm:col-span-6 lg:col-span-4'
+                    : 'col-span-12'
+                }
+              >
+                <EventCard
+                  event={event}
+                  onView={onViewEvent}
+                  onEdit={onEditEvent}
+                  onDelete={onDeleteEvent}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages || Math.max(1, Math.ceil(filteredEvents.length / pageSize))}
+            totalItems={totalCount !== undefined ? totalCount : filteredEvents.length}
+            pageSize={pageSize}
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+            pageSizeOptions={[6, 9, 18, 36]}
+            itemLabel="events"
+          />
         </div>
       ) : (
         /* Empty State */

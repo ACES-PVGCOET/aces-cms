@@ -470,13 +470,13 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
                     {q.question_type === 'payment_acceptance' && (
                       <div className="space-y-4">
                         {/* Payment Amount Card */}
-                        <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-emerald-500/10 border border-indigo-500/30 flex items-center justify-between">
+                        <div className="p-4 rounded-xl bg-[#9d4edd]/10 border border-[#9d4edd]/30 flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-lg bg-[#9d4edd]/20 text-[#9d4edd] flex items-center justify-center">
                               <CreditCard className="w-4 h-4" />
                             </div>
                             <div>
-                              <p className="text-[11px] font-bold text-indigo-300">Amount Due</p>
+                              <p className="text-[11px] font-bold text-[#c77dff]">Amount Due</p>
                               <p className="text-[10px] opacity-70">Scan QR and transfer the exact fee</p>
                             </div>
                           </div>

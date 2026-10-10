@@ -57,19 +57,11 @@ export function GalleryView({
       {/* 1. Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200 dark:bg-indigo-950/80 dark:text-indigo-300 dark:border-indigo-800/60">
-              Visual Archives
-            </span>
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-rose-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-md border border-rose-200/80 dark:border-slate-700">
-              {filteredMedia.length} assets displayed
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-3xl font-black text-slate-950 dark:text-white tracking-tight mt-1.5">
+          <h1 className="text-2xl sm:text-3xl lg:text-3xl font-black text-slate-950 dark:text-white tracking-tight">
             Media Gallery
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5 font-medium">
-            Experience high-res photography, aftermovies, workshop keynotes, and guild moments.
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-medium">
+            Experience high-res photography, aftermovies, workshop keynotes, and team moments.
           </p>
         </div>
 
@@ -107,7 +99,7 @@ export function GalleryView({
         <StatCard
           title="Community Appreciation"
           value={`${totalLikes} Hearts`}
-          description="Student & guild member engagements"
+          description="Student & team member engagements"
           icon={<Heart className="w-5 h-5" />}
           accentColor="rose"
           hideDescription={false}

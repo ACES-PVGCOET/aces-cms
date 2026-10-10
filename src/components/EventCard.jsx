@@ -40,16 +40,6 @@ export function EventCard({ event, onView, onEdit, onDelete }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
-        {/* Highlight Tag */}
-        {isHighlight && (
-          <div className="absolute top-3 right-3">
-            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold btn-primary flex items-center gap-1 shadow-sm">
-              <Sparkles className="w-3 h-3" />
-              <span>Highlighted</span>
-            </span>
-          </div>
-        )}
-
         {/* Overview Overlay */}
         <div className="absolute bottom-3 left-3 right-3 text-white">
           <h3 className="text-base leading-6 font-black truncate">

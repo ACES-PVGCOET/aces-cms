@@ -37,7 +37,7 @@ function normalizeMagazine(item) {
     academicYear: meta.academicYear || '2026-27',
     coverImage: item.media_url || meta.coverImage || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
     publishedDate: meta.publishedDate || new Date().toISOString().split('T')[0],
-    editor: meta.editor || 'ACES Editorial Guild',
+    editor: meta.editor || 'ACES Editorial Team',
     pageCount: meta.pageCount || 50,
     downloadsCount: meta.downloadsCount || 0,
     readsCount: meta.readsCount || 0,

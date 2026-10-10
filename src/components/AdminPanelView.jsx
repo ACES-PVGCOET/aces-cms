@@ -71,7 +71,7 @@ export function AdminPanelView({
               onClick={() => onNavigateBack('members')}
               className="px-4 py-2 rounded-xl btn-secondary text-xs font-bold"
             >
-              Back to Member Hub
+              Back to Committee
             </button>
           </div>
         )}
@@ -168,8 +168,8 @@ export function AdminPanelView({
       {/* 1. Header & Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            {onNavigateBack && (
+          {onNavigateBack && (
+            <div className="mb-2">
               <button
                 onClick={() => onNavigateBack('members')}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold btn-secondary hover:bg-purple-100 transition-colors"
@@ -178,16 +178,10 @@ export function AdminPanelView({
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Back</span>
               </button>
-            )}
-            <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-black bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40">
-              True Admin Zone
-            </span>
-            <span className="text-xs leading-4 font-black btn-secondary px-2.5 py-0.5 rounded-md text-slate-800 dark:text-white">
-              {filteredMembers.length} member profiles
-            </span>
-          </div>
+            </div>
+          )}
           <h1 className="text-2xl leading-8 sm:text-3xl sm:leading-9 font-black tracking-tight mt-1 flex items-center gap-3 text-slate-900 dark:text-white">
-            <UserCog className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+            <UserCog className="w-8 h-8 text-[#9d4edd] dark:text-[#c77dff]" />
             <span>Admin Governance Panel</span>
           </h1>
           <p className="text-sm leading-5 text-slate-600 dark:text-slate-300 font-medium">
@@ -254,13 +248,13 @@ export function AdminPanelView({
         </div>
 
         <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-          <label className="text-xs font-bold shrink-0 text-slate-700 dark:text-slate-300">Guild Filter:</label>
+          <label className="text-xs font-bold shrink-0 text-slate-700 dark:text-slate-300">Team Filter:</label>
           <select
             value={selectedTeamFilter}
             onChange={(e) => setSelectedTeamFilter(e.target.value)}
             className="w-full sm:w-auto px-3 py-2 rounded-xl btn-secondary text-xs font-black focus:outline-none cursor-pointer border border-purple-200/80 dark:border-slate-700"
           >
-            <option value="ALL" className="bg-white dark:bg-slate-900">All Guilds ({members.length})</option>
+            <option value="ALL" className="bg-white dark:bg-slate-900">All Teams ({members.length})</option>
             {teamsList.map((t) => (
               <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>
             ))}
@@ -430,8 +424,8 @@ export function AdminPanelView({
           </div>
         ) : (
           <div className="glass-panel rounded-2xl text-center py-12 space-y-3">
-            <Users className="w-10 h-10 opacity-40 mx-auto text-purple-600" />
-            <p className="text-sm font-bold opacity-80">No member accounts match your current query or guild filter.</p>
+            <Users className="w-10 h-10 opacity-40 mx-auto text-[#9d4edd]" />
+            <p className="text-sm font-bold opacity-80">No member accounts match your current query or team filter.</p>
           </div>
         )}
       </div>

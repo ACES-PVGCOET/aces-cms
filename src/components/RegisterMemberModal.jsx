@@ -208,7 +208,7 @@ export function RegisterMemberModal({ isOpen, onClose, onRegister, onStartOnboar
                 <div>
                   <label className="block text-xs font-bold mb-1.5 opacity-80 flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Assigned Guild / Team</span>
+                    <span>Assigned Team</span>
                   </label>
                   <select
                     value={team}

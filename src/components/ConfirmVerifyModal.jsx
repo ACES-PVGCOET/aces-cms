@@ -69,8 +69,8 @@ export function ConfirmVerifyModal({
       >
         {/* Animated In-Process Top Bar */}
         {isProcessing && (
-          <div className="h-1 w-full bg-emerald-950/40 overflow-hidden relative">
-            <div className="h-full bg-gradient-to-r from-emerald-500 via-teal-300 to-emerald-400 animate-pulse w-full" />
+          <div className="h-1 w-full bg-[#9d4edd]/20 overflow-hidden relative">
+            <div className="h-full bg-[#9d4edd] animate-pulse w-full" />
           </div>
         )}
 

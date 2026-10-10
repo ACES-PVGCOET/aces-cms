@@ -63,6 +63,40 @@ export function useMembership() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+
+  const handleSearchChange = (val) => {
+    setSearchQuery(val);
+    setPage(1);
+  };
+
+  const handleStatusFilterChange = (val) => {
+    setStatusFilter(val);
+    setPage(1);
+  };
+
+  const handleClassFilterChange = (val) => {
+    setClassFilter(val);
+    setPage(1);
+  };
+
+  const handlePaymentModeFilterChange = (val) => {
+    setPaymentModeFilter(val);
+    setPage(1);
+  };
+
+  const handleSortChange = (val) => {
+    setSortBy(val);
+    setPage(1);
+  };
+
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
+
   // Fetch registrations and stats from backend API
   const fetchRegistrations = useCallback(async () => {
     try {
@@ -220,20 +254,35 @@ export function useMembership() {
     };
   }, [registrations, stats]);
 
+  // Paginated registrations
+  const totalPages = Math.max(1, Math.ceil(filteredRegistrations.length / limit));
+  const paginatedRegistrations = useMemo(() => {
+    const safePage = Math.max(1, Math.min(page, totalPages));
+    const start = (safePage - 1) * limit;
+    return filteredRegistrations.slice(start, start + limit);
+  }, [filteredRegistrations, page, limit, totalPages]);
+
   return {
     registrations,
     filteredRegistrations,
+    paginatedRegistrations,
     stats: computedStats,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchChange,
     statusFilter,
-    setStatusFilter,
+    setStatusFilter: handleStatusFilterChange,
     classFilter,
-    setClassFilter,
+    setClassFilter: handleClassFilterChange,
     paymentModeFilter,
-    setPaymentModeFilter,
+    setPaymentModeFilter: handlePaymentModeFilterChange,
     sortBy,
-    setSortBy,
+    setSortBy: handleSortChange,
+    page,
+    setPage,
+    limit,
+    setLimit: handleLimitChange,
+    totalPages,
+    totalCount: filteredRegistrations.length,
     isLoading,
     error,
     fetchRegistrations,

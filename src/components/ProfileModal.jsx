@@ -161,7 +161,7 @@ export function ProfileModal({ isOpen, user, isAdmin, onClose, onSaveProfile }) 
             </div>
             <p className="text-xs opacity-70 font-medium mt-0.5">{user.email}</p>
             <div className="flex items-center gap-2 text-[11px] font-bold text-indigo-400 mt-1">
-              <span>{user.team || 'Member Guild'}</span>
+              <span>{user.team || 'Member Team'}</span>
               <span>•</span>
               <span>{user.position || 'Member'}</span>
             </div>
@@ -212,12 +212,12 @@ export function ProfileModal({ isOpen, user, isAdmin, onClose, onSaveProfile }) 
             </div>
           </div>
 
-          {/* Section: Read-Only Guild & Role Info (unless Admin) */}
+          {/* Section: Read-Only Team & Role Info (unless Admin) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold mb-1.5 opacity-80 flex items-center gap-1">
                 <Layers className="w-3 h-3 text-emerald-400" />
-                <span>Team / Guild</span>
+                <span>Team</span>
               </label>
               <input
                 type="text"

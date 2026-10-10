@@ -18,6 +18,7 @@ import {
 import StatCard from './StatCard';
 import MemberCard from './MemberCard';
 import { InstagramIcon, LinkedinIcon, GithubIcon } from './SocialIcons';
+import Pagination from './Pagination';
 
 /**
  * MembersView Component
@@ -26,6 +27,13 @@ import { InstagramIcon, LinkedinIcon, GithubIcon } from './SocialIcons';
 export function MembersView({
   members = [],
   filteredMembers = [],
+  paginatedMembers,
+  page = 1,
+  onPageChange,
+  pageSize = 12,
+  onPageSizeChange,
+  totalPages = 1,
+  totalCount,
   searchQuery,
   onSearchChange,
   selectedTeam,
@@ -43,6 +51,7 @@ export function MembersView({
   allowAdd = true,
 }) {
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
+  const itemsToDisplay = paginatedMembers || (onPageChange ? filteredMembers.slice((page - 1) * pageSize, page * pageSize) : filteredMembers);
   const TEAMS_LIST = [
     'All Teams',
     'Faculty',
@@ -68,19 +77,11 @@ export function MembersView({
       {/* 1. Header & Primary CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-black btn-primary shadow-xs text-white">
-              Guild Directory
-            </span>
-            <span className="text-xs leading-4 font-black btn-secondary px-2.5 py-0.5 rounded-md text-black dark:text-white">
-              {filteredMembers.length} records displayed
-            </span>
-          </div>
-          <h1 className="text-2xl leading-8 sm:text-3xl sm:leading-9 font-black tracking-tight mt-1 text-black dark:text-white">
-            <span className="classic-dotted-heading">Member Hub</span>
+          <h1 className="text-2xl leading-8 sm:text-3xl sm:leading-9 font-black tracking-tight text-black dark:text-white">
+            <span className="classic-dotted-heading">Committee</span>
           </h1>
-          <p className="text-sm leading-5 text-black dark:text-white opacity-80 font-semibold">
-            Discover engineers, manage guild assignments, and maintain social profile credentials.
+          <p className="text-sm leading-5 text-black dark:text-white opacity-80 font-semibold mt-1">
+            Discover engineers, manage team assignments, and maintain social profile credentials.
           </p>
         </div>
 
@@ -139,10 +140,10 @@ export function MembersView({
 
         <div className="col-span-12 md:col-span-6">
           <StatCard
-            title="Guilds Tracking"
+            title="Teams Tracking"
             value={memberStats.teamsTracking || TEAMS_LIST.length - 1}
             description="Core technical &amp; operational divisions"
-            icon={<Layers className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
+            icon={<Layers className="w-5 h-5 text-[#9d4edd] dark:text-[#c77dff]" />}
             hideDescription={false}
           />
         </div>
@@ -188,7 +189,7 @@ export function MembersView({
               >
                 <option value="name-asc" className="bg-white dark:bg-slate-900 text-black dark:text-white">Name (A-Z)</option>
                 <option value="name-desc" className="bg-white dark:bg-slate-900 text-black dark:text-white">Name (Z-A)</option>
-                <option value="team" className="bg-white dark:bg-slate-900 text-black dark:text-white">Team Guild</option>
+                <option value="team" className="bg-white dark:bg-slate-900 text-black dark:text-white">Team</option>
               </select>
             </div>
 
@@ -259,23 +260,24 @@ export function MembersView({
 
       {/* 4. Members Directory: List View (Table) or Card Grid */}
       {filteredMembers.length > 0 ? (
-        viewMode === 'table' ? (
+        <>
+          {viewMode === 'table' ? (
           /* List / Table View */
-          <div className="glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-white/10">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="border-b border-slate-200 dark:border-white/10 bg-slate-50/60 dark:bg-white/5 text-[11px] font-black uppercase tracking-wider text-black dark:text-slate-200">
+          <div className="glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-white/10 flex flex-col">
+            <div className="overflow-auto max-h-[calc(100vh-320px)] min-h-[360px] relative">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="sticky top-0 z-10 text-[11px] font-black uppercase tracking-wider text-black dark:text-slate-200 shadow-xs">
                   <tr>
-                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Name</th>
-                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Team</th>
-                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Position</th>
-                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Email</th>
-                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Socials</th>
-                    <th className="py-3.5 px-4 text-right text-black dark:text-slate-200">Actions</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Name</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Team</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Position</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Email</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Socials</th>
+                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-right text-black dark:text-slate-200">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-semibold">
-                  {filteredMembers.map((member) => {
+                  {itemsToDisplay.map((member) => {
                     const isNotActive = member.status?.toUpperCase() === 'NOT_ACTIVE';
                     const photo = member.profile_photo_url || member.avatar;
                     const hasNoProfileImage = !photo || photo.trim() === '' || photo.includes('dicebear');
@@ -431,7 +433,7 @@ export function MembersView({
         ) : (
           /* Cards Grid View */
           <div className="grid grid-cols-12 gap-6">
-            {filteredMembers.map((member) => (
+            {itemsToDisplay.map((member) => (
               <div key={member.id} className="col-span-12 sm:col-span-6 lg:col-span-4 xl:col-span-3">
                 <MemberCard
                   member={member}
@@ -442,7 +444,20 @@ export function MembersView({
               </div>
             ))}
           </div>
-        )
+        )}
+
+        {/* Pagination Controls */}
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages || Math.max(1, Math.ceil(filteredMembers.length / pageSize))}
+          totalItems={totalCount !== undefined ? totalCount : filteredMembers.length}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          pageSizeOptions={[6, 12, 24, 48]}
+          itemLabel="members"
+        />
+        </>
       ) : (
         /* Empty State */
         <div className="glass-card rounded-2xl p-12 text-center space-y-4 text-black dark:text-white">
@@ -450,9 +465,9 @@ export function MembersView({
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-base leading-6 font-black text-black dark:text-white">No guild members found</h3>
+            <h3 className="text-base leading-6 font-black text-black dark:text-white">No team members found</h3>
             <p className="text-sm leading-5 opacity-80 max-w-sm mx-auto mt-1 font-semibold text-black dark:text-white">
-              No profiles match your current search query or guild category filter.
+              No profiles match your current search query or team category filter.
             </p>
           </div>
           <button
@@ -462,7 +477,7 @@ export function MembersView({
             }}
             className="px-4 py-2 rounded-xl text-sm leading-5 font-black btn-secondary inline-flex items-center gap-2 cursor-pointer transition-all duration-200 text-black dark:text-white"
           >
-            <span>Reset Guild Filters</span>
+            <span>Reset Filters</span>
           </button>
         </div>
       )}

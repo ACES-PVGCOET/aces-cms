@@ -1,77 +1,80 @@
+import React, { useState } from 'react';
 import { 
   LayoutGrid, 
   Users, 
   Calendar, 
   Megaphone, 
-  Sparkles, 
+  Globe, 
   ExternalLink,
   X,
   ClipboardList,
   CheckCircle2,
-  FolderArchive
+  FolderArchive,
+  ChevronsRight,
+  ChevronsLeft
 } from 'lucide-react';
 
 /**
  * SidebarNavigation Component
  * Multi-Theme Navigation rail for ACES CMS.
- * Strictly mirrors reference design with 7 core modules and purple active accents.
+ * Features ultra-smooth animated transitions between compact (icon-only, default) and expanded modes.
  */
 export function SidebarNavigation({
   currentView = 'dashboard',
   onSelectView,
   isMobileOpen = false,
   onCloseMobile,
+  isExpanded: controlledExpanded,
+  onToggleExpand,
   counts = {},
 }) {
-  // Navigation Menu definition matching the reference image strictly
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+
+  const handleToggleExpand = () => {
+    if (onToggleExpand) {
+      onToggleExpand();
+    } else {
+      setInternalExpanded(!internalExpanded);
+    }
+  };
+
+  // Navigation Menu definition - descriptions removed per requirements
   const navItems = [
     {
       id: 'dashboard',
       label: 'Launchpad',
       icon: LayoutGrid,
-      description: 'Overview & metrics',
     },
     {
       id: 'members',
-      label: 'Member Hub',
+      label: 'Committee',
       icon: Users,
-      description: 'Guilds & directory',
-      badge: counts.members ? `${counts.members}` : null,
     },
     {
       id: 'fee-verification',
       label: 'Fee Verification',
       icon: CheckCircle2,
-      description: 'Verify fees & receipts',
-      badge: counts.feePending ? `${counts.feePending}` : null,
     },
     {
       id: 'events',
       label: 'Event Lineup',
       icon: Calendar,
-      description: 'Sessions & schedule',
-      badge: counts.events ? `${counts.events}` : null,
     },
     {
       id: 'forms',
       label: 'Forms Engine',
       icon: ClipboardList,
-      description: 'Custom forms & responses',
-      badge: counts.forms ? `${counts.forms}` : null,
     },
     {
       id: 'announcements',
       label: 'Announcements',
       icon: Megaphone,
-      description: 'Public releases',
-      badge: counts.announcements ? `${counts.announcements}` : null,
     },
     {
       id: 'showcase',
       label: 'Media Showcase',
       icon: FolderArchive,
-      description: 'Media & collections',
-      badge: counts.showcase || null,
     },
   ];
 
@@ -94,48 +97,57 @@ export function SidebarNavigation({
       )}
 
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-64 lg:w-72 z-50 p-3 sm:p-4 flex flex-col justify-between select-none transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 bottom-0 z-50 p-2.5 sm:p-3 flex flex-col justify-between select-none transition-all duration-300 ease-in-out ${
+          isExpanded ? 'w-64 lg:w-72' : 'w-24'
+        } ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
         aria-label="Sidebar Navigation Rail"
       >
         {/* Panel Container with Refined Geometry & Purple Accents */}
-        <div className="w-full h-full glass-panel p-3.5 sm:p-4 flex flex-col justify-between shadow-xl relative overflow-hidden bg-white/95 dark:bg-slate-900/95 border border-purple-100 dark:border-purple-900/30 rounded-3xl text-slate-900 dark:text-white">
+        <div className={`w-full h-full glass-panel flex flex-col justify-between shadow-xl relative overflow-hidden bg-white/95 dark:bg-slate-900/95 border border-purple-100 dark:border-purple-900/30 rounded-2xl text-slate-900 dark:text-white transition-all duration-300 ease-in-out ${
+          isExpanded ? 'p-3.5 sm:p-4' : 'px-2 py-3.5 items-center'
+        }`}>
           
           {/* Top: Brand Header */}
-          <div className="relative z-10 space-y-3.5 text-slate-900 dark:text-white">
-            <div className="flex items-center justify-between px-1.5 py-1 border-b border-purple-100 dark:border-slate-800/80 pb-3.5">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-white/10 p-1.5 flex items-center justify-center shadow-xs shrink-0 border border-purple-100/80 dark:border-white/10">
+          <div className="relative z-10 w-full space-y-3.5 text-slate-900 dark:text-white flex flex-col items-center">
+            <div className={`w-full flex items-center border-b border-purple-100 dark:border-slate-800/80 pb-3 h-14 transition-all duration-300 ${
+              isExpanded ? 'justify-between px-1' : 'justify-center'
+            }`}>
+              <div 
+                className="flex items-center gap-3 min-w-0 cursor-pointer group"
+                onClick={handleToggleExpand}
+                title={isExpanded ? 'Collapse Sidebar' : 'Expand Sidebar'}
+              >
+                <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-white/10 p-2 flex items-center justify-center shadow-xs shrink-0 border border-purple-100/80 dark:border-white/10 group-hover:scale-105 transition-transform duration-200">
                   <img src="/logo.png" alt="ACES Logo" className="w-full h-full object-contain drop-shadow" />
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-sm leading-5 tracking-tight truncate text-slate-900 dark:text-white">
-                      ACES CMS
-                    </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 shrink-0 border border-purple-200/60 dark:border-purple-800/40">
-                      2026–27
-                    </span>
-                  </div>
-                  <p className="text-xs leading-4 opacity-75 font-semibold truncate text-slate-600 dark:text-slate-400 mt-0.5">
+                <div className={`flex flex-col min-w-0 overflow-hidden transition-all duration-300 ease-in-out ${
+                  isExpanded ? 'opacity-100 max-w-[180px]' : 'opacity-0 max-w-0 pointer-events-none'
+                }`}>
+                  <span className="font-extrabold text-sm leading-5 tracking-tight truncate text-slate-900 dark:text-white whitespace-nowrap">
+                    ACES CMS
+                  </span>
+                  <p className="text-xs leading-4 opacity-75 font-semibold truncate text-slate-600 dark:text-slate-400 whitespace-nowrap">
                     Association of CS Engineers
                   </p>
                 </div>
               </div>
 
               {/* Close Button for Mobile Drawer */}
-              <button
-                onClick={onCloseMobile}
-                className="lg:hidden p-1.5 rounded-xl hover:bg-purple-50 dark:hover:bg-white/10 opacity-70 hover:opacity-100 transition-colors cursor-pointer text-slate-800 dark:text-white"
-                aria-label="Close navigation menu"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              {isMobileOpen && (
+                <button
+                  onClick={onCloseMobile}
+                  className="lg:hidden p-1.5 rounded-xl hover:bg-purple-50 dark:hover:bg-white/10 opacity-70 hover:opacity-100 transition-colors cursor-pointer text-slate-800 dark:text-white shrink-0"
+                  aria-label="Close navigation menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </div>
 
             {/* Navigation Items List */}
-            <nav className="space-y-1.5 overflow-y-auto no-scrollbar max-h-[calc(100vh-210px)]" aria-label="Main Menu">
+            <nav className="w-full overflow-y-auto no-scrollbar max-h-[calc(100vh-220px)] space-y-2.5 flex flex-col items-center" aria-label="Main Menu">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentView === item.id;
@@ -145,69 +157,105 @@ export function SidebarNavigation({
                     key={item.id}
                     id={`nav-tab-${item.id}`}
                     onClick={() => handleNavClick(item.id)}
-                    className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-2xl text-sm leading-5 font-bold transition-all duration-200 text-left relative cursor-pointer active:scale-95 ${
+                    className={`group flex items-center rounded-xl font-bold transition-all duration-300 ease-in-out cursor-pointer active:scale-95 relative overflow-hidden ${
+                      isExpanded ? 'w-full px-3 py-2.5' : 'w-12 h-12 justify-center p-0'
+                    } ${
                       isActive
-                        ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-purple-500/20 font-extrabold'
-                        : 'hover:bg-purple-50/80 dark:hover:bg-slate-800/60 text-slate-800 dark:text-slate-200 hover:text-purple-700 dark:hover:text-purple-300'
+                        ? 'bg-[#9d4edd] text-white shadow-md shadow-[#9d4edd]/35 ring-2 ring-[#9d4edd]/40'
+                        : isExpanded
+                          ? 'hover:bg-purple-50/80 dark:hover:bg-slate-800/60 text-slate-800 dark:text-slate-200 hover:text-[#9d4edd] dark:hover:text-[#c77dff]'
+                          : 'bg-slate-100/80 dark:bg-slate-800/70 hover:bg-purple-100/80 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 hover:text-[#9d4edd] dark:hover:text-[#c77dff] border border-slate-200/60 dark:border-slate-700/60'
                     }`}
+                    title={item.label}
+                    aria-label={item.label}
                     aria-current={isActive ? 'page' : undefined}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200 ${
-                          isActive
-                            ? 'bg-white/20 text-white shadow-inner'
-                            : 'bg-purple-50/70 dark:bg-white/5 text-purple-600 dark:text-purple-400 group-hover:bg-purple-100 dark:group-hover:bg-white/10'
-                        }`}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className={`text-xs leading-4 font-bold truncate ${isActive ? 'text-white' : 'text-slate-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300'}`}>
-                          {item.label}
-                        </div>
-                        <div
-                          className={`text-[11px] leading-4 transition-colors duration-200 truncate ${
-                            isActive ? 'text-white/85 font-medium' : 'text-slate-500 dark:text-slate-400 font-medium'
-                          }`}
-                        >
-                          {item.description}
-                        </div>
-                      </div>
+                    <div className={`flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      isExpanded ? 'w-8 h-8 rounded-lg' : 'w-full h-full'
+                    } ${
+                      isExpanded && isActive ? 'bg-white/20 text-white shadow-inner' : ''
+                    } ${
+                      isExpanded && !isActive ? 'bg-purple-50/70 dark:bg-white/5 text-[#9d4edd] dark:text-[#c77dff] group-hover:bg-purple-100 dark:group-hover:bg-white/10' : ''
+                    }`}>
+                      <Icon className={`w-5 h-5 shrink-0 stroke-[2.2] transition-transform duration-200 group-hover:scale-110 ${
+                        isActive ? 'text-white' : 'text-slate-700 dark:text-slate-200 group-hover:text-[#9d4edd] dark:group-hover:text-[#c77dff]'
+                      }`} />
                     </div>
 
-                    {/* Badges */}
-                    {item.badge && (
-                      <span
-                        className={`px-2 py-0.5 text-[10px] font-bold rounded-lg transition-colors duration-200 shrink-0 ${
-                          isActive
-                            ? 'bg-white/25 text-white'
-                            : 'bg-purple-50 text-purple-700 border border-purple-200/70 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800/40'
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
+                    <span className={`text-xs font-bold truncate whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
+                      isExpanded ? 'opacity-100 max-w-[160px] ml-3' : 'opacity-0 max-w-0 ml-0 pointer-events-none'
+                    } ${
+                      isActive ? 'text-white font-extrabold' : 'text-slate-900 dark:text-white group-hover:text-[#9d4edd] dark:group-hover:text-[#c77dff]'
+                    }`}>
+                      {item.label}
+                    </span>
                   </button>
                 );
               })}
             </nav>
           </div>
 
-          {/* Bottom: Public Site Link */}
-          <div className="relative z-10 pt-3 border-t border-purple-100 dark:border-slate-800/80">
+          {/* Bottom: Public Site Link & Expand/Collapse Toggle */}
+          <div className="relative z-10 w-full pt-3 border-t border-purple-100 dark:border-slate-800/80 space-y-2 flex flex-col items-center">
+            {/* Public Site Link */}
             <a
-              href="https://acesclub.org"
+              href="https://acespvgcoet.in"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-between px-3 py-2 text-xs leading-4 font-bold text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-purple-50/80 dark:hover:bg-white/5 rounded-xl transition-colors duration-200 active:scale-95"
+              className={`group flex items-center rounded-xl text-xs font-bold transition-all duration-300 ease-in-out cursor-pointer active:scale-95 overflow-hidden ${
+                isExpanded 
+                  ? 'w-full px-3 py-2.5 justify-between text-slate-700 dark:text-slate-300 hover:text-[#9d4edd] dark:hover:text-[#c77dff] hover:bg-purple-50/80 dark:hover:bg-white/5' 
+                  : 'w-12 h-12 justify-center p-0 bg-purple-50/80 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 hover:text-[#9d4edd] dark:hover:text-[#c77dff] hover:bg-purple-100 dark:hover:bg-slate-700 border border-purple-100/60 dark:border-slate-700/60'
+              }`}
+              title="Visit Main Website (acespvgcoet.in)"
+              aria-label="Visit Main Website"
             >
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span>Visit Main Website</span>
-              </span>
-              <ExternalLink className="w-3 h-3 opacity-60" />
+              <div className={`flex items-center min-w-0 ${isExpanded ? 'gap-2.5' : 'justify-center w-full h-full'}`}>
+                <div className={`flex items-center justify-center shrink-0 ${isExpanded ? 'w-7 h-7' : 'w-full h-full'}`}>
+                  <Globe className="w-5 h-5 text-[#9d4edd] stroke-[2.2] shrink-0" />
+                </div>
+                <span className={`truncate whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
+                  isExpanded ? 'opacity-100 max-w-[140px]' : 'opacity-0 max-w-0 pointer-events-none hidden'
+                }`}>
+                  Visit Main Website
+                </span>
+              </div>
+              <ExternalLink className={`w-3.5 h-3.5 opacity-60 shrink-0 transition-all duration-300 ${
+                isExpanded ? 'opacity-60 scale-100' : 'opacity-0 scale-0 pointer-events-none hidden'
+              }`} />
             </a>
+
+            {/* Expand / Collapse Button */}
+            <button
+              onClick={handleToggleExpand}
+              className={`group flex items-center rounded-xl text-xs font-bold transition-all duration-300 ease-in-out cursor-pointer active:scale-95 overflow-hidden shadow-xs ${
+                isExpanded
+                  ? 'w-full px-3 py-2.5 justify-between bg-purple-50/80 dark:bg-slate-800/80 hover:bg-purple-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-[#9d4edd] dark:hover:text-[#c77dff] border border-purple-100 dark:border-slate-700'
+                  : 'w-12 h-12 justify-center p-0 bg-[#9d4edd]/10 hover:bg-[#9d4edd]/20 text-[#9d4edd] border border-[#9d4edd]/30'
+              }`}
+              title={isExpanded ? 'Collapse Sidebar' : 'Expand Sidebar'}
+              aria-label={isExpanded ? 'Collapse Sidebar' : 'Expand Sidebar'}
+            >
+              <div className={`flex items-center min-w-0 ${isExpanded ? 'gap-2.5' : 'justify-center w-full h-full'}`}>
+                <div className={`flex items-center justify-center shrink-0 ${isExpanded ? 'w-7 h-7' : 'w-full h-full'}`}>
+                  {isExpanded ? (
+                    <ChevronsLeft className="w-5 h-5 text-[#9d4edd] stroke-[2.2] shrink-0" />
+                  ) : (
+                    <ChevronsRight className="w-5 h-5 text-[#9d4edd] stroke-[2.2] shrink-0" />
+                  )}
+                </div>
+                <span className={`truncate whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
+                  isExpanded ? 'opacity-100 max-w-[130px]' : 'opacity-0 max-w-0 pointer-events-none hidden'
+                }`}>
+                  Collapse Sidebar
+                </span>
+              </div>
+              <span className={`text-[10px] opacity-60 font-mono uppercase font-semibold transition-all duration-300 ${
+                isExpanded ? 'opacity-60 scale-100' : 'opacity-0 scale-0 pointer-events-none hidden'
+              }`}>
+                Hide
+              </span>
+            </button>
           </div>
 
         </div>
@@ -217,4 +265,3 @@ export function SidebarNavigation({
 }
 
 export default SidebarNavigation;
-

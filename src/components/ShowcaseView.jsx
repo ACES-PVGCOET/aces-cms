@@ -82,20 +82,12 @@ export function ShowcaseView({
       {/* 1. Header & Primary CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md text-xs font-black btn-primary shadow-xs text-white">
-              Media Showcase
-            </span>
-            <span className="text-xs font-black btn-secondary px-2.5 py-0.5 rounded-md text-black dark:text-white">
-              {showcaseStats.totalCollections} Collections • {showcaseStats.totalItems} Assets
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-black dark:text-white mt-1">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-black dark:text-white">
             <span className="classic-dotted-heading">
               {activeCollection ? `Collection: ${activeCollection}` : 'Media Showcase'}
             </span>
           </h1>
-          <p className="text-sm text-black dark:text-white opacity-80 font-semibold">
+          <p className="text-sm text-black dark:text-white opacity-80 font-semibold mt-1">
             {activeCollection
               ? `Browse, manage, and download visual media and PDF publications in '${activeCollection}'.`
               : 'Explore all media collections organized into interactive folders (images, videos, PDF publications).'}

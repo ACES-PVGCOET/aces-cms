@@ -153,13 +153,38 @@ export function useMembers() {
   const [sortBy, setSortBy] = useState('name-asc');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+
+  const handleSearchChange = (val) => {
+    setSearchQuery(val);
+    setPage(1);
+  };
+
+  const handleSelectTeam = (val) => {
+    setSelectedTeam(val);
+    setPage(1);
+  };
+
+  const handleSortChange = (val) => {
+    setSortBy(val);
+    setPage(1);
+  };
+
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
+
   // Fetch members from backend API on mount
   const fetchFromApi = useCallback(async () => {
     try {
       setIsLoading(true);
       const apiData = await membersApi.getAll();
-      if (Array.isArray(apiData) && apiData.length > 0) {
-        setMembers(apiData.map(normalizeMember));
+      const memberList = Array.isArray(apiData) ? apiData : apiData?.members || [];
+      if (Array.isArray(memberList) && memberList.length > 0) {
+        setMembers(memberList.map(normalizeMember));
       }
     } catch (e) {
       console.warn('[Members Hook] Backend offline, using default demo members');
@@ -223,7 +248,7 @@ export function useMembers() {
 
     return {
       totalMembers,
-      teamsTracking: `${uniqueTeams} Active Guilds`,
+      teamsTracking: `${uniqueTeams} Active Teams`,
       socialsPending: `${socialsPending} Needs Links`,
     };
   }, [members]);
@@ -274,15 +299,30 @@ export function useMembers() {
     }
   };
 
+  // Paginated members slice
+  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / limit));
+  const paginatedMembers = useMemo(() => {
+    const safePage = Math.max(1, Math.min(page, totalPages));
+    const start = (safePage - 1) * limit;
+    return filteredMembers.slice(start, start + limit);
+  }, [filteredMembers, page, limit, totalPages]);
+
   return {
     members,
     filteredMembers,
+    paginatedMembers,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchChange,
     selectedTeam,
-    setSelectedTeam,
+    setSelectedTeam: handleSelectTeam,
     sortBy,
-    setSortBy,
+    setSortBy: handleSortChange,
+    page,
+    setPage,
+    limit,
+    setLimit: handleLimitChange,
+    totalPages,
+    totalCount: filteredMembers.length,
     memberStats,
     addMember,
     updateMember,

@@ -42,13 +42,23 @@ export function useAnnouncements() {
   const [announcements, setAnnouncements] = useState(DEFAULT_ANNOUNCEMENTS);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
+
   // Fetch announcements from API on mount
   const fetchFromApi = useCallback(async () => {
     try {
       setIsLoading(true);
       const apiData = await announcementsApi.getAll();
-      if (Array.isArray(apiData) && apiData.length > 0) {
-        const normalized = apiData.map(normalizeAnnouncement);
+      const list = Array.isArray(apiData) ? apiData : apiData?.announcements || [];
+      if (Array.isArray(list) && list.length > 0) {
+        const normalized = list.map(normalizeAnnouncement);
         setAnnouncements(normalized);
       }
     } catch (e) {
@@ -111,8 +121,19 @@ export function useAnnouncements() {
     }
   };
 
+  // Paginated announcements
+  const totalPages = Math.max(1, Math.ceil(announcements.length / limit));
+  const paginatedAnnouncements = announcements.slice((page - 1) * limit, page * limit);
+
   return {
     announcements,
+    paginatedAnnouncements,
+    page,
+    setPage,
+    limit,
+    setLimit: handleLimitChange,
+    totalPages,
+    totalCount: announcements.length,
     addAnnouncement,
     updateAnnouncement,
     deleteAnnouncement,

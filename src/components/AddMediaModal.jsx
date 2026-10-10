@@ -36,7 +36,7 @@ export function AddMediaModal({ isOpen, onClose, onSubmit }) {
     src: '',
     videoUrl: '',
     duration: '1:15',
-    author: 'ACES Media Guild',
+    author: 'ACES Media Team',
     tags: 'Hackathon, SpeedCoding, ACES',
     description: '',
   });

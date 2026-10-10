@@ -73,7 +73,7 @@ export function ActiveMembersPieCard({ members = [] }) {
     <div
       className="w-full h-full glass-card glass-card-hover rounded-2xl p-6 relative overflow-hidden transition-all duration-300 group flex flex-col justify-between"
       role="region"
-      aria-label="Active Members with Guild Breakdown"
+      aria-label="Active Members with Team Breakdown"
     >
       {/* Header */}
       <div>
@@ -81,10 +81,6 @@ export function ActiveMembersPieCard({ members = [] }) {
           <div className="flex items-center gap-2">
             <span className="text-xs leading-4 font-bold uppercase tracking-wider opacity-70 font-sans">
               Active Members
-            </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold btn-secondary">
-              <Sparkles className="w-2.5 h-2.5" />
-              <span>By Guild</span>
             </span>
           </div>
 
@@ -112,7 +108,7 @@ export function ActiveMembersPieCard({ members = [] }) {
               </div>
             ) : (
               <div className="text-xs leading-4 font-semibold opacity-60">
-                {teamsData.length} Active Guilds
+                {teamsData.length} Active Teams
               </div>
             )}
           </div>
@@ -163,7 +159,7 @@ export function ActiveMembersPieCard({ members = [] }) {
                 {hoveredSlice ? `${hoveredSlice.percent}%` : totalActive}
               </span>
               <span className="text-[8px] font-bold opacity-60 uppercase tracking-tighter">
-                {hoveredSlice ? 'Guild' : 'Active'}
+                {hoveredSlice ? 'Team' : 'Active'}
               </span>
             </div>
           </div>
@@ -171,7 +167,7 @@ export function ActiveMembersPieCard({ members = [] }) {
         </div>
       </div>
 
-      {/* Guild Swatches */}
+      {/* Team Swatches */}
       <div className="pt-2 border-t border-white/10 flex items-center gap-1.5 overflow-x-auto pb-0.5">
         {teamsData.slice(0, 5).map((t) => (
           <button

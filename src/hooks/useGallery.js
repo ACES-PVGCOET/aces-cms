@@ -21,7 +21,7 @@ function normalizeGalleryItem(item) {
     src: item.media_url || item.src || item.thumbnail,
     videoUrl: item.media_type === 'video' ? item.media_url : item.videoUrl || '',
     duration: item.duration || (item.media_type === 'video' ? '1:00' : null),
-    author: item.auditing?.created_by?.name || item.author || 'ACES Media Guild',
+    author: item.auditing?.created_by?.name || item.author || 'ACES Media Team',
     date: item.auditing?.created_at ? new Date(item.auditing.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     likes: item.likes || 0,
     tags: item.tags || ['ACES', 'Gallery'],
@@ -48,8 +48,9 @@ export function useGallery() {
     try {
       setIsLoading(true);
       const apiData = await galleryApi.getItems();
-      if (Array.isArray(apiData) && apiData.length > 0) {
-        setMediaItems(apiData.map(normalizeGalleryItem));
+      const rawList = Array.isArray(apiData) ? apiData : (apiData?.items || []);
+      if (rawList.length > 0) {
+        setMediaItems(rawList.map(normalizeGalleryItem));
       }
     } catch (e) {
       console.info('[Gallery Hook] API fetch warning:', e.message);

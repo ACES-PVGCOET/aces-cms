@@ -155,7 +155,7 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
                 {isEditing ? 'Update Member Profile' : 'Enroll New Member'}
               </h2>
               <p className="text-xs leading-4 opacity-70 font-medium">
-                {isEditing ? 'Modify guild credentials & status' : 'Register a new member to ACES database'}
+                {isEditing ? 'Modify team credentials & status' : 'Register a new member to ACES database'}
               </p>
             </div>
           </div>

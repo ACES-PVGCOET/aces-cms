@@ -120,11 +120,11 @@ export function VerifyFeeModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="relative w-full max-w-4xl glass-panel rounded-3xl overflow-hidden shadow-2xl border border-white/20 flex flex-col my-auto max-h-[92vh]">
+      <div className="relative w-full max-w-4xl glass-panel rounded-2xl overflow-hidden shadow-2xl border border-white/20 flex flex-col my-auto max-h-[92vh]">
         {/* Animated In-Process Top Bar */}
         {isSubmitting && (
-          <div className="h-1.5 w-full bg-emerald-950 overflow-hidden relative shrink-0">
-            <div className="h-full bg-gradient-to-r from-emerald-500 via-teal-300 to-emerald-400 animate-pulse w-full" />
+          <div className="h-1.5 w-full bg-[#9d4edd]/20 overflow-hidden relative shrink-0">
+            <div className="h-full bg-[#9d4edd] animate-pulse w-full" />
           </div>
         )}
         

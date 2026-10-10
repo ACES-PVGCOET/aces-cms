@@ -116,6 +116,7 @@ function AppContent() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [globalSearch, setGlobalSearch] = useState('');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
   // Data Hooks
   const memberHook = useMembers();
@@ -527,6 +528,8 @@ function AppContent() {
         }}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        isExpanded={isSidebarExpanded}
+        onToggleExpand={() => setIsSidebarExpanded(!isSidebarExpanded)}
         counts={{
           members: memberHook.members.length,
           feePending: membershipHook.stats.pending,
@@ -538,7 +541,7 @@ function AppContent() {
       />
 
       {/* 2. Main Content Area */}
-      <div className="pl-0 lg:pl-64 xl:pl-72 w-full min-h-screen flex flex-col justify-between min-w-0 transition-all duration-300">
+      <div className={`pl-0 ${isSidebarExpanded ? 'lg:pl-64 xl:pl-72' : 'lg:pl-24'} w-full min-h-screen flex flex-col justify-between min-w-0 transition-all duration-300 ease-in-out`}>
         
         <div>
           {/* Top Header Bar with Auth Session Controls & Omnisearch */}
@@ -587,11 +590,18 @@ function AppContent() {
               />
             )}
 
-            {/* View 2: Member Hub */}
+            {/* View 2: Committee */}
             {currentView === 'members' && (
               <MembersView
                 members={memberHook.members}
                 filteredMembers={memberHook.filteredMembers}
+                paginatedMembers={memberHook.paginatedMembers}
+                page={memberHook.page}
+                onPageChange={memberHook.setPage}
+                pageSize={memberHook.limit}
+                onPageSizeChange={memberHook.setLimit}
+                totalPages={memberHook.totalPages}
+                totalCount={memberHook.totalCount}
                 searchQuery={memberHook.searchQuery}
                 onSearchChange={memberHook.setSearchQuery}
                 selectedTeam={memberHook.selectedTeam}
@@ -627,6 +637,13 @@ function AppContent() {
               <FeeVerificationView
                 registrations={membershipHook.registrations}
                 filteredRegistrations={membershipHook.filteredRegistrations}
+                paginatedRegistrations={membershipHook.paginatedRegistrations}
+                page={membershipHook.page}
+                onPageChange={membershipHook.setPage}
+                pageSize={membershipHook.limit}
+                onPageSizeChange={membershipHook.setLimit}
+                totalPages={membershipHook.totalPages}
+                totalCount={membershipHook.totalCount}
                 stats={membershipHook.stats}
                 searchQuery={membershipHook.searchQuery}
                 onSearchChange={membershipHook.setSearchQuery}
@@ -656,6 +673,13 @@ function AppContent() {
             {currentView === 'events' && (
               <EventsView
                 filteredEvents={eventHook.filteredEvents}
+                paginatedEvents={eventHook.paginatedEvents}
+                page={eventHook.page}
+                onPageChange={eventHook.setPage}
+                pageSize={eventHook.limit}
+                onPageSizeChange={eventHook.setLimit}
+                totalPages={eventHook.totalPages}
+                totalCount={eventHook.totalCount}
                 searchQuery={eventHook.searchQuery}
                 onSearchChange={eventHook.setSearchQuery}
                 highlightFilter={eventHook.highlightFilter}
@@ -675,6 +699,13 @@ function AppContent() {
               <FormsView
                 forms={formsHook.forms}
                 filteredForms={formsHook.filteredForms}
+                paginatedForms={formsHook.paginatedForms}
+                page={formsHook.page}
+                onPageChange={formsHook.setPage}
+                pageSize={formsHook.limit}
+                onPageSizeChange={formsHook.setLimit}
+                totalPages={formsHook.totalPages}
+                totalCount={formsHook.totalCount}
                 searchQuery={formsHook.searchQuery}
                 onSearchChange={formsHook.setSearchQuery}
                 statusFilter={formsHook.statusFilter}
@@ -684,6 +715,13 @@ function AppContent() {
                 onSelectForm={formsHook.fetchFormById}
                 onClearActiveForm={() => formsHook.setActiveForm(null)}
                 activeFormResponses={formsHook.activeFormResponses}
+                paginatedResponses={formsHook.paginatedResponses}
+                responsesPage={formsHook.responsesPage}
+                onResponsesPageChange={formsHook.setResponsesPage}
+                responsesPageSize={formsHook.responsesLimit}
+                onResponsesPageSizeChange={formsHook.setResponsesLimit}
+                responsesTotalPages={formsHook.responsesTotalPages}
+                responsesTotalCount={formsHook.responsesTotalCount}
                 onFetchResponses={formsHook.fetchFormResponses}
                 onOpenCreateModal={handleOpenCreateForm}
                 onOpenEditModal={handleOpenEditForm}
@@ -701,6 +739,13 @@ function AppContent() {
             {currentView === 'announcements' && (
               <AnnouncementsView
                 announcements={announcementHook.announcements}
+                paginatedAnnouncements={announcementHook.paginatedAnnouncements}
+                page={announcementHook.page}
+                onPageChange={announcementHook.setPage}
+                pageSize={announcementHook.limit}
+                onPageSizeChange={announcementHook.setLimit}
+                totalPages={announcementHook.totalPages}
+                totalCount={announcementHook.totalCount}
                 onBroadcast={handleBroadcastAnnouncement}
                 onDeleteAnnouncement={handleDeleteAnnouncement}
               />
