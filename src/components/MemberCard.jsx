@@ -2,7 +2,9 @@ import {
   Mail, 
   Edit3, 
   Trash2, 
-  Eye
+  Eye,
+  AlertTriangle,
+  Image as ImageIcon
 } from 'lucide-react';
 import { InstagramIcon, LinkedinIcon, GithubIcon } from './SocialIcons';
 
@@ -18,6 +20,8 @@ export function MemberCard({ member, onView, onEdit, onDelete }) {
   const team = member.team || 'Web Team';
   const status = member.status || 'ACTIVE';
   const photoUrl = member.profile_photo_url || member.avatar;
+  const isNotActive = status?.toUpperCase() === 'NOT_ACTIVE';
+  const hasNoProfileImage = !photoUrl || photoUrl.trim() === '' || photoUrl.includes('dicebear');
   const socialLinks = member.social_links || member.socials || {};
 
   return (
@@ -65,12 +69,24 @@ export function MemberCard({ member, onView, onEdit, onDelete }) {
               </span>
             </div>
 
-            <h3 
-              className="text-sm leading-5 font-black text-black dark:text-white truncate group-hover:opacity-90 transition-opacity" 
-              title={name}
-            >
-              {name}
-            </h3>
+            <div className="flex items-center gap-1.5 min-w-0">
+              {isNotActive && (
+                <span title="Status: NOT_ACTIVE" className="inline-flex items-center shrink-0">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                </span>
+              )}
+              {hasNoProfileImage && (
+                <span title="Profile image not uploaded" className="inline-flex items-center shrink-0">
+                  <ImageIcon className="w-3.5 h-3.5 text-red-500" />
+                </span>
+              )}
+              <h3 
+                className="text-sm leading-5 font-black text-black dark:text-white truncate group-hover:opacity-90 transition-opacity" 
+                title={name}
+              >
+                {name}
+              </h3>
+            </div>
 
             <p 
               className="text-xs leading-4 font-bold text-black dark:text-white opacity-80 truncate mt-0.5" 

@@ -21,7 +21,8 @@ async function request(endpoint, options = {}) {
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.message || `API request failed with status ${response.status}`);
+      const errMsg = data.error?.message || data.message || `API request failed with status ${response.status}`;
+      throw new Error(errMsg);
     }
     return data;
   } catch (error) {
@@ -139,6 +140,20 @@ export const membersApi = {
     const res = await request('/iam/onboard', {
       method: 'POST',
       body: JSON.stringify({ token, password, name }),
+    });
+    return res.data;
+  },
+  forgotPassword: async (email) => {
+    const res = await request('/iam/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+    return res.data;
+  },
+  resetPassword: async ({ email, otp, password }) => {
+    const res = await request('/iam/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp, password }),
     });
     return res.data;
   },

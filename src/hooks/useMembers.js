@@ -116,7 +116,7 @@ const DEFAULT_MEMBERS = [
     email: 'pooja.verma@acesclub.org',
     team: 'Event Team',
     position: 'Event Coordinator',
-    status: 'ACTIVE',
+    status: 'NOT_ACTIVE',
     profile_photo_url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&auto=format&fit=crop&q=80',
     social_links: { linkedin: 'https://linkedin.com', github: '', instagram: 'https://instagram.com' },
   },
@@ -127,8 +127,18 @@ const DEFAULT_MEMBERS = [
     team: 'Treasury Team',
     position: 'Treasurer',
     status: 'ACTIVE',
-    profile_photo_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&auto=format&fit=crop&q=80',
+    profile_photo_url: '',
     social_links: { linkedin: 'https://linkedin.com', github: '', instagram: 'https://instagram.com' },
+  },
+  {
+    id: 'mem-012',
+    name: 'Sameer Rao',
+    email: 'sameer.rao@acesclub.org',
+    team: 'Technical Team',
+    position: 'Junior Developer',
+    status: 'NOT_ACTIVE',
+    profile_photo_url: '',
+    social_links: { linkedin: 'https://linkedin.com', github: 'https://github.com', instagram: '' },
   },
 ];
 

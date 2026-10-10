@@ -12,13 +12,19 @@ import {
   BookOpen, 
   CheckCircle2 
 } from 'lucide-react';
+import { membersApi } from '../services/api';
 
 export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
-  const [email, setEmail] = useState('pranavmankar2007@gmail.com');
-  const [password, setPassword] = useState('admin@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [mode, setMode] = useState('login');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [notice, setNotice] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,6 +39,56 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
       await onLogin(email.trim(), password);
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      setError('Enter your email address to request a reset code.');
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      setError('');
+      const result = await membersApi.forgotPassword(email.trim());
+      setNotice(result?.message || 'If an account exists with this email, a password reset code has been sent.');
+      setMode('verify');
+    } catch (err) {
+      setError(err.message || 'Could not request a password reset. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (otp.length !== 4) {
+      setError('Enter the 4-digit code from your email.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError('Your password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('The passwords do not match.');
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      setError('');
+      const result = await membersApi.resetPassword({ email: email.trim(), otp, password: newPassword });
+      setNotice(result?.message || 'Password reset successfully. You can now sign in.');
+      setMode('login');
+      setPassword('');
+      setOtp('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setError(err.message || 'Could not reset your password. The code may have expired.');
     } finally {
       setIsSubmitting(false);
     }
@@ -183,7 +239,7 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
                 </div>
               </div>
 
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">ACES CMS Portal</h2>
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">{mode === 'verify' ? 'Enter your reset code' : mode === 'forgot' ? 'Reset your password' : 'ACES CMS Portal'}</h2>
               <p className="text-xs text-slate-500 font-medium mt-1">
                 Association of Computer Engineering Students
               </p>
@@ -210,9 +266,14 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
                 {error}
               </div>
             )}
+            {notice && (
+              <div role="status" className="mb-5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                {notice}
+              </div>
+            )}
 
             {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === 'login' && <form onSubmit={handleSubmit} className="space-y-4">
               
               {/* Email Address Field */}
               <div>
@@ -228,6 +289,12 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-[#b0bcc9] text-slate-900 placeholder-slate-500 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-[#bcc8d5] transition-all shadow-inner"
                 />
+              </div>
+
+              <div className="flex justify-end -mt-2">
+                <button type="button" onClick={() => { setMode('forgot'); setError(''); setNotice(''); }} className="text-xs font-bold text-[#7c3aed] hover:text-[#6d28d9] cursor-pointer">
+                  Forgot password?
+                </button>
               </div>
 
               {/* Password Field */}
@@ -272,7 +339,35 @@ export function LoginPage({ onLogin, onOpenOnboarding, hasOnboardingToken }) {
                 )}
               </button>
 
-            </form>
+            </form>}
+
+            {mode === 'forgot' && <form onSubmit={handleForgotPassword} className="space-y-4">
+              <p className="text-sm text-slate-500">Enter your account email and we’ll send a 4-digit password reset code if the account exists.</p>
+              <div>
+                <label className="block text-xs font-semibold mb-1.5 text-slate-700 flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-[#7c3aed]" /><span>Email Address</span></label>
+                <input type="email" required autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-[#b0bcc9] text-slate-900 placeholder-slate-500 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-[#bcc8d5] transition-all shadow-inner" />
+              </div>
+              <button type="submit" disabled={isSubmitting} className="w-full py-3 rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#9333ea] to-[#db2777] text-white font-bold text-sm disabled:opacity-50">{isSubmitting ? 'Sending…' : 'Send reset code'}</button>
+              <button type="button" onClick={() => { setMode('login'); setError(''); setNotice(''); }} className="w-full text-xs font-bold text-slate-500 hover:text-slate-800">Back to sign in</button>
+            </form>}
+
+            {mode === 'verify' && <form onSubmit={handleResetPassword} className="space-y-4">
+              <p className="text-sm text-slate-500">Enter the 4-digit code sent to <strong>{email}</strong>, then choose a new password. The code expires in 10 minutes.</p>
+              <div>
+                <label className="block text-xs font-semibold mb-1.5 text-slate-700">4-digit code</label>
+                <input type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{4}" maxLength={4} required value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))} className="w-full px-4 py-3 rounded-xl bg-[#b0bcc9] text-slate-900 text-lg tracking-[0.5em] font-bold focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1.5 text-slate-700">New password</label>
+                <input type="password" required minLength={6} autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-[#b0bcc9] text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1.5 text-slate-700">Confirm new password</label>
+                <input type="password" required minLength={6} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-[#b0bcc9] text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner" />
+              </div>
+              <button type="submit" disabled={isSubmitting || otp.length !== 4} className="w-full py-3 rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#9333ea] to-[#db2777] text-white font-bold text-sm disabled:opacity-50">{isSubmitting ? 'Updating…' : 'Update password'}</button>
+              <button type="button" onClick={() => { setMode('forgot'); setError(''); setNotice(''); setOtp(''); }} className="w-full text-xs font-bold text-slate-500 hover:text-slate-800">Send a new code</button>
+            </form>}
 
             {/* Footer */}
             <div className="mt-8 pt-4 flex items-center justify-between text-xs text-slate-400 font-medium">

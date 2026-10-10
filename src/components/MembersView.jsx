@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { 
   Users, 
   Layers, 
@@ -5,10 +6,18 @@ import {
   Search, 
   ArrowUpDown,
   FileSpreadsheet,
-  ShieldCheck
+  ShieldCheck,
+  LayoutList,
+  LayoutGrid,
+  AlertTriangle,
+  Image as ImageIcon,
+  Eye,
+  Edit3,
+  Trash2
 } from 'lucide-react';
 import StatCard from './StatCard';
 import MemberCard from './MemberCard';
+import { InstagramIcon, LinkedinIcon, GithubIcon } from './SocialIcons';
 
 /**
  * MembersView Component
@@ -33,6 +42,7 @@ export function MembersView({
   onDeleteMember,
   allowAdd = true,
 }) {
+  const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
   const TEAMS_LIST = [
     'All Teams',
     'Faculty',
@@ -165,8 +175,8 @@ export function MembersView({
             )}
           </div>
 
-          {/* Sort Selector */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Sort Selector & View Mode Toggle */}
+          <div className="flex items-center gap-2.5 shrink-0">
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl btn-secondary text-sm leading-5 font-black text-black dark:text-white">
               <ArrowUpDown className="w-4 h-4 opacity-80" />
               <label htmlFor="member-sort-select" className="text-xs leading-4 font-black text-black dark:text-white">Sort:</label>
@@ -180,6 +190,32 @@ export function MembersView({
                 <option value="name-desc" className="bg-white dark:bg-slate-900 text-black dark:text-white">Name (Z-A)</option>
                 <option value="team" className="bg-white dark:bg-slate-900 text-black dark:text-white">Team Guild</option>
               </select>
+            </div>
+
+            {/* View Mode Toggle: Table (List) vs Cards (Grid) */}
+            <div className="flex items-center p-1 rounded-xl btn-secondary">
+              <button
+                id="members-view-table-btn"
+                onClick={() => setViewMode('table')}
+                className={`p-1.5 rounded-lg cursor-pointer transition-colors ${
+                  viewMode === 'table' ? 'bg-black/30 dark:bg-white/10 text-white shadow-xs' : 'text-black dark:text-white opacity-70 hover:opacity-100'
+                }`}
+                title="Dense List View"
+                aria-label="List view"
+              >
+                <LayoutList className="w-4 h-4" />
+              </button>
+              <button
+                id="members-view-cards-btn"
+                onClick={() => setViewMode('cards')}
+                className={`p-1.5 rounded-lg cursor-pointer transition-colors ${
+                  viewMode === 'cards' ? 'bg-black/30 dark:bg-white/10 text-white shadow-xs' : 'text-black dark:text-white opacity-70 hover:opacity-100'
+                }`}
+                title="Card Grid View"
+                aria-label="Card view"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
@@ -221,20 +257,192 @@ export function MembersView({
 
       </div>
 
-      {/* 4. Members 12-Column Grid */}
+      {/* 4. Members Directory: List View (Table) or Card Grid */}
       {filteredMembers.length > 0 ? (
-        <div className="grid grid-cols-12 gap-6">
-          {filteredMembers.map((member) => (
-            <div key={member.id} className="col-span-12 sm:col-span-6 lg:col-span-4 xl:col-span-3">
-              <MemberCard
-                member={member}
-                onView={onViewMember}
-                onEdit={onEditMember}
-                onDelete={onDeleteMember}
-              />
+        viewMode === 'table' ? (
+          /* List / Table View */
+          <div className="glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-white/10">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-slate-200 dark:border-white/10 bg-slate-50/60 dark:bg-white/5 text-[11px] font-black uppercase tracking-wider text-black dark:text-slate-200">
+                  <tr>
+                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Name</th>
+                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Team</th>
+                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Position</th>
+                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Email</th>
+                    <th className="py-3.5 px-4 text-black dark:text-slate-200">Socials</th>
+                    <th className="py-3.5 px-4 text-right text-black dark:text-slate-200">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-semibold">
+                  {filteredMembers.map((member) => {
+                    const isNotActive = member.status?.toUpperCase() === 'NOT_ACTIVE';
+                    const photo = member.profile_photo_url || member.avatar;
+                    const hasNoProfileImage = !photo || photo.trim() === '' || photo.includes('dicebear');
+
+                    const socialLinks = member.social_links || member.socials || {};
+                    const instagramUrl = socialLinks.instagram
+                      ? (socialLinks.instagram.startsWith('http') ? socialLinks.instagram : `https://instagram.com/${socialLinks.instagram.replace('@', '')}`)
+                      : null;
+                    const linkedinUrl = socialLinks.linkedin
+                      ? (socialLinks.linkedin.startsWith('http') ? socialLinks.linkedin : `https://linkedin.com/in/${socialLinks.linkedin}`)
+                      : null;
+                    const githubUrl = socialLinks.github
+                      ? (socialLinks.github.startsWith('http') ? socialLinks.github : `https://github.com/${socialLinks.github}`)
+                      : null;
+
+                    return (
+                      <tr
+                        key={member.id}
+                        onClick={() => onViewMember(member)}
+                        className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                      >
+                        {/* Name */}
+                        <td className="py-3.5 px-4 font-bold text-black dark:text-white">
+                          <div className="flex items-center gap-2">
+                            {isNotActive && (
+                              <span title="Status: NOT_ACTIVE" className="inline-flex items-center shrink-0">
+                                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                              </span>
+                            )}
+                            {hasNoProfileImage && (
+                              <span title="Profile image not uploaded" className="inline-flex items-center shrink-0">
+                                <ImageIcon className="w-4 h-4 text-red-500" />
+                              </span>
+                            )}
+                            <span 
+                              className="font-bold text-black dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"
+                              title={member.name || 'Unnamed Member'}
+                            >
+                              {member.name || 'Unnamed Member'}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Team */}
+                        <td className="py-3.5 px-4">
+                          <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold btn-secondary text-black dark:text-white">
+                            {member.team || 'Web Team'}
+                          </span>
+                        </td>
+
+                        {/* Position */}
+                        <td className="py-3.5 px-4 text-xs font-semibold text-black dark:text-white opacity-90">
+                          {member.position || member.role || 'Member'}
+                        </td>
+
+                        {/* Email */}
+                        <td className="py-3.5 px-4 text-xs font-semibold text-black dark:text-white">
+                          {member.email ? (
+                            <a
+                              href={`mailto:${member.email}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-black dark:text-white hover:underline hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                              title={member.email}
+                            >
+                              {member.email}
+                            </a>
+                          ) : (
+                            <span className="opacity-40">-</span>
+                          )}
+                        </td>
+
+                        {/* Socials */}
+                        <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1.5">
+                            {instagramUrl && (
+                              <a
+                                href={instagramUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center text-[#E4405F] hover:bg-pink-50 dark:hover:bg-pink-950/40 transition-colors cursor-pointer"
+                                title="Instagram Profile"
+                                aria-label={`${member.name}'s Instagram`}
+                              >
+                                <InstagramIcon className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                            {linkedinUrl && (
+                              <a
+                                href={linkedinUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center text-[#0A66C2] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
+                                title="LinkedIn Profile"
+                                aria-label={`${member.name}'s LinkedIn`}
+                              >
+                                <LinkedinIcon className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                            {githubUrl && (
+                              <a
+                                href={githubUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-7 h-7 rounded-lg btn-secondary flex items-center justify-center text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                title="GitHub Profile"
+                                aria-label={`${member.name}'s GitHub`}
+                              >
+                                <GithubIcon className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                            {!instagramUrl && !linkedinUrl && !githubUrl && (
+                              <span className="text-xs text-slate-400 opacity-40 font-medium">-</span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1.5 justify-end">
+                            <button
+                              onClick={() => onViewMember(member)}
+                              className="p-1.5 rounded-lg btn-secondary transition-colors cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+                              title="View Details"
+                              aria-label="View member details"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => onEditMember(member)}
+                              className="p-1.5 rounded-lg btn-secondary transition-colors cursor-pointer hover:text-amber-600 dark:hover:text-amber-400"
+                              title="Edit Member"
+                              aria-label="Edit member"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => onDeleteMember(member.id, member.name)}
+                              className="p-1.5 rounded-lg btn-secondary hover:text-rose-500 transition-colors cursor-pointer"
+                              title="Delete Member"
+                              aria-label="Delete member"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          /* Cards Grid View */
+          <div className="grid grid-cols-12 gap-6">
+            {filteredMembers.map((member) => (
+              <div key={member.id} className="col-span-12 sm:col-span-6 lg:col-span-4 xl:col-span-3">
+                <MemberCard
+                  member={member}
+                  onView={onViewMember}
+                  onEdit={onEditMember}
+                  onDelete={onDeleteMember}
+                />
+              </div>
+            ))}
+          </div>
+        )
       ) : (
         /* Empty State */
         <div className="glass-card rounded-2xl p-12 text-center space-y-4 text-black dark:text-white">

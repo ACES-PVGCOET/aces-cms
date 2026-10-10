@@ -3,31 +3,15 @@ import { membersApi } from '../services/api';
 
 const AuthContext = createContext(null);
 
-const DEMO_ADMIN = {
-  id: 'aces-admin-demo',
-  name: 'ACES Admin',
-  email: 'admin@aces.org',
-  team: 'Executive',
-  position: 'System Administrator',
-  roles: ['admin', 'member'],
-  status: 'ACTIVE',
-  profile_photo_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ACESAdmin',
-  social_links: {
-    linkedin: 'https://linkedin.com',
-    github: 'https://github.com',
-    instagram: 'https://instagram.com',
-  },
-};
-
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem('aces_cms_user');
       if (stored) return JSON.parse(stored);
     } catch (_e) {}
-    return DEMO_ADMIN;
+    return null;
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Initialize session by verifying cookie with backend on mount
   useEffect(() => {
@@ -38,20 +22,26 @@ export function AuthProvider({ children }) {
         if (isMounted && member) {
           const loggedInMember = {
             id: member._id || member.id,
-            name: member.name || member.email.split('@')[0],
+            name: member.name || (member.email ? member.email.split('@')[0] : 'Member'),
             email: member.email,
             team: member.team || 'Web Team',
             position: member.position || 'Member',
             roles: member.roles || ['member'],
             status: member.status || 'ACTIVE',
-            profile_photo_url: member.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(member.email)}`,
+            profile_photo_url: member.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(member.email || 'user')}`,
             social_links: member.social_links || {},
           };
           setCurrentUser(loggedInMember);
           try { localStorage.setItem('aces_cms_user', JSON.stringify(loggedInMember)); } catch (_) {}
+        } else if (isMounted) {
+          setCurrentUser(null);
+          try { localStorage.removeItem('aces_cms_user'); } catch (_) {}
         }
       } catch (_err) {
-        // Backend offline or invalid session - keep demo session if available
+        if (isMounted) {
+          setCurrentUser(null);
+          try { localStorage.removeItem('aces_cms_user'); } catch (_) {}
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -84,48 +74,26 @@ export function AuthProvider({ children }) {
 
   const isAuthenticated = Boolean(currentUser);
 
-  // Login handler connected to backend API with offline fallback
+  // Login handler strictly authenticated via backend API
   const login = async (email, password) => {
-    try {
-      const res = await membersApi.login(email, password);
-      if (res && res.member) {
-        const loggedInMember = {
-          id: res.member._id || res.member.id,
-          name: res.member.name || email.split('@')[0],
-          email: res.member.email,
-          team: res.member.team || 'Web Team',
-          position: res.member.position || 'Member',
-          roles: res.member.roles || ['member'],
-          status: res.member.status || 'ACTIVE',
-          profile_photo_url: res.member.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
-          social_links: res.member.social_links || {},
-        };
-        setCurrentUser(loggedInMember);
-        try { localStorage.setItem('aces_cms_user', JSON.stringify(loggedInMember)); } catch (_) {}
-        return loggedInMember;
-      }
-    } catch (apiError) {
-      console.warn('[Auth] Backend API offline, activating demo local session:', apiError.message);
-      const isAdm = email.toLowerCase().includes('admin') || email.toLowerCase().includes('exec') || email.toLowerCase().includes('president');
-      const fallbackMember = {
-        id: `demo-${Date.now()}`,
-        name: isAdm ? 'ACES Admin' : (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1) || 'ACES Member'),
-        email: email,
-        team: isAdm ? 'Executive' : 'Web Team',
-        position: isAdm ? 'System Administrator' : 'Core Member',
-        roles: isAdm ? ['admin', 'member'] : ['member'],
-        status: 'ACTIVE',
-        profile_photo_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
-        social_links: {
-          linkedin: 'https://linkedin.com',
-          github: 'https://github.com',
-          instagram: 'https://instagram.com',
-        },
+    const res = await membersApi.login(email, password);
+    if (res && res.member) {
+      const loggedInMember = {
+        id: res.member._id || res.member.id,
+        name: res.member.name || email.split('@')[0],
+        email: res.member.email,
+        team: res.member.team || 'Web Team',
+        position: res.member.position || 'Member',
+        roles: res.member.roles || ['member'],
+        status: res.member.status || 'ACTIVE',
+        profile_photo_url: res.member.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
+        social_links: res.member.social_links || {},
       };
-      setCurrentUser(fallbackMember);
-      try { localStorage.setItem('aces_cms_user', JSON.stringify(fallbackMember)); } catch (_) {}
-      return fallbackMember;
+      setCurrentUser(loggedInMember);
+      try { localStorage.setItem('aces_cms_user', JSON.stringify(loggedInMember)); } catch (_) {}
+      return loggedInMember;
     }
+    throw new Error('Authentication failed. No member data received.');
   };
 
   // Logout handler
