@@ -26,7 +26,7 @@ export const generatePaymentStatement = (amount, hasFallback) => {
   const amtStr = amount ? `₹${amount}` : '{amount}';
   return hasFallback
     ? `Please pay ${amtStr} using one of the following QR codes and upload your payment confirmation screenshot. If ACES member, please upload membership card.`
-    : `Please pay ${amtStr} using the QR code below and upload your payment confirmation screenshot.If ACES member, please upload membership card.`;
+    : `Please pay ${amtStr} using the QR code below and upload your payment confirmation screenshot. If ACES member, please upload membership card.`;
 };
 
 const DEFAULT_QUESTIONS = [
