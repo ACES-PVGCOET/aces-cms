@@ -64,13 +64,17 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingImages, setUploadingImages] = useState({});
-  const [uploadingQrs, setUploadingQrs] = useState({});
+  const [whatsappGroupLink, setWhatsappGroupLink] = useState('');
+const [whatsappQrCode, setWhatsappQrCode] = useState('');
+const [isUploadingQr, setIsUploadingQr] = useState(false);
 
   useEffect(() => {
     if (initialForm) {
       setTitle(initialForm.title || '');
       setDescription(initialForm.description || '');
       setIsActive(initialForm.is_active !== undefined ? Boolean(initialForm.is_active) : true);
+       setWhatsappGroupLink(initialForm.whatsapp_group_link || '');
+    setWhatsappQrCode(initialForm.whatsapp_qr_code || '');
 
       if (Array.isArray(initialForm.questions) && initialForm.questions.length > 0) {
         setQuestions(
@@ -88,12 +92,15 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
         );
       } else {
         setQuestions(DEFAULT_QUESTIONS);
+       
       }
     } else {
       setTitle('');
       setDescription('');
       setIsActive(true);
       setQuestions(DEFAULT_QUESTIONS);
+       setWhatsappGroupLink('');
+    setWhatsappQrCode('');
     }
     setErrorMsg('');
     setIsPreviewMode(false);
@@ -282,6 +289,28 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
     }
   };
 
+  // Upload WhatsApp QR Image to Cloudinary
+  const handleQrUpload = async (file) => {
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg(`QR Image file "${file.name}" exceeds maximum size of 5MB.`);
+      return;
+    }
+
+    try {
+      setErrorMsg('');
+      setIsUploadingQr(true);
+      const uploadedUrl = await uploadToCloudinary(file, 'form_whatsapp_qr', 'image');
+      setWhatsappQrCode(uploadedUrl);
+    } catch (err) {
+      console.error('[FormBuilderModal] WhatsApp QR upload failed:', err);
+      setErrorMsg(err.message || 'WhatsApp QR upload failed. Please try again.');
+    } finally {
+      setIsUploadingQr(false);
+    }
+  };
+
   // Update question policy object
   const updateQuestionPolicy = (idx, policyKey, field, value) => {
     const updated = [...questions];
@@ -374,29 +403,18 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
         title: title.trim(),
         description: description.trim(),
         is_active: isActive,
-        questions: questions.map((q, idx) => {
-          const isPayment = q.question_type === 'payment_acceptance';
-          const numAmount = Number(q.payment_policy?.amount || 0);
-          const statement = isPayment
-            ? (q.question_statement?.trim() || generatePaymentStatement(numAmount, Boolean(q.payment_policy?.fallback_qr_url)))
-            : q.question_statement.trim();
-
-          return {
-            question_serial: idx + 1,
-            question_statement: statement,
-            question_type: q.question_type,
-            is_required: Boolean(q.is_required),
-            image_url: q.image_url ? q.image_url.trim() : '',
-            textual_policy: q.textual_policy || { max_len: 500 },
-            multiple_choice_policy: q.multiple_choice_policy || { type: 'Single', options: [] },
-            file_policy: q.file_policy || { supported_types: ['pdf'], max_size_mb: 5 },
-            payment_policy: isPayment ? {
-              amount: numAmount,
-              primary_qr_url: q.payment_policy?.primary_qr_url || '',
-              fallback_qr_url: q.payment_policy?.fallback_qr_url || '',
-            } : undefined,
-          };
-        }),
+        whatsapp_group_link: whatsappGroupLink.trim(),
+  whatsapp_qr_code: whatsappQrCode.trim(),
+        questions: questions.map((q, idx) => ({
+          question_serial: idx + 1,
+          question_statement: q.question_statement.trim(),
+          question_type: q.question_type,
+          is_required: Boolean(q.is_required),
+          image_url: q.image_url ? q.image_url.trim() : '',
+          textual_policy: q.textual_policy || { max_len: 500 },
+          multiple_choice_policy: q.multiple_choice_policy || { type: 'Single', options: [] },
+          file_policy: q.file_policy || { supported_types: ['pdf'], max_size_mb: 5 },
+        })),
       };
 
       await onSubmit(payload);
@@ -597,6 +615,75 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                   placeholder="Briefly explain what this form is for and any instructions..."
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:outline-none text-xs font-medium resize-none"
                 />
+              </div>
+
+              {/* WhatsApp Post-Submission Settings */}
+              <div className="sm:col-span-3 p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span>WhatsApp Group & QR Code (Post-Submission)</span>
+                  </span>
+                  <span className="text-[10px] text-white/50">Optional - displayed to participant after submitting</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* WhatsApp Group Link */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium opacity-80">WhatsApp Group Link</label>
+                    <input
+                      type="url"
+                      value={whatsappGroupLink}
+                      onChange={(e) => setWhatsappGroupLink(e.target.value)}
+                      placeholder="https://chat.whatsapp.com/..."
+                      className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:outline-none text-xs font-mono"
+                    />
+                  </div>
+
+                  {/* WhatsApp QR Code */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium opacity-80">WhatsApp QR Code</label>
+                    {whatsappQrCode ? (
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10 text-xs">
+                        <div className="flex items-center gap-2 truncate">
+                          <img src={whatsappQrCode} alt="QR Code" className="w-7 h-7 rounded object-cover" />
+                          <span className="truncate text-white/80 text-[11px] font-mono">{whatsappQrCode}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setWhatsappQrCode('')}
+                          className="text-red-400 hover:text-red-300 text-xs font-bold shrink-0 ml-2 cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={whatsappQrCode}
+                          onChange={(e) => setWhatsappQrCode(e.target.value)}
+                          placeholder="Image URL or upload ->"
+                          className="flex-1 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:outline-none text-xs font-mono"
+                        />
+                        <label className="px-3 py-2 rounded-xl bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold hover:bg-emerald-600/50 transition-colors cursor-pointer shrink-0 flex items-center gap-1.5">
+                          {isUploadingQr ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <UploadCloud className="w-3.5 h-3.5" />
+                          )}
+                          <span>Upload</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={isUploadingQr}
+                            onChange={(e) => handleQrUpload(e.target.files?.[0])}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
