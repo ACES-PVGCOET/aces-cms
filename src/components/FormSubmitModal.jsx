@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, CheckCircle2, AlertCircle, UploadCloud, FileCheck, Send, Sparkles, Mail } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, UploadCloud, FileCheck, Send, Sparkles, Mail, ArrowUpRight, Copy, Check } from 'lucide-react';
 import { uploadToCloudinary, formsApi } from '../services/api';
 
 export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
@@ -11,6 +11,17 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleCopyLink = async (link) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      console.warn('Failed to copy link:', err);
+    }
+  };
 
   useEffect(() => {
     if (form && Array.isArray(form.questions)) {
@@ -208,15 +219,86 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
 
         {/* SUBMITTED SUCCESS STATE */}
         {isSubmittedSuccess ? (
-          <div className="py-12 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center animate-bounce">
-              <CheckCircle2 className="w-8 h-8" />
+          <div className="py-8 text-center space-y-6">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center animate-bounce shadow-lg">
+              <CheckCircle2 className="w-7 h-7" />
             </div>
-            <h3 className="text-xl font-bold text-emerald-300">Response Successfully Recorded!</h3>
-            <p className="text-xs opacity-80 max-w-md mx-auto">
-              Thank you for filling out &quot;{form.title}&quot;. Your response has been securely logged into the ACES Forms Engine for <span className="font-semibold text-emerald-400">{fillerEmail}</span>.
-            </p>
-            <div className="pt-4">
+            <div>
+              <h3 className="text-xl font-bold text-emerald-300">Response Successfully Recorded!</h3>
+              <p className="text-xs opacity-80 max-w-md mx-auto mt-1">
+                Thank you for filling out &quot;{form.title}&quot;. Your response has been securely logged into the ACES Forms Engine for <span className="font-semibold text-emerald-400">{fillerEmail}</span>.
+              </p>
+            </div>
+
+            {/* Optional WhatsApp Group & QR Code Box */}
+            {(form?.whatsapp_group_link || form?.whatsapp_qr_code) && (
+              <div className="p-5 rounded-2xl bg-white/[0.04] border border-emerald-500/30 max-w-md mx-auto space-y-4 text-left shadow-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.28-2.42 5.84s-3.64 2.4-5.82 2.4c-1.43 0-2.83-.37-4.08-1.07l-.29-.17-3.04.8 1.15-2.95-.19-.31c-.76-1.25-1.16-2.69-1.16-4.17 0-4.54 3.7-8.24 8.24-8.24zm4.56 11.64c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.4-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.38-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.35-.77-1.85-.2-.49-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.45 1.03 2.62.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.11-.23-.17-.48-.29z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white">Join Event WhatsApp Group</h4>
+                    <p className="text-[11px] opacity-70">
+                      Stay connected for announcements and schedule updates.
+                    </p>
+                  </div>
+                </div>
+
+                {/* QR Code (if provided) */}
+                {form.whatsapp_qr_code && (
+                  <div className="flex flex-col items-center justify-center py-2">
+                    <div className="p-2 bg-white rounded-xl shadow-md border border-emerald-500/30">
+                      <img
+                        src={form.whatsapp_qr_code}
+                        alt="WhatsApp Group QR Code"
+                        className="w-36 h-36 object-contain rounded"
+                      />
+                    </div>
+                    <span className="text-[10px] text-emerald-400 font-mono mt-1.5">
+                      Scan QR code to join group
+                    </span>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                {form.whatsapp_group_link && (
+                  <div className="space-y-2 pt-1">
+                    <a
+                      href={form.whatsapp_group_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <span>Join WhatsApp Group</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink(form.whatsapp_group_link)}
+                      className="w-full py-1.5 px-3 rounded-xl border border-white/10 hover:border-emerald-500/40 bg-black/20 text-[11px] font-mono flex items-center justify-center gap-1.5 text-white/80 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {copiedLink ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-400" />
+                          <span>Link Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy WhatsApp Link</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={onClose}
