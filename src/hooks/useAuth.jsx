@@ -4,7 +4,13 @@ import { membersApi } from '../services/api';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('aces_cms_user');
+      if (stored) return JSON.parse(stored);
+    } catch (_e) {}
+    return null;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize session by verifying cookie with backend on mount
@@ -16,21 +22,25 @@ export function AuthProvider({ children }) {
         if (isMounted && member) {
           const loggedInMember = {
             id: member._id || member.id,
-            name: member.name || member.email.split('@')[0],
+            name: member.name || (member.email ? member.email.split('@')[0] : 'Member'),
             email: member.email,
             team: member.team || 'Web Team',
             position: member.position || 'Member',
             roles: member.roles || ['member'],
             status: member.status || 'ACTIVE',
-            profile_photo_url: member.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(member.email)}`,
+            profile_photo_url: member.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(member.email || 'user')}`,
             social_links: member.social_links || {},
           };
           setCurrentUser(loggedInMember);
+          try { localStorage.setItem('aces_cms_user', JSON.stringify(loggedInMember)); } catch (_) {}
+        } else if (isMounted) {
+          setCurrentUser(null);
+          try { localStorage.removeItem('aces_cms_user'); } catch (_) {}
         }
       } catch (_err) {
-        // Session invalid or expired cookie
         if (isMounted) {
           setCurrentUser(null);
+          try { localStorage.removeItem('aces_cms_user'); } catch (_) {}
         }
       } finally {
         if (isMounted) {
@@ -64,29 +74,26 @@ export function AuthProvider({ children }) {
 
   const isAuthenticated = Boolean(currentUser);
 
-  // Login handler connected to backend API
+  // Login handler strictly authenticated via backend API
   const login = async (email, password) => {
-    try {
-      const res = await membersApi.login(email, password);
-      if (res && res.member) {
-        const loggedInMember = {
-          id: res.member._id || res.member.id,
-          name: res.member.name || email.split('@')[0],
-          email: res.member.email,
-          team: res.member.team || 'Web Team',
-          position: res.member.position || 'Member',
-          roles: res.member.roles || ['member'],
-          status: res.member.status || 'ACTIVE',
-          profile_photo_url: res.member.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
-          social_links: res.member.social_links || {},
-        };
-        setCurrentUser(loggedInMember);
-        return loggedInMember;
-      }
-    } catch (apiError) {
-      console.warn('[Auth] Backend API login error:', apiError.message);
-      throw apiError;
+    const res = await membersApi.login(email, password);
+    if (res && res.member) {
+      const loggedInMember = {
+        id: res.member._id || res.member.id,
+        name: res.member.name || email.split('@')[0],
+        email: res.member.email,
+        team: res.member.team || 'Web Team',
+        position: res.member.position || 'Member',
+        roles: res.member.roles || ['member'],
+        status: res.member.status || 'ACTIVE',
+        profile_photo_url: res.member.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
+        social_links: res.member.social_links || {},
+      };
+      setCurrentUser(loggedInMember);
+      try { localStorage.setItem('aces_cms_user', JSON.stringify(loggedInMember)); } catch (_) {}
+      return loggedInMember;
     }
+    throw new Error('Authentication failed. No member data received.');
   };
 
   // Logout handler
@@ -97,6 +104,7 @@ export function AuthProvider({ children }) {
       console.warn('[Auth] Logout request error:', e.message);
     } finally {
       setCurrentUser(null);
+      try { localStorage.removeItem('aces_cms_user'); } catch (_) {}
     }
   };
 

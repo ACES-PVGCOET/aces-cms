@@ -121,23 +121,42 @@ export function ImportMembershipModal({
               />
             </div>
 
-            <button
-              onClick={handleImportLocalSheet}
-              disabled={isImporting || !customPath.trim()}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg cursor-pointer transition-all duration-200 disabled:opacity-50"
-            >
-              {isImporting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Parsing & Importing Records...</span>
-                </>
-              ) : (
-                <>
-                  <FileSpreadsheet className="w-4 h-4" />
-                  <span>Import Records from Spreadsheet</span>
-                </>
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <button
+                onClick={handleImportLocalSheet}
+                disabled={isImporting || !customPath.trim()}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg cursor-pointer transition-all duration-200 disabled:opacity-50"
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Parsing &amp; Importing Records...</span>
+                  </>
+                ) : (
+                  <>
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>Import Records from Path</span>
+                  </>
+                )}
+              </button>
+
+              {onLoadSampleData && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onLoadSampleData();
+                    if (showToast) {
+                      showToast('Loaded sample membership spreadsheet with 8 student records.', 'success', 'Sample Sheet Loaded');
+                    }
+                    onClose();
+                  }}
+                  className="btn-secondary px-4 py-2.5 rounded-xl text-xs font-black text-black dark:text-white flex items-center justify-center gap-1.5 cursor-pointer border border-sky-500/40"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
+                  <span>Load Sample Demo Sheet</span>
+                </button>
               )}
-            </button>
+            </div>
           </div>
 
           {/* Success Summary Result */}

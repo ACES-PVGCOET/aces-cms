@@ -111,13 +111,13 @@ export function OnboardingModal({ isOpen, token, onClose, onCompleteOnboarding, 
 
                 <h1 className="text-3xl xl:text-4xl font-black tracking-tight leading-tight text-slate-900">
                   Activate Your <br />
-                  <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 bg-clip-text text-transparent">
+                  <span className="text-[#9d4edd]">
                     ACES Club Identity
                   </span>
                 </h1>
 
                 <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                  Welcome to ACES! Complete your account verification to access the central content launchpad, events, and guild directory.
+                  Welcome to ACES! Complete your account verification to access the central content launchpad, events, and team directory.
                 </p>
               </div>
 
@@ -134,7 +134,7 @@ export function OnboardingModal({ isOpen, token, onClose, onCompleteOnboarding, 
                 </div>
 
                 <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/80 border border-slate-200 backdrop-blur-xl shadow-sm">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black flex items-center justify-center text-xs shrink-0 shadow-md">
+                  <div className="w-8 h-8 rounded-xl bg-[#9d4edd] text-white font-black flex items-center justify-center text-xs shrink-0 shadow-md">
                     2
                   </div>
                   <div>
@@ -148,7 +148,7 @@ export function OnboardingModal({ isOpen, token, onClose, onCompleteOnboarding, 
                     3
                   </div>
                   <div>
-                    <h4 className="text-xs font-extrabold text-slate-900">Active Guild Membership</h4>
+                    <h4 className="text-xs font-extrabold text-slate-900">Active Team Membership</h4>
                     <p className="text-[11px] text-slate-500 font-medium">Full privileges enabled</p>
                   </div>
                 </div>
@@ -168,7 +168,7 @@ export function OnboardingModal({ isOpen, token, onClose, onCompleteOnboarding, 
               <div className="relative rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden border border-emerald-200/80 bg-white/90 backdrop-blur-2xl ring-1 ring-white/80">
                 
                 {/* Top Glowing Emerald Accent Line */}
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-500" />
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#9d4edd]" />
 
                 {/* Form Header Branding with Logo */}
                 <div className="flex items-center gap-4 mb-6">
@@ -309,7 +309,7 @@ export function OnboardingModal({ isOpen, token, onClose, onCompleteOnboarding, 
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/25 disabled:opacity-50 transition-all hover:scale-[1.02] cursor-pointer"
+                      className="px-6 py-3 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-purple-500/25 disabled:opacity-50 transition-all hover:scale-[1.02] cursor-pointer"
                     >
                       {isSubmitting ? (
                         <span>Activating Account...</span>
@@ -336,8 +336,8 @@ export function OnboardingModal({ isOpen, token, onClose, onCompleteOnboarding, 
           <div className="max-w-lg mx-auto py-10 px-8 rounded-3xl bg-white/95 border border-emerald-300 backdrop-blur-2xl shadow-2xl text-center space-y-6 animate-in zoom-in-95 duration-300 relative overflow-hidden">
             
             {/* Ambient Celebration Glow */}
-            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
-            <div className="w-32 h-32 bg-emerald-200/50 rounded-full blur-3xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="absolute top-0 left-0 right-0 h-2 bg-[#9d4edd]" />
+            <div className="w-32 h-32 bg-purple-200/50 rounded-full blur-3xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
             {/* Animated Logo / Check Badge */}
             <div className="relative inline-block">
@@ -365,7 +365,7 @@ export function OnboardingModal({ isOpen, token, onClose, onCompleteOnboarding, 
                 onClose();
                 if (onOpenLogin) onOpenLogin();
               }}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/30 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+              className="w-full py-4 rounded-2xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-purple-500/30 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
             >
               <span>Proceed to Login Portal</span>
               <ArrowRight className="w-4 h-4" />

@@ -135,6 +135,39 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
     }
   };
 
+  // Payment Screenshot Upload to Cloudinary handler
+  const handlePaymentScreenshotUpload = async (serial, file) => {
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMsg(`Screenshot "${file.name}" exceeds maximum allowed size of 10MB.`);
+      return;
+    }
+
+    const ext = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : '';
+    const allowedExts = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
+    if (!allowedExts.includes(ext)) {
+      setErrorMsg(`Payment screenshot must be an image or document (allowed: ${allowedExts.join(', ')}).`);
+      return;
+    }
+
+    try {
+      setErrorMsg('');
+      setUploadingFiles((prev) => ({ ...prev, [String(serial)]: true }));
+      const cloudinaryUrl = await uploadToCloudinary(file, 'form_payments', 'image');
+
+      setAnswersMap((prev) => ({
+        ...prev,
+        [String(serial)]: [cloudinaryUrl],
+      }));
+    } catch (err) {
+      console.error('[FormSubmitModal] Payment screenshot upload error:', err);
+      setErrorMsg(err.message || 'Payment screenshot upload failed. Please try again.');
+    } finally {
+      setUploadingFiles((prev) => ({ ...prev, [String(serial)]: false }));
+    }
+  };
+
   // Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -195,10 +228,10 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
             <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
               <Sparkles className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold tracking-tight">{form.title}</h2>
-              <p className="text-xs opacity-70">Fill out and submit form response</p>
-            </div>
+              <h2 className="text-lg font-extrabold text-black dark:text-white tracking-tight">
+                <span className="classic-dotted-heading">{form.title}</span>
+              </h2>
+              <p className="text-xs text-black/70 dark:text-slate-300">Fill out and submit form response</p>
           </div>
 
           <button
@@ -501,6 +534,145 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
                       </div>
                     )}
 
+                    {/* PAYMENT ACCEPTANCE QUESTION INPUT */}
+                    {q.question_type === 'payment_acceptance' && (
+                      <div className="space-y-4">
+                        {/* Payment Amount Card */}
+                        <div className="p-4 rounded-xl bg-[#9d4edd]/10 border border-[#9d4edd]/30 flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-[#9d4edd]/20 text-[#9d4edd] flex items-center justify-center">
+                              <CreditCard className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-bold text-[#c77dff]">Amount Due</p>
+                              <p className="text-[10px] opacity-70">Scan QR and transfer the exact fee</p>
+                            </div>
+                          </div>
+                          <span className="text-lg font-mono font-extrabold text-emerald-400">
+                            ₹{q.payment_policy?.amount || '0'}
+                          </span>
+                        </div>
+
+                        {/* QR Codes Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* Primary QR */}
+                          {q.payment_policy?.primary_qr_url && (
+                            <div className="p-3.5 rounded-xl bg-black/40 border border-emerald-500/30 text-center space-y-2">
+                              <span className="inline-block px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                                Primary Payment QR
+                              </span>
+                              <div className="w-36 h-36 mx-auto rounded-xl bg-white p-2 flex items-center justify-center shadow-lg">
+                                <img
+                                  src={q.payment_policy.primary_qr_url}
+                                  alt="Primary Payment QR"
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                              <a
+                                href={q.payment_policy.primary_qr_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[10px] text-indigo-300 hover:text-indigo-200 underline"
+                              >
+                                <span>Open Full QR</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          )}
+
+                          {/* Fallback QR */}
+                          {q.payment_policy?.fallback_qr_url && (
+                            <div className="p-3.5 rounded-xl bg-black/40 border border-amber-500/30 text-center space-y-2">
+                              <span className="inline-block px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold">
+                                Secondary / Fallback QR
+                              </span>
+                              <div className="w-36 h-36 mx-auto rounded-xl bg-white p-2 flex items-center justify-center shadow-lg">
+                                <img
+                                  src={q.payment_policy.fallback_qr_url}
+                                  alt="Fallback Payment QR"
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                              <a
+                                href={q.payment_policy.fallback_qr_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[10px] text-indigo-300 hover:text-indigo-200 underline"
+                              >
+                                <span>Open Full QR</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Payment Screenshot Upload Zone */}
+                        <div className="space-y-1.5 pt-1">
+                          <label className="block text-xs font-bold text-slate-200 flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <ImageIcon className="w-3.5 h-3.5 text-indigo-400" />
+                              <span>Upload Payment Screenshot</span>
+                              {q.is_required && <span className="text-red-400">*</span>}
+                            </span>
+                            <span className="text-[10px] opacity-60">PNG, JPG, WEBP, PDF (Max 10MB)</span>
+                          </label>
+
+                          {currentAns[0] ? (
+                            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-300 font-semibold">
+                              <div className="flex items-center gap-2 truncate pr-2">
+                                <FileCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                                <span className="truncate">{currentAns[0]}</span>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                <label className="text-[11px] text-indigo-300 hover:text-white font-bold cursor-pointer hover:underline">
+                                  <span>Replace</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*,application/pdf"
+                                    disabled={!form.is_active || isUploading}
+                                    onChange={(e) => handlePaymentScreenshotUpload(q.question_serial, e.target.files?.[0])}
+                                    className="hidden"
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTextChange(q.question_serial, '')}
+                                  className="text-[11px] text-red-400 hover:underline cursor-pointer"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="p-4 border-2 border-dashed border-indigo-500/40 hover:border-indigo-400 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-indigo-500/5 hover:bg-indigo-500/10">
+                              {isUploading ? (
+                                <div className="flex items-center gap-2 py-2 text-indigo-300">
+                                  <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+                                  <span className="text-xs font-semibold">Uploading payment screenshot...</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <UploadCloud className="w-6 h-6 mb-1 text-indigo-400" />
+                                  <span className="text-xs font-semibold text-slate-200">
+                                    Click or drop to upload payment confirmation screenshot
+                                  </span>
+                                  <span className="text-[10px] opacity-60 mt-0.5">
+                                    Capture the transaction ID & status screen from your payment app
+                                  </span>
+                                </>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*,application/pdf"
+                                disabled={!form.is_active || isUploading}
+                                onChange={(e) => handlePaymentScreenshotUpload(q.question_serial, e.target.files?.[0])}
+                                className="hidden"
+                              />
+                            </label>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

@@ -19,27 +19,175 @@ function normalizeMember(m) {
   };
 }
 
+const DEFAULT_MEMBERS = [
+  {
+    id: 'mem-001',
+    name: 'Dr. Sunita Kulkarni',
+    email: 'sunita.kulkarni@pvgcoet.ac.in',
+    team: 'Faculty',
+    position: 'Faculty Sponsor',
+    status: 'ACTIVE',
+    profile_photo_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80',
+    social_links: { linkedin: 'https://linkedin.com', github: '', instagram: '' },
+  },
+  {
+    id: 'mem-002',
+    name: 'Yash Jawle',
+    email: 'yashjawle440@gmail.com',
+    team: 'Leaders',
+    position: 'President',
+    status: 'ACTIVE',
+    profile_photo_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+    social_links: { linkedin: 'https://linkedin.com', github: 'https://github.com', instagram: 'https://instagram.com' },
+  },
+  {
+    id: 'mem-003',
+    name: 'Aarav Sharma',
+    email: 'aarav.sharma@acesclub.org',
+    team: 'Leaders',
+    position: 'Vice President',
+    status: 'ACTIVE',
+    profile_photo_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80',
+    social_links: { linkedin: 'https://linkedin.com', github: 'https://github.com', instagram: 'https://instagram.com' },
+  },
+  {
+    id: 'mem-004',
+    name: 'Vikram Joshi',
+    email: 'vikram.joshi@acesclub.org',
+    team: 'Technical Team',
+    position: 'Tech Lead',
+    status: 'ACTIVE',
+    profile_photo_url: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&auto=format&fit=crop&q=80',
+    social_links: { linkedin: 'https://linkedin.com', github: 'https://github.com', instagram: '' },
+  },
+  {
+    id: 'mem-005',
+    name: 'Diya Patel',
+    email: 'diya.patel@acesclub.org',
+    team: 'Web Team',
+    position: 'Lead Web Engineer',
+    status: 'ACTIVE',
+    profile_photo_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80',
+    social_links: { linkedin: 'https://linkedin.com', github: 'https://github.com', instagram: 'https://instagram.com' },
+  },
+  {
+    id: 'mem-006',
+    name: 'Ananya Deshmukh',
+    email: 'ananya.deshmukh@acesclub.org',
+    team: 'Editorial Team',
+    position: 'Editorial Lead',
+    status: 'ACTIVE',
+    profile_photo_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+    social_links: { linkedin: 'https://linkedin.com', github: '', instagram: 'https://instagram.com' },
+  },
+  {
+    id: 'mem-007',
+    name: 'Rohan Deshmukh',
+    email: 'rohan.deshmukh@acesclub.org',
+    team: 'Design & Production',
+    position: 'Creative Director',
+    status: 'ACTIVE',
+    profile_photo_url: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=300&auto=format&fit=crop&q=80',
+    social_links: { linkedin: 'https://linkedin.com', github: '', instagram: 'https://instagram.com' },
+  },
+  {
+    id: 'mem-008',
+    name: 'Priya Shinde',
+    email: 'priya.shinde@acesclub.org',
+    team: 'Marketing Team',
+    position: 'Marketing Head',
+    status: 'ACTIVE',
+    profile_photo_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80',
+    social_links: { linkedin: 'https://linkedin.com', github: '', instagram: 'https://instagram.com' },
+  },
+  {
+    id: 'mem-009',
+    name: 'Tanmay Kulkarni',
+    email: 'tanmay.kulkarni@acesclub.org',
+    team: 'Media Team',
+    position: 'Media Head',
+    status: 'ACTIVE',
+    profile_photo_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&auto=format&fit=crop&q=80',
+    social_links: { linkedin: 'https://linkedin.com', github: '', instagram: 'https://instagram.com' },
+  },
+  {
+    id: 'mem-010',
+    name: 'Pooja Verma',
+    email: 'pooja.verma@acesclub.org',
+    team: 'Event Team',
+    position: 'Event Coordinator',
+    status: 'NOT_ACTIVE',
+    profile_photo_url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&auto=format&fit=crop&q=80',
+    social_links: { linkedin: 'https://linkedin.com', github: '', instagram: 'https://instagram.com' },
+  },
+  {
+    id: 'mem-011',
+    name: 'Varun Nair',
+    email: 'varun.nair@acesclub.org',
+    team: 'Treasury Team',
+    position: 'Treasurer',
+    status: 'ACTIVE',
+    profile_photo_url: '',
+    social_links: { linkedin: 'https://linkedin.com', github: '', instagram: 'https://instagram.com' },
+  },
+  {
+    id: 'mem-012',
+    name: 'Sameer Rao',
+    email: 'sameer.rao@acesclub.org',
+    team: 'Technical Team',
+    position: 'Junior Developer',
+    status: 'NOT_ACTIVE',
+    profile_photo_url: '',
+    social_links: { linkedin: 'https://linkedin.com', github: 'https://github.com', instagram: '' },
+  },
+];
+
 /**
  * useMembers Hook
- * Fetches real member records directly from backend API (/iam/members).
+ * Fetches real member records directly from backend API (/iam/members) with rich offline fallback.
  */
 export function useMembers() {
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState(DEFAULT_MEMBERS);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('All Teams');
   const [sortBy, setSortBy] = useState('name-asc');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+
+  const handleSearchChange = (val) => {
+    setSearchQuery(val);
+    setPage(1);
+  };
+
+  const handleSelectTeam = (val) => {
+    setSelectedTeam(val);
+    setPage(1);
+  };
+
+  const handleSortChange = (val) => {
+    setSortBy(val);
+    setPage(1);
+  };
+
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
 
   // Fetch members from backend API on mount
   const fetchFromApi = useCallback(async () => {
     try {
       setIsLoading(true);
       const apiData = await membersApi.getAll();
-      if (Array.isArray(apiData)) {
-        setMembers(apiData.map(normalizeMember));
+      const memberList = Array.isArray(apiData) ? apiData : apiData?.members || [];
+      if (Array.isArray(memberList) && memberList.length > 0) {
+        setMembers(memberList.map(normalizeMember));
       }
     } catch (e) {
-      console.warn('[Members Hook] API fetch members error:', e.message);
+      console.warn('[Members Hook] Backend offline, using default demo members');
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +248,7 @@ export function useMembers() {
 
     return {
       totalMembers,
-      teamsTracking: `${uniqueTeams} Active Guilds`,
+      teamsTracking: `${uniqueTeams} Active Teams`,
       socialsPending: `${socialsPending} Needs Links`,
     };
   }, [members]);
@@ -151,15 +299,30 @@ export function useMembers() {
     }
   };
 
+  // Paginated members slice
+  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / limit));
+  const paginatedMembers = useMemo(() => {
+    const safePage = Math.max(1, Math.min(page, totalPages));
+    const start = (safePage - 1) * limit;
+    return filteredMembers.slice(start, start + limit);
+  }, [filteredMembers, page, limit, totalPages]);
+
   return {
     members,
     filteredMembers,
+    paginatedMembers,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchChange,
     selectedTeam,
-    setSelectedTeam,
+    setSelectedTeam: handleSelectTeam,
     sortBy,
-    setSortBy,
+    setSortBy: handleSortChange,
+    page,
+    setPage,
+    limit,
+    setLimit: handleLimitChange,
+    totalPages,
+    totalCount: filteredMembers.length,
     memberStats,
     addMember,
     updateMember,

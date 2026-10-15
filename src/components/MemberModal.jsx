@@ -155,7 +155,7 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
                 {isEditing ? 'Update Member Profile' : 'Enroll New Member'}
               </h2>
               <p className="text-xs leading-4 opacity-70 font-medium">
-                {isEditing ? 'Modify guild credentials & status' : 'Register a new member to ACES database'}
+                {isEditing ? 'Modify team credentials & status' : 'Register a new member to ACES database'}
               </p>
             </div>
           </div>
@@ -387,7 +387,7 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-1 text-[11px] font-bold opacity-80">
-                  <InstagramIcon className="w-3.5 h-3.5 text-pink-500" />
+                  <InstagramIcon className="w-3.5 h-3.5 text-[#E4405F]" />
                   <span>Instagram</span>
                 </div>
                 <input
@@ -401,7 +401,7 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
 
               <div className="space-y-1">
                 <div className="flex items-center gap-1 text-[11px] font-bold opacity-80">
-                  <LinkedinIcon className="w-3.5 h-3.5 text-blue-500" />
+                  <LinkedinIcon className="w-3.5 h-3.5 text-[#0A66C2]" />
                   <span>LinkedIn</span>
                 </div>
                 <input
@@ -415,7 +415,7 @@ export function MemberModal({ isOpen, initialMember, onClose, onSubmit }) {
 
               <div className="space-y-1">
                 <div className="flex items-center gap-1 text-[11px] font-bold opacity-80">
-                  <GithubIcon className="w-3.5 h-3.5" />
+                  <GithubIcon className="w-3.5 h-3.5 text-slate-800 dark:text-slate-200" />
                   <span>GitHub</span>
                 </div>
                 <input

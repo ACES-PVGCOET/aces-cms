@@ -132,7 +132,7 @@ export function BatchRegisterModal({ isOpen, onClose, onBulkRegister, onStartOnb
               </span>
             </div>
             <p className="text-xs opacity-70 font-medium mt-0.5">
-              Import multiple guild members simultaneously directly from a Google Sheet.
+              Import multiple team members simultaneously directly from a Google Sheet.
             </p>
           </div>
         </div>
@@ -355,7 +355,7 @@ export function BatchRegisterModal({ isOpen, onClose, onBulkRegister, onStartOnb
                       <thead className="bg-black/30 text-slate-300 font-bold sticky top-0 backdrop-blur-md">
                         <tr>
                           <th className="p-3">Member Details</th>
-                          <th className="p-3">Guild &amp; Position</th>
+                          <th className="p-3">Team &amp; Position</th>
                           <th className="p-3 text-right">Onboarding Activation Link</th>
                         </tr>
                       </thead>

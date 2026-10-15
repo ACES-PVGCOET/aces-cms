@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { 
   CheckCircle2, 
   XCircle, 
-  Clock, 
   X, 
   ExternalLink, 
   Copy, 
@@ -11,13 +10,13 @@ import {
   Receipt, 
   Send, 
   AlertCircle, 
-  MessageSquare,
-  ShieldCheck,
-  Calendar,
-  CreditCard,
-  User,
-  Phone
+  MessageSquare, 
+  ShieldCheck, 
+  User, 
+  Phone, 
+  Loader2 
 } from 'lucide-react';
+import ConfirmVerifyModal from './ConfirmVerifyModal';
 
 function getDriveFileId(url) {
   if (!url) return '';
@@ -54,12 +53,14 @@ export function VerifyFeeModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedContact, setCopiedContact] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [showConfirmPrompt, setShowConfirmPrompt] = useState(false);
 
   useEffect(() => {
     if (registration) {
       setRemarks(registration.remarks || '');
       setCustomAmount(registration.amount || 450);
       setImageError(false);
+      setShowConfirmPrompt(false);
     }
   }, [registration]);
 
@@ -71,8 +72,11 @@ export function VerifyFeeModal({
     setTimeout(() => setCopiedContact(false), 2000);
   };
 
-  const handleAction = async (targetStatus) => {
-    if (targetStatus === 'REJECTED' && !remarks.trim()) {
+  const handleAction = async (targetStatus, overridePayload = null) => {
+    const finalRemarks = overridePayload && overridePayload.remarks !== undefined ? overridePayload.remarks : remarks.trim();
+    const finalAmount = overridePayload && overridePayload.amount !== undefined ? overridePayload.amount : customAmount;
+
+    if (targetStatus === 'REJECTED' && !finalRemarks) {
       if (showToast) showToast('Please provide a reason/remark for rejection.', 'error', 'Remark Required');
       return;
     }
@@ -81,8 +85,8 @@ export function VerifyFeeModal({
       setIsSubmitting(true);
       await onVerify(registration.id, {
         status: targetStatus,
-        remarks: remarks.trim(),
-        amount: customAmount,
+        remarks: finalRemarks,
+        amount: finalAmount,
       });
       if (showToast) {
         showToast(
@@ -96,6 +100,7 @@ export function VerifyFeeModal({
       if (showToast) {
         showToast(err.message || 'Failed to update verification status.', 'error', 'Action Failed');
       }
+      throw err;
     } finally {
       setIsSubmitting(false);
     }
@@ -115,17 +120,23 @@ export function VerifyFeeModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="relative w-full max-w-4xl glass-panel rounded-3xl overflow-hidden shadow-2xl border border-white/20 flex flex-col my-auto max-h-[92vh]">
+      <div className="relative w-full max-w-4xl glass-panel rounded-2xl overflow-hidden shadow-2xl border border-white/20 flex flex-col my-auto max-h-[92vh]">
+        {/* Animated In-Process Top Bar */}
+        {isSubmitting && (
+          <div className="h-1.5 w-full bg-[#9d4edd]/20 overflow-hidden relative shrink-0">
+            <div className="h-full bg-[#9d4edd] animate-pulse w-full" />
+          </div>
+        )}
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 bg-white/5">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold shadow-md ${
               isVerified 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                ? 'bg-emerald-500/20 text-verified-black border border-emerald-500/40'
                 : isRejected
-                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                ? 'bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/40'
+                : 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/40'
             }`}>
               <Receipt className="w-5 h-5" />
             </div>
@@ -139,10 +150,10 @@ export function VerifyFeeModal({
                 </span>
                 <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${
                   isVerified
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    ? 'bg-emerald-500/20 text-verified-black border border-emerald-500/30'
                     : isRejected
-                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                    ? 'bg-rose-500/20 text-rose-700 dark:text-white border border-rose-500/30'
+                    : 'bg-amber-500/20 text-amber-700 dark:text-white border border-amber-500/30'
                 }`}>
                   {registration.status}
                 </span>
@@ -407,8 +418,9 @@ export function VerifyFeeModal({
 
           <div className="flex items-center gap-2.5">
             <button
+              disabled={isSubmitting}
               onClick={onClose}
-              className="px-4 py-2 rounded-xl btn-secondary text-xs font-bold cursor-pointer"
+              className="px-4 py-2 rounded-xl btn-secondary text-xs font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -416,7 +428,7 @@ export function VerifyFeeModal({
             <button
               disabled={isSubmitting}
               onClick={() => handleAction('REJECTED')}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-500/40 cursor-pointer transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-500/40 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <XCircle className="w-4 h-4" />
               <span>Reject Payment</span>
@@ -424,16 +436,44 @@ export function VerifyFeeModal({
 
             <button
               disabled={isSubmitting}
-              onClick={() => handleAction('VERIFIED')}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg cursor-pointer transition-all duration-200"
+              onClick={() => setShowConfirmPrompt(true)}
+              className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Verify & Approve</span>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Verifying...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Verify & Approve</span>
+                </>
+              )}
             </button>
           </div>
         </div>
 
       </div>
+
+      {/* Customized Confirmation Prompt Modal */}
+      {showConfirmPrompt && (
+        <ConfirmVerifyModal
+          isOpen={showConfirmPrompt}
+          onClose={() => setShowConfirmPrompt(false)}
+          registration={{
+            ...registration,
+            amount: customAmount,
+            remarks: remarks,
+          }}
+          onConfirm={async (id, payload) => {
+            await handleAction('VERIFIED', payload);
+            setShowConfirmPrompt(false);
+          }}
+          onOpenMediaLightbox={onOpenMediaLightbox}
+          showToast={showToast}
+        />
+      )}
     </div>
   );
 }

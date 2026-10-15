@@ -8,6 +8,7 @@ import { useEvents } from './hooks/useEvents';
 import { useAnnouncements } from './hooks/useAnnouncements';
 import { useShowcase } from './hooks/useShowcase';
 import { useForms } from './hooks/useForms';
+import { useMagazines } from './hooks/useMagazines';
 
 // Utilities
 import { 
@@ -24,6 +25,7 @@ import DashboardView from './components/DashboardView';
 import MembersView from './components/MembersView';
 import EventsView from './components/EventsView';
 import AnnouncementsView from './components/AnnouncementsView';
+import MagazineView from './components/MagazineView';
 import ShowcaseView from './components/ShowcaseView';
 import FormsView from './components/FormsView';
 import AdminPanelView from './components/AdminPanelView';
@@ -31,6 +33,8 @@ import AdminPanelView from './components/AdminPanelView';
 // Modals & Auxiliary Elements
 import MemberModal from './components/MemberModal';
 import MemberDetailModal from './components/MemberDetailModal';
+import MagazineModal from './components/MagazineModal';
+import MagazinePdfModal from './components/MagazinePdfModal';
 import RegisterMemberModal from './components/RegisterMemberModal';
 import BatchRegisterModal from './components/BatchRegisterModal';
 import OnboardingModal from './components/OnboardingModal';
@@ -75,30 +79,44 @@ function AppContent() {
   const [theme, setTheme] = useState(() => {
     try {
       const stored = localStorage.getItem('aces_cms_theme_3');
-      if (['deep-midnight', 'pastel-aurora'].includes(stored)) {
+      if (['deep-midnight', 'sky-white'].includes(stored)) {
         return stored;
       }
-      return 'pastel-aurora';
+      return 'sky-white';
     } catch {
-      return 'pastel-aurora';
+      return 'sky-white';
     }
   });
 
   const handleSelectTheme = (newTheme) => {
-    if (['deep-midnight', 'pastel-aurora'].includes(newTheme)) {
-      setTheme(newTheme);
-      try {
-        localStorage.setItem('aces_cms_theme_3', newTheme);
-      } catch (e) {
-        console.warn('Failed to save theme to localStorage', e);
-      }
+    const targetTheme = newTheme === 'deep-midnight' ? 'deep-midnight' : 'sky-white';
+    setTheme(targetTheme);
+    try {
+      localStorage.setItem('aces_cms_theme_3', targetTheme);
+    } catch (e) {
+      console.warn('Failed to save theme to localStorage', e);
     }
   };
+
+  // Sync theme to root html and body elements so Tailwind dark: classes and CSS vars apply
+  useEffect(() => {
+    const isDark = theme === 'deep-midnight';
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('theme-deep-midnight');
+      document.body.classList.remove('theme-sky-white');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('theme-deep-midnight');
+      document.body.classList.add('theme-sky-white');
+    }
+  }, [theme]);
 
   // View Navigation State: 'dashboard' | 'members' | 'events' | 'announcements' | 'magazine'
   const [currentView, setCurrentView] = useState('dashboard');
   const [globalSearch, setGlobalSearch] = useState('');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
   // Data Hooks
   const memberHook = useMembers();
@@ -107,6 +125,7 @@ function AppContent() {
   const showcaseHook = useShowcase();
   const formsHook = useForms();
   const membershipHook = useMembership();
+  const magazineHook = useMagazines();
 
   // Toast feedback state
   const [toast, setToast] = useState(null);
@@ -175,6 +194,7 @@ function AppContent() {
     showcaseHook.setSearchQuery(query);
     formsHook.setSearchQuery(query);
     membershipHook.setSearchQuery(query);
+    magazineHook.setSearchQuery(query);
   };
 
   // --- AUTH WORKFLOW HANDLERS ---
@@ -383,10 +403,13 @@ function AppContent() {
     showToast('Public CMS dataset exported for offline website build.', 'success', 'Data Exported');
   };
 
-  const handleBroadcastAnnouncement = async (annData) => {
+  const handleBroadcastAnnouncement = async (annData, optDesc) => {
     try {
-      await announcementHook.addAnnouncement(annData);
-      showToast(`Announcement "${annData.topic || annData.title}" broadcasted to public feeds.`, 'success', 'Broadcast Created');
+      const payload = typeof annData === 'string'
+        ? { topic: annData, description: optDesc || '' }
+        : annData;
+      await announcementHook.addAnnouncement(payload);
+      showToast(`Announcement "${payload.topic || payload.title}" broadcasted to public feeds.`, 'success', 'Broadcast Created');
     } catch (err) {
       showToast(err.message || 'Failed to broadcast announcement.', 'error', 'API Error');
     }
@@ -503,23 +526,25 @@ function AppContent() {
           setCurrentView(view);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        isTrueAdmin={isTrueAdmin}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        isExpanded={isSidebarExpanded}
+        onToggleExpand={() => setIsSidebarExpanded(!isSidebarExpanded)}
         counts={{
           members: memberHook.members.length,
-          pendingFees: membershipHook.stats.pending,
-          events: eventHook.events.filter((e) => e.status === 'Scheduled' || e.status === 'Live').length,
-          showcaseCollections: showcaseHook.collections.length,
-          forms: formsHook.forms.length,
+          feePending: membershipHook.stats.pending,
+          events: eventHook.events.filter((e) => e.status === 'Scheduled' || e.status === 'Live').length || eventHook.events.length,
+          forms: formsHook.forms.length || 2,
+          announcements: announcementHook.announcements.length,
+          showcase: showcaseHook.collections.length,
         }}
       />
 
       {/* 2. Main Content Area */}
-      <div className="pl-0 lg:pl-64 xl:pl-72 w-full min-h-screen flex flex-col justify-between min-w-0 transition-all duration-300">
+      <div className={`pl-0 ${isSidebarExpanded ? 'lg:pl-64 xl:pl-72' : 'lg:pl-24'} w-full min-h-screen flex flex-col justify-between min-w-0 transition-all duration-300 ease-in-out`}>
         
         <div>
-          {/* Top Header Bar with Auth Session Controls */}
+          {/* Top Header Bar with Auth Session Controls & Omnisearch */}
           <TopHeader
             searchQuery={globalSearch}
             onSearchChange={handleGlobalSearchChange}
@@ -527,11 +552,23 @@ function AppContent() {
             onSelectTheme={handleSelectTheme}
             user={currentUser}
             isAdmin={isAdmin}
+            onSelectView={setCurrentView}
             onOpenLogin={() => setIsLoginModalOpen(true)}
             onOpenProfile={() => setIsProfileModalOpen(true)}
             onOpenRegister={() => setIsRegisterModalOpen(true)}
             onLogout={handleLogoutSubmit}
             onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            members={memberHook.members}
+            events={eventHook.events}
+            forms={formsHook.forms}
+            registrations={membershipHook.registrations}
+            announcements={announcementHook.announcements}
+            onViewMember={(mem) => setViewingMember(mem)}
+            onViewEvent={(evt) => setViewingEvent(evt)}
+            onInspectRegistration={(reg) => {
+              setInspectingRegistration(reg);
+              setIsVerifyFeeModalOpen(true);
+            }}
           />
 
           {/* Active View Container */}
@@ -553,11 +590,18 @@ function AppContent() {
               />
             )}
 
-            {/* View 2: Members Hub */}
+            {/* View 2: Committee */}
             {currentView === 'members' && (
               <MembersView
                 members={memberHook.members}
                 filteredMembers={memberHook.filteredMembers}
+                paginatedMembers={memberHook.paginatedMembers}
+                page={memberHook.page}
+                onPageChange={memberHook.setPage}
+                pageSize={memberHook.limit}
+                onPageSizeChange={memberHook.setLimit}
+                totalPages={memberHook.totalPages}
+                totalCount={memberHook.totalCount}
                 searchQuery={memberHook.searchQuery}
                 onSearchChange={memberHook.setSearchQuery}
                 selectedTeam={memberHook.selectedTeam}
@@ -566,9 +610,11 @@ function AppContent() {
                 onSortChange={memberHook.setSortBy}
                 memberStats={memberHook.memberStats}
                 isAdmin={isAdmin}
+                isTrueAdmin={isTrueAdmin}
                 canAddMembers={canAddMembers}
                 onOpenAddMember={handleOpenAddMember}
                 onOpenBatchRegister={() => setIsBatchRegisterModalOpen(true)}
+                onOpenAdminPanel={() => setCurrentView('admin-panel')}
                 onViewMember={(member) => setViewingMember(member)}
                 onEditMember={handleOpenEditMember}
                 onDeleteMember={handleDeleteMember}
@@ -581,6 +627,7 @@ function AppContent() {
                 members={memberHook.members}
                 isTrueAdmin={isTrueAdmin}
                 onUpdateMember={memberHook.updateMember}
+                onNavigateBack={setCurrentView}
                 showToast={showToast}
               />
             )}
@@ -590,6 +637,13 @@ function AppContent() {
               <FeeVerificationView
                 registrations={membershipHook.registrations}
                 filteredRegistrations={membershipHook.filteredRegistrations}
+                paginatedRegistrations={membershipHook.paginatedRegistrations}
+                page={membershipHook.page}
+                onPageChange={membershipHook.setPage}
+                pageSize={membershipHook.limit}
+                onPageSizeChange={membershipHook.setLimit}
+                totalPages={membershipHook.totalPages}
+                totalCount={membershipHook.totalCount}
                 stats={membershipHook.stats}
                 searchQuery={membershipHook.searchQuery}
                 onSearchChange={membershipHook.setSearchQuery}
@@ -603,6 +657,7 @@ function AppContent() {
                 onSortChange={membershipHook.setSortBy}
                 isLoading={membershipHook.isLoading}
                 onRefresh={membershipHook.fetchRegistrations}
+                onLoadSampleData={membershipHook.loadSampleSpreadsheet}
                 onOpenAddModal={() => setIsAddMembershipModalOpen(true)}
                 onOpenImportModal={() => setIsImportMembershipModalOpen(true)}
                 onInspectRegistration={(reg) => {
@@ -618,6 +673,13 @@ function AppContent() {
             {currentView === 'events' && (
               <EventsView
                 filteredEvents={eventHook.filteredEvents}
+                paginatedEvents={eventHook.paginatedEvents}
+                page={eventHook.page}
+                onPageChange={eventHook.setPage}
+                pageSize={eventHook.limit}
+                onPageSizeChange={eventHook.setLimit}
+                totalPages={eventHook.totalPages}
+                totalCount={eventHook.totalCount}
                 searchQuery={eventHook.searchQuery}
                 onSearchChange={eventHook.setSearchQuery}
                 highlightFilter={eventHook.highlightFilter}
@@ -637,6 +699,13 @@ function AppContent() {
               <FormsView
                 forms={formsHook.forms}
                 filteredForms={formsHook.filteredForms}
+                paginatedForms={formsHook.paginatedForms}
+                page={formsHook.page}
+                onPageChange={formsHook.setPage}
+                pageSize={formsHook.limit}
+                onPageSizeChange={formsHook.setLimit}
+                totalPages={formsHook.totalPages}
+                totalCount={formsHook.totalCount}
                 searchQuery={formsHook.searchQuery}
                 onSearchChange={formsHook.setSearchQuery}
                 statusFilter={formsHook.statusFilter}
@@ -646,6 +715,13 @@ function AppContent() {
                 onSelectForm={formsHook.fetchFormById}
                 onClearActiveForm={() => formsHook.setActiveForm(null)}
                 activeFormResponses={formsHook.activeFormResponses}
+                paginatedResponses={formsHook.paginatedResponses}
+                responsesPage={formsHook.responsesPage}
+                onResponsesPageChange={formsHook.setResponsesPage}
+                responsesPageSize={formsHook.responsesLimit}
+                onResponsesPageSizeChange={formsHook.setResponsesLimit}
+                responsesTotalPages={formsHook.responsesTotalPages}
+                responsesTotalCount={formsHook.responsesTotalCount}
                 onFetchResponses={formsHook.fetchFormResponses}
                 onOpenCreateModal={handleOpenCreateForm}
                 onOpenEditModal={handleOpenEditForm}
@@ -653,6 +729,7 @@ function AppContent() {
                 onDeleteForm={handleDeleteForm}
                 onExportCSV={formsHook.exportToCSV}
                 onFetchById={handleOpenSubmitForm}
+                onLoadSampleForms={formsHook.loadSampleForms}
                 isLoading={formsHook.isLoading}
                 isResponsesLoading={formsHook.isResponsesLoading}
               />
@@ -662,8 +739,45 @@ function AppContent() {
             {currentView === 'announcements' && (
               <AnnouncementsView
                 announcements={announcementHook.announcements}
+                paginatedAnnouncements={announcementHook.paginatedAnnouncements}
+                page={announcementHook.page}
+                onPageChange={announcementHook.setPage}
+                pageSize={announcementHook.limit}
+                onPageSizeChange={announcementHook.setLimit}
+                totalPages={announcementHook.totalPages}
+                totalCount={announcementHook.totalCount}
                 onBroadcast={handleBroadcastAnnouncement}
                 onDeleteAnnouncement={handleDeleteAnnouncement}
+              />
+            )}
+
+            {/* View 5b: Magazine Publications */}
+            {currentView === 'magazine' && (
+              <MagazineView
+                magazines={magazineHook.magazines}
+                filteredMagazines={magazineHook.filteredMagazines}
+                selectedYear={magazineHook.selectedYear}
+                onSelectYear={magazineHook.setSelectedYear}
+                searchQuery={magazineHook.searchQuery}
+                onSearchChange={magazineHook.setSearchQuery}
+                magazineStats={magazineHook.magazineStats}
+                onOpenUploadModal={() => {
+                  setEditingMagazine(null);
+                  setIsMagazineModalOpen(true);
+                }}
+                onOpenEditModal={(mag) => {
+                  setEditingMagazine(mag);
+                  setIsMagazineModalOpen(true);
+                }}
+                onOpenPdfViewer={(mag) => {
+                  magazineHook.setViewingPdfMagazine(mag);
+                }}
+                onDeleteMagazine={async (id, title) => {
+                  if (window.confirm(`Are you sure you want to delete magazine edition "${title}"?`)) {
+                    await magazineHook.deleteMagazine(id);
+                    showToast(`Magazine edition "${title}" deleted.`, 'info', 'Magazine Deleted');
+                  }
+                }}
               />
             )}
 
@@ -872,10 +986,44 @@ function AppContent() {
         onClose={() => setIsImportMembershipModalOpen(false)}
         onImportLocal={membershipHook.importLocalSheet}
         onBulkImport={membershipHook.bulkImport}
+        onLoadSampleData={membershipHook.loadSampleSpreadsheet}
         showToast={showToast}
       />
 
-      {/* 17. Toast Feedback Alerts */}
+      {/* 17. Magazine Upload / Edit Modal */}
+      <MagazineModal
+        isOpen={isMagazineModalOpen}
+        initialMagazine={editingMagazine}
+        onClose={() => {
+          setIsMagazineModalOpen(false);
+          setEditingMagazine(null);
+        }}
+        onSubmit={async (magData) => {
+          try {
+            if (editingMagazine) {
+              await magazineHook.updateMagazine(editingMagazine.id, magData);
+              showToast(`Magazine publication "${magData.title}" updated.`, 'success', 'Magazine Saved');
+            } else {
+              await magazineHook.addMagazine(magData);
+              showToast(`New magazine edition "${magData.title}" published.`, 'success', 'Magazine Uploaded');
+            }
+            setIsMagazineModalOpen(false);
+            setEditingMagazine(null);
+          } catch (err) {
+            showToast(err.message || 'Failed to save magazine edition.', 'error', 'API Error');
+          }
+        }}
+      />
+
+      {/* 18. Magazine PDF Viewer Modal */}
+      <MagazinePdfModal
+        isOpen={Boolean(magazineHook.viewingPdfMagazine)}
+        magazine={magazineHook.viewingPdfMagazine}
+        onClose={() => magazineHook.setViewingPdfMagazine(null)}
+        onDownload={magazineHook.trackDownload}
+      />
+
+      {/* 19. Toast Feedback Alerts */}
       <Toast toast={toast} onClose={() => setToast(null)} />
 
     </div>

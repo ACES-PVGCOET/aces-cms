@@ -4,12 +4,9 @@ import {
   Sparkles, 
   Plus, 
   CalendarPlus, 
-  Megaphone, 
   Download, 
   ArrowUpRight, 
   Activity, 
-  BookOpen, 
-  Radio, 
   ChevronRight,
   ClipboardList,
   CheckCircle2
@@ -20,8 +17,8 @@ import MediaViewer from './MediaViewer';
 
 /**
  * DashboardView (Launchpad) Component
- * Multi-Theme dynamic dashboard.
- * Adheres strictly to 4px/8px Baseline Grid & Vertical Rhythm and 12-column CSS Grid.
+ * Multi-Theme Dashboard adhering strictly to semantic design tokens.
+ * Switches seamlessly between Sky-White light theme and Deep Midnight dark theme.
  */
 export function DashboardView({
   members = [],
@@ -31,10 +28,10 @@ export function DashboardView({
   onOpenAddMember,
   onOpenCreateEvent,
   onOpenBroadcast,
-  onOpenUploadMagazine,
   onExportData,
   onViewEvent,
 }) {
+  const activeMembersCount = members.filter((m) => m.status === 'ACTIVE' || m.status === 'Active').length || members.length;
   const teamsCount = new Set(members.map((m) => m.team).filter(Boolean)).size || 10;
 
   const defaultSpotlight =
@@ -51,25 +48,20 @@ export function DashboardView({
   const [hoveredEvent, setHoveredEvent] = useState(defaultSpotlight);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300 text-black dark:text-white">
       
       {/* 1. Hero Welcome Banner */}
-      <section className="relative overflow-hidden rounded-2xl p-6 glass-panel shadow-sm">
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs leading-4 font-bold btn-secondary shadow-xs">
-            <Sparkles className="w-4 h-4 opacity-80" />
-            <span>ACES Central Command • Academic Year 2026-27</span>
-          </div>
-
+      <section className="relative overflow-hidden rounded-2xl p-6 glass-panel shadow-sm text-black dark:text-white">
+        <div className="relative z-10 max-w-3xl space-y-3">
           <h1 className="text-3xl leading-9 sm:text-4xl sm:leading-10 font-extrabold tracking-tight">
             Welcome to your{' '}
-            <span className="opacity-90 underline decoration-indigo-500/50">
+            <span className="classic-dotted-heading">
               ACES CMS launchpad
             </span>
           </h1>
 
           <p className="text-sm leading-5 sm:text-base sm:leading-6 opacity-80 font-medium">
-            Orchestrate members, synchronize guild workflows, and schedule high-impact campus tech experiences with real-time public website reflection.
+            Orchestrate members, synchronize team workflows, and schedule high-impact campus tech experiences with real-time public website reflection.
           </p>
         </div>
       </section>
@@ -78,29 +70,29 @@ export function DashboardView({
       <section aria-label="Key Statistics and Quick Actions">
         <div className="grid grid-cols-12 gap-6 items-stretch">
           
-          {/* Col 1-4: Active Members Pie Card */}
+          {/* Card 1: Active Members (Donut breakdown) */}
           <div className="col-span-12 md:col-span-4">
             <ActiveMembersPieCard members={members} />
           </div>
 
-          {/* Col 5-8: Teams Collaborating Stat Card */}
+          {/* Card 2: Teams Collaborating Stat Card */}
           <div className="col-span-12 md:col-span-4">
             <StatCard
               title="Teams Collaborating"
-              value={`${teamsCount} Guilds`}
+              value={`${teamsCount} Teams`}
               description="Faculty, Leaders, Technical, Web, Editorial, Design, Marketing, Media, Event & Treasury"
-              icon={<Layers className="w-5 h-5" />}
+              icon={<Layers className="w-5 h-5 text-[#9d4edd] dark:text-[#c77dff]" />}
               hideDescription={false}
             />
           </div>
 
-          {/* Col 9-12: Quick Actions Panel */}
+          {/* Card 3: Quick Actions Panel */}
           <div className="col-span-12 md:col-span-4">
-            <div className="w-full h-full glass-card rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+            <div className="w-full h-full glass-panel rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 opacity-80" />
-                  <h2 className="text-sm leading-5 font-bold">
+                  <Activity className="w-4 h-4 text-[#9d4edd] dark:text-[#c77dff]" />
+                  <h2 className="text-sm leading-5 font-extrabold">
                     Quick Actions
                   </h2>
                 </div>
@@ -111,15 +103,15 @@ export function DashboardView({
                 <button
                   id="quick-action-add-member"
                   onClick={onOpenAddMember}
-                  className="flex items-center gap-2 p-2 rounded-lg btn-secondary group text-left cursor-pointer"
+                  className="flex items-center gap-2 p-2 rounded-xl btn-secondary group text-left cursor-pointer transition-all duration-200 active:scale-95"
                   title={isAdmin ? "Register new member & generate onboarding link" : "View members"}
                 >
-                  <div className="w-8 h-8 rounded-lg btn-primary flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg btn-primary flex items-center justify-center shrink-0 shadow-2xs">
                     <Plus className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs leading-4 font-bold truncate">{isAdmin ? 'Register Member' : 'Members'}</div>
-                    <div className="text-xs leading-4 opacity-60 truncate font-medium">{isAdmin ? 'Onboard recruit' : 'Guild directory'}</div>
+                    <div className="text-xs leading-4 font-extrabold truncate">{isAdmin ? 'Register Member' : 'Members'}</div>
+                    <div className="text-xs leading-4 opacity-70 truncate font-semibold">{isAdmin ? 'Onboard recruit' : 'Team directory'}</div>
                   </div>
                 </button>
 
@@ -127,15 +119,15 @@ export function DashboardView({
                 <button
                   id="quick-action-create-event"
                   onClick={onOpenCreateEvent}
-                  className="flex items-center gap-2 p-2 rounded-lg btn-secondary group text-left cursor-pointer"
+                  className="flex items-center gap-2 p-2 rounded-xl btn-secondary group text-left cursor-pointer transition-all duration-200 active:scale-95"
                   title="Schedule a new session"
                 >
-                  <div className="w-8 h-8 rounded-lg btn-primary flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg btn-primary flex items-center justify-center shrink-0 shadow-2xs">
                     <CalendarPlus className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs leading-4 font-bold truncate">Create Event</div>
-                    <div className="text-xs leading-4 opacity-60 truncate font-medium">Schedule</div>
+                    <div className="text-xs leading-4 font-extrabold truncate">Create Event</div>
+                    <div className="text-xs leading-4 opacity-70 truncate font-semibold">Schedule</div>
                   </div>
                 </button>
 
@@ -143,15 +135,15 @@ export function DashboardView({
                 <button
                   id="quick-action-forms-engine"
                   onClick={() => onNavigate('forms')}
-                  className="flex items-center gap-2 p-2 rounded-lg btn-secondary group text-left cursor-pointer"
+                  className="flex items-center gap-2 p-2 rounded-xl btn-secondary group text-left cursor-pointer transition-all duration-200 active:scale-95"
                   title="Forms engine & responses"
                 >
-                  <div className="w-8 h-8 rounded-lg btn-primary flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg btn-primary flex items-center justify-center shrink-0 shadow-2xs">
                     <ClipboardList className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs leading-4 font-bold truncate">Forms Engine</div>
-                    <div className="text-xs leading-4 opacity-60 truncate font-medium">Forms & CSV</div>
+                    <div className="text-xs leading-4 font-extrabold truncate">Forms Engine</div>
+                    <div className="text-xs leading-4 opacity-70 truncate font-semibold">Forms & CSV</div>
                   </div>
                 </button>
 
@@ -159,31 +151,15 @@ export function DashboardView({
                 <button
                   id="quick-action-fees"
                   onClick={() => onNavigate('fee-verification')}
-                  className="flex items-center gap-2 p-2 rounded-lg btn-secondary group text-left cursor-pointer border border-emerald-500/20 hover:border-emerald-500/40"
+                  className="flex items-center gap-2 p-2 rounded-xl btn-secondary group text-left cursor-pointer transition-all duration-200 active:scale-95"
                   title="Audit & verify membership fees"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg btn-primary flex items-center justify-center shrink-0 shadow-2xs">
                     <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs leading-4 font-bold truncate text-emerald-300">Fee Verification</div>
-                    <div className="text-xs leading-4 opacity-60 truncate font-medium">Audit & Receipts</div>
-                  </div>
-                </button>
-
-                {/* Broadcast */}
-                <button
-                  id="quick-action-broadcast"
-                  onClick={onOpenBroadcast}
-                  className="flex items-center gap-2 p-2 rounded-lg btn-secondary group text-left cursor-pointer"
-                  title="Simulate marketing broadcast"
-                >
-                  <div className="w-8 h-8 rounded-lg btn-primary flex items-center justify-center shrink-0">
-                    <Megaphone className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs leading-4 font-bold truncate">Broadcast</div>
-                    <div className="text-xs leading-4 opacity-60 truncate font-medium">Feeds</div>
+                    <div className="text-xs leading-4 font-extrabold truncate">Fee Verification</div>
+                    <div className="text-xs leading-4 opacity-70 truncate font-semibold">Audit & Receipts</div>
                   </div>
                 </button>
               </div>
@@ -192,7 +168,7 @@ export function DashboardView({
               <button
                 id="quick-action-export"
                 onClick={onExportData}
-                className="w-full flex items-center justify-between px-4 py-2 rounded-lg btn-secondary text-xs leading-4 font-bold cursor-pointer"
+                className="w-full flex items-center justify-between px-4 py-2 rounded-xl btn-secondary text-xs leading-4 font-extrabold cursor-pointer transition-all duration-200 active:scale-95"
               >
                 <span className="flex items-center gap-2">
                   <Download className="w-4 h-4 opacity-80" />
@@ -206,47 +182,38 @@ export function DashboardView({
         </div>
       </section>
 
-      {/* 3. Events & Spotlight Section */}
+      {/* 3. Events Showcase (Full Width) */}
       <section
         id="events-in-motion-section"
-        className="glass-panel rounded-2xl p-6 shadow-sm space-y-6 relative overflow-hidden"
+        className="glass-panel rounded-2xl p-6 shadow-sm space-y-6"
       >
-        {/* Header */}
+        {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold btn-primary flex items-center gap-1.5 shadow-xs">
-                <Radio className="w-3.5 h-3.5 animate-pulse" />
-                <span>Highlighted Showcase</span>
-              </span>
-              <span className="text-xs leading-4 font-semibold opacity-70">
-                {events.length} events active
-              </span>
-            </div>
-            <h2 className="text-2xl leading-8 font-extrabold tracking-tight mt-1">
+            <h2 className="text-2xl leading-8 font-extrabold tracking-tight">
               Events Showcase
             </h2>
-            <p className="text-xs leading-4 opacity-70 font-medium mt-0.5">
-              Select any event to view description, terms & conditions, and registration form ID.
+            <p className="text-xs leading-4 opacity-70 font-semibold mt-0.5">
+              Hover over any event below to preview live spotlight banner &amp; details.
             </p>
           </div>
 
           <button
             onClick={() => onNavigate('events')}
-            className="flex items-center gap-1.5 text-xs leading-4 font-bold opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
+            className="flex items-center gap-1.5 text-xs leading-4 font-extrabold text-[#9d4edd] dark:text-[#c77dff] hover:underline transition-colors cursor-pointer self-start sm:self-auto"
           >
             <span>Explore All Events</span>
             <ArrowUpRight className="w-4 h-4" />
           </button>
         </div>
 
-        {/* 12-Col Grid: Events List (5 Cols) & Spotlight Preview (7 Cols) */}
+        {/* Grid: Events Hover List & Spotlight Preview */}
         <div className="grid grid-cols-12 gap-6">
           
           {/* Left 5 Cols: Events List */}
-          <div className="col-span-12 lg:col-span-5 space-y-3">
-            <span className="text-xs leading-4 font-bold opacity-70 uppercase tracking-wider block">
-              Active Events
+          <div className="col-span-12 md:col-span-5 space-y-3">
+            <span className="text-xs leading-4 font-extrabold opacity-70 uppercase tracking-wider block">
+              Select / Hover Event
             </span>
 
             <div className="space-y-2">
@@ -263,7 +230,7 @@ export function DashboardView({
                     className={`p-3 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 ${
                       isSelected
                         ? 'btn-primary shadow-xs'
-                        : 'glass-panel-subtle hover:bg-white/10'
+                        : 'glass-panel-subtle hover:bg-black/5 dark:hover:bg-white/10'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -285,11 +252,6 @@ export function DashboardView({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      {evt.isHighlight && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-black">
-                          Spotlight
-                        </span>
-                      )}
                       <ChevronRight className={`w-4 h-4 transition-transform ${isSelected ? 'translate-x-0.5' : 'opacity-60'}`} />
                     </div>
                   </div>
@@ -299,7 +261,7 @@ export function DashboardView({
           </div>
 
           {/* Right 7 Cols: Spotlight Panel */}
-          <div className="col-span-12 lg:col-span-7">
+          <div className="col-span-12 md:col-span-7">
             <div className="h-full rounded-2xl overflow-hidden glass-card shadow-sm flex flex-col justify-between">
               
               {/* Spotlight Banner Preview */}
@@ -308,48 +270,35 @@ export function DashboardView({
                   src={hoveredEvent.banner_url || hoveredEvent.banner}
                   alt={hoveredEvent.overview || hoveredEvent.title}
                   className="w-full h-full object-cover"
-                  showVideoBadge={true}
+                  showVideoBadge={false}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-
-                {/* Floating Badges */}
-                <div className="absolute top-3 left-3 flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold btn-primary flex items-center gap-1.5 shadow-sm">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Selected Event</span>
-                  </span>
-                  {hoveredEvent.isHighlight && (
-                    <span className="px-2.5 py-0.5 rounded-md text-xs leading-4 font-bold bg-amber-500 text-black">
-                      Highlighted
-                    </span>
-                  )}
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
                 <div className="absolute bottom-3 left-4 right-4 text-white">
-                  <h3 className="text-lg leading-7 font-black truncate mt-0.5">
+                  <h3 className="text-base leading-6 font-black truncate">
                     {hoveredEvent.overview || hoveredEvent.title}
                   </h3>
                 </div>
               </div>
 
               {/* Spotlight Details */}
-              <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <p className="text-xs leading-4 sm:text-sm sm:leading-5 opacity-80 line-clamp-3 font-medium">
+              <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <p className="text-xs leading-4 opacity-80 font-medium line-clamp-2">
                     {hoveredEvent.description}
                   </p>
 
                   {hoveredEvent.terms && (
-                    <div className="text-xs leading-4 font-semibold glass-panel-subtle p-3 rounded-xl space-y-0.5">
+                    <div className="text-xs leading-4 font-semibold glass-panel-subtle p-2.5 rounded-xl space-y-0.5">
                       <span className="text-[10px] uppercase font-bold opacity-60 block">Terms</span>
-                      <p className="opacity-80 line-clamp-2">{hoveredEvent.terms}</p>
+                      <p className="opacity-80 line-clamp-1">{hoveredEvent.terms}</p>
                     </div>
                   )}
                 </div>
 
                 <button
                   onClick={() => onViewEvent && onViewEvent(hoveredEvent)}
-                  className="w-full py-2 px-4 rounded-lg text-sm leading-5 font-medium btn-primary text-center cursor-pointer transition-all duration-300"
+                  className="w-full py-2 px-4 rounded-xl text-xs leading-4 font-extrabold btn-primary text-center cursor-pointer transition-all duration-200 active:scale-95 shadow-sm"
                 >
                   Manage Event Details
                 </button>
