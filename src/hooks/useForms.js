@@ -3,12 +3,15 @@ import { formsApi } from '../services/api';
 import { SAMPLE_FORMS } from '../data/sampleSpreadsheets';
 
 function normalizeForm(f) {
+  if (!f) return null;
   return {
     id: f.form_id || f.id || f._id,
     form_id: f.form_id || f.id || f._id,
     title: f.title || 'Untitled Form',
     description: f.description || '',
     is_active: f.is_active !== undefined ? Boolean(f.is_active) : true,
+    whatsapp_group_link: f.whatsapp_group_link || f.whatsappGroupLink || '',
+    whatsapp_qr_code: f.whatsapp_qr_code || f.whatsappQrCode || '',
     question_count: f.question_count || (f.questions ? f.questions.length : 0),
     response_count: f.response_count || (f.sampleResponses ? f.sampleResponses.length : 0),
     created_at: f.created_at || f.createdAt || new Date().toISOString(),

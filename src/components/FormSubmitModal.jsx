@@ -1,5 +1,21 @@
 import { useState, useEffect } from 'react';
-import { X, CheckCircle2, AlertCircle, UploadCloud, FileCheck, Send, Sparkles, Mail, ArrowUpRight, Copy, Check } from 'lucide-react';
+import { 
+  X, 
+  CheckCircle2, 
+  AlertCircle, 
+  UploadCloud, 
+  FileCheck, 
+  Send, 
+  Sparkles, 
+  Mail, 
+  ArrowUpRight, 
+  Copy, 
+  Check, 
+  CreditCard, 
+  ExternalLink, 
+  Image as ImageIcon, 
+  Loader2 
+} from 'lucide-react';
 import { uploadToCloudinary, formsApi } from '../services/api';
 
 export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {

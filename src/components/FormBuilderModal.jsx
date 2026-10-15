@@ -64,9 +64,10 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingImages, setUploadingImages] = useState({});
+  const [uploadingQrs, setUploadingQrs] = useState({});
   const [whatsappGroupLink, setWhatsappGroupLink] = useState('');
-const [whatsappQrCode, setWhatsappQrCode] = useState('');
-const [isUploadingQr, setIsUploadingQr] = useState(false);
+  const [whatsappQrCode, setWhatsappQrCode] = useState('');
+  const [isUploadingQr, setIsUploadingQr] = useState(false);
 
   useEffect(() => {
     if (initialForm) {
@@ -290,7 +291,7 @@ const [isUploadingQr, setIsUploadingQr] = useState(false);
   };
 
   // Upload WhatsApp QR Image to Cloudinary
-  const handleQrUpload = async (file) => {
+  const handleWhatsappQrUpload = async (file) => {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
@@ -405,16 +406,29 @@ const [isUploadingQr, setIsUploadingQr] = useState(false);
         is_active: isActive,
         whatsapp_group_link: whatsappGroupLink.trim(),
   whatsapp_qr_code: whatsappQrCode.trim(),
-        questions: questions.map((q, idx) => ({
-          question_serial: idx + 1,
-          question_statement: q.question_statement.trim(),
-          question_type: q.question_type,
-          is_required: Boolean(q.is_required),
-          image_url: q.image_url ? q.image_url.trim() : '',
-          textual_policy: q.textual_policy || { max_len: 500 },
-          multiple_choice_policy: q.multiple_choice_policy || { type: 'Single', options: [] },
-          file_policy: q.file_policy || { supported_types: ['pdf'], max_size_mb: 5 },
-        })),
+        questions: questions.map((q, idx) => {
+          const isPayment = q.question_type === 'payment_acceptance';
+          const numAmount = Number(q.payment_policy?.amount || 0);
+          const statement = isPayment
+            ? (q.question_statement?.trim() || generatePaymentStatement(numAmount, Boolean(q.payment_policy?.fallback_qr_url)))
+            : q.question_statement.trim();
+
+          return {
+            question_serial: idx + 1,
+            question_statement: statement,
+            question_type: q.question_type,
+            is_required: Boolean(q.is_required),
+            image_url: q.image_url ? q.image_url.trim() : '',
+            textual_policy: q.textual_policy || { max_len: 500 },
+            multiple_choice_policy: q.multiple_choice_policy || { type: 'Single', options: [] },
+            file_policy: q.file_policy || { supported_types: ['pdf'], max_size_mb: 5 },
+            payment_policy: isPayment ? {
+              amount: numAmount,
+              primary_qr_url: q.payment_policy?.primary_qr_url || '',
+              fallback_qr_url: q.payment_policy?.fallback_qr_url || '',
+            } : undefined,
+          };
+        }),
       };
 
       await onSubmit(payload);
@@ -676,7 +690,7 @@ const [isUploadingQr, setIsUploadingQr] = useState(false);
                             type="file"
                             accept="image/*"
                             disabled={isUploadingQr}
-                            onChange={(e) => handleQrUpload(e.target.files?.[0])}
+                            onChange={(e) => handleWhatsappQrUpload(e.target.files?.[0])}
                             className="hidden"
                           />
                         </label>
