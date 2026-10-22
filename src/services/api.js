@@ -364,6 +364,52 @@ export const membershipApi = {
     });
     return res.data;
   },
+  sync: async (formId) => {
+    const res = await request('/membership/sync', {
+      method: 'POST',
+      body: JSON.stringify(formId ? { form_id: formId } : {}),
+    });
+    return res.data;
+  },
+  getSyncStatus: async (formId) => {
+    const qs = formId ? `?form_id=${encodeURIComponent(formId)}` : '';
+    const res = await request(`/membership/sync-status${qs}`);
+    return res.data;
+  },
+  getIdCardUrl: (membershipNo) => {
+    return `${API_BASE_URL}/membership/id-card/${encodeURIComponent(membershipNo)}`;
+  },
+  downloadIdCard: async (membershipNo, filename) => {
+    const response = await fetch(`${API_BASE_URL}/membership/id-card/${encodeURIComponent(membershipNo)}`, {
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      let errMsg = `Failed to download ID card (Status: ${response.status})`;
+      try {
+        const errJson = await response.json();
+        errMsg = errJson.error?.message || errJson.message || errMsg;
+      } catch {
+        // fallback message
+      }
+      throw new Error(errMsg);
+    }
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename || `ACES-ID-${membershipNo}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+    return true;
+  },
+  resendEmail: async (identifier) => {
+    const res = await request(`/membership/${encodeURIComponent(identifier)}/resend-email`, {
+      method: 'POST',
+    });
+    return res.data;
+  },
   bulkImport: async (records) => {
     const res = await request('/membership/bulk-import', {
       method: 'POST',

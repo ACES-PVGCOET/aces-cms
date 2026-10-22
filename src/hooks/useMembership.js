@@ -62,6 +62,13 @@ export function useMembership() {
   const [sortBy, setSortBy] = useState('newest');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState(() => {
+    try {
+      return localStorage.getItem('aces_last_membership_synced') || null;
+    } catch {
+      return null;
+    }
+  });
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -112,11 +119,46 @@ export function useMembership() {
       if (data && data.stats && data.stats.total > 0) {
         setStats(data.stats);
       }
+
+      // Read remote sync timestamp from API response
+      const apiTimestamp =
+        data?.lastMembershipSynced ||
+        data?.lastSyncedAt ||
+        data?.stats?.lastMembershipSynced ||
+        data?.stats?.lastSyncedAt;
+
+      if (apiTimestamp) {
+        setLastSyncedAt(apiTimestamp);
+        try {
+          localStorage.setItem('aces_last_membership_synced', apiTimestamp);
+        } catch {
+          // ignore
+        }
+      }
     } catch (err) {
       console.warn('[Membership Hook] Error fetching registrations, using sample data:', err.message);
       setRegistrations(SAMPLE_FEE_REGISTRATIONS.map(normalizeRegistration));
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch sync timestamp directly from backend sync-status endpoint
+  const fetchSyncStatus = useCallback(async () => {
+    try {
+      const status = await membershipApi.getSyncStatus();
+      const ts = status?.lastMembershipSynced || status?.lastSyncedAt || status?.last_synced_at;
+      if (ts) {
+        setLastSyncedAt(ts);
+        try {
+          localStorage.setItem('aces_last_membership_synced', ts);
+        } catch {
+          // ignore
+        }
+      }
+      return status;
+    } catch {
+      return null;
     }
   }, []);
 
@@ -129,7 +171,8 @@ export function useMembership() {
 
   useEffect(() => {
     fetchRegistrations();
-  }, [fetchRegistrations]);
+    fetchSyncStatus();
+  }, [fetchRegistrations, fetchSyncStatus]);
 
   // Verify / Reject / Reset Fee
   const verifyRegistration = async (id, { status, remarks, receipt_number, amount }) => {
@@ -167,8 +210,47 @@ export function useMembership() {
   // Delete Registration
   const deleteRegistration = async (id) => {
     await membershipApi.delete(id);
-    setRegistrations((prev) => prev.filter((r) => r.id !== id));
+    setRegistrations((prev) => prev.filter((r) => r.id !== id && r.receiptNumber !== id));
     membershipApi.getStats().then(setStats).catch(() => {});
+  };
+
+  // Sync Registrations from Form API (Default backend sync if formId omitted)
+  const syncFromForm = async (formId = null) => {
+    setIsLoading(true);
+    try {
+      const result = await membershipApi.sync(formId);
+      const syncTimestamp = result?.lastMembershipSynced || new Date().toISOString();
+      setLastSyncedAt(syncTimestamp);
+      try {
+        localStorage.setItem('aces_last_membership_synced', syncTimestamp);
+      } catch {
+        // ignore
+      }
+      await fetchRegistrations();
+      return result;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Download Digital ID Card PNG
+  const downloadIdCard = async (membershipNo, studentName) => {
+    const cleanNo = membershipNo || '';
+    const safeName = (studentName || 'Student').replace(/[^a-zA-Z0-9_-]/g, '_');
+    return await membershipApi.downloadIdCard(cleanNo, `ACES-ID-${safeName}-${cleanNo}.png`);
+  };
+
+  // Resend Membership Verification Email with ID Card
+  const resendEmail = async (identifier) => {
+    const result = await membershipApi.resendEmail(identifier);
+    setRegistrations((prev) =>
+      prev.map((r) =>
+        r.id === identifier || r.receiptNumber === identifier || r.email === identifier
+          ? { ...r, receiptStatus: 'SENT' }
+          : r
+      )
+    );
+    return result;
   };
 
   // Bulk Import
@@ -286,11 +368,16 @@ export function useMembership() {
     isLoading,
     error,
     fetchRegistrations,
+    fetchSyncStatus,
     loadSampleSpreadsheet,
     verifyRegistration,
     addRegistration,
     updateRegistration,
     deleteRegistration,
+    syncFromForm,
+    lastSyncedAt,
+    downloadIdCard,
+    resendEmail,
     bulkImport,
     importLocalSheet,
   };
