@@ -6,12 +6,9 @@ import {
   Search, 
   ArrowUpDown, 
   Plus, 
-  FileSpreadsheet, 
   Download, 
   ExternalLink, 
   Eye, 
-  Copy, 
-  Check, 
   Phone, 
   Filter, 
   LayoutList, 
@@ -23,11 +20,13 @@ import {
   Users,
   CreditCard,
   Send,
-  Loader2
+  Loader2,
+  Trash2,
 } from 'lucide-react';
 import StatCard from './StatCard';
 import MediaPreviewModal from './MediaPreviewModal';
 import ConfirmVerifyModal from './ConfirmVerifyModal';
+import ConfirmDeleteMembershipModal from './ConfirmDeleteMembershipModal';
 import Pagination from './Pagination';
 
 function getDriveFileId(url) {
@@ -46,6 +45,21 @@ function getDriveViewUrl(url) {
 
 const CLASSES = ['ALL', 'SE', 'TE', 'BE'];
 const PAYMENT_MODES = ['ALL', 'UPI', 'CASH'];
+
+function formatLastSynced(timestamp) {
+  if (!timestamp) return 'Never';
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return String(timestamp);
+  
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  if (isToday) {
+    return `Today at ${timeStr}`;
+  }
+  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${timeStr}`;
+}
 
 export function FeeVerificationView({
   registrations = [],
@@ -70,18 +84,90 @@ export function FeeVerificationView({
   onSortChange,
   isLoading,
   onRefresh,
-  onLoadSampleData,
   onOpenAddModal,
-  onOpenImportModal,
+  onSync,
+  lastSyncedAt,
   onInspectRegistration,
   onVerifyRegistration,
+  onDownloadIdCard,
+  onResendEmail,
+  onDeleteRegistration,
   showToast,
 }) {
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
-  const [copiedId, setCopiedId] = useState(null);
   const [lightboxMedia, setLightboxMedia] = useState(null);
   const [confirmItem, setConfirmItem] = useState(null);
   const [processingVerifyId, setProcessingVerifyId] = useState(null);
+  const [downloadingCardId, setDownloadingCardId] = useState(null);
+  const [resendingEmailId, setResendingEmailId] = useState(null);
+  const [deletingItem, setDeletingItem] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleDefaultSync = async () => {
+    if (isSyncing) return;
+    try {
+      setIsSyncing(true);
+      if (onSync) {
+        const res = await onSync();
+        if (showToast) {
+          showToast(
+            `Sync complete: ${res?.synced_count ?? 0} new record(s) added, ${res?.skipped_count ?? 0} duplicate(s) skipped.`,
+            'success',
+            'Membership Synced'
+          );
+        }
+      }
+    } catch (err) {
+      if (showToast) {
+        showToast(err.message || 'Failed to sync form responses with membership.', 'error', 'Sync Failed');
+      }
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleDownloadCard = async (e, item) => {
+    e.stopPropagation();
+    const idKey = item.receiptNumber || item.id;
+    try {
+      setDownloadingCardId(idKey);
+      if (onDownloadIdCard) {
+        await onDownloadIdCard(idKey, item.fullName);
+      }
+      if (showToast) {
+        showToast(`Downloaded ID card for ${item.fullName}.`, 'success', 'ID Card Downloaded');
+      }
+    } catch (err) {
+      if (showToast) {
+        showToast(err.message || 'Failed to download digital ID card.', 'error', 'Download Failed');
+      }
+    } finally {
+      setDownloadingCardId(null);
+    }
+  };
+
+  const handleResendVerificationEmail = async (e, item) => {
+    e.stopPropagation();
+    try {
+      setResendingEmailId(item.id);
+      if (onResendEmail) {
+        await onResendEmail(item.id || item.receiptNumber);
+      }
+      if (showToast) {
+        showToast(
+          `Membership email with ID card resent to ${item.email || item.fullName}.`,
+          'success',
+          'Email Resent'
+        );
+      }
+    } catch (err) {
+      if (showToast) {
+        showToast(err.message || 'Failed to resend verification email.', 'error', 'Email Failed');
+      }
+    } finally {
+      setResendingEmailId(null);
+    }
+  };
 
   const itemsToDisplay = useMemo(() => {
     if (paginatedRegistrations && paginatedRegistrations.length > 0) {
@@ -93,21 +179,6 @@ export function FeeVerificationView({
     }
     return filteredRegistrations;
   }, [paginatedRegistrations, filteredRegistrations, onPageChange, page, pageSize]);
-
-  const handleLoadSample = () => {
-    if (onLoadSampleData) {
-      onLoadSampleData();
-      if (showToast) {
-        showToast('Sample membership spreadsheet data loaded successfully!', 'success', 'Sample Data Loaded');
-      }
-    }
-  };
-
-  const handleCopy = (text, id) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
 
   const handleInitiateVerify = (e, item) => {
     e.stopPropagation();
@@ -194,23 +265,33 @@ export function FeeVerificationView({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto shrink-0">
-          <button
-            onClick={handleLoadSample}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-black btn-secondary border border-sky-500/40 text-black dark:text-sky-300 hover:bg-sky-500/20 cursor-pointer transition-all"
-            title="Load Pre-populated Sample Spreadsheet Data to Check Contrast"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-            <span>Load Sample Spreadsheet</span>
-          </button>
-
-          <button
-            onClick={onOpenImportModal}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-black btn-secondary border border-emerald-500/40 text-black dark:text-emerald-300 hover:bg-emerald-500/20 cursor-pointer transition-all"
-            title="Import from Excel Spreadsheet in Downloads"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Import Spreadsheet</span>
-          </button>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5">
+            <button
+              onClick={handleDefaultSync}
+              disabled={isSyncing}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-black btn-secondary border border-indigo-500/40 text-black dark:text-indigo-300 hover:bg-indigo-500/20 cursor-pointer transition-all disabled:opacity-50"
+              title="Synchronize new membership responses from Forms API"
+            >
+              {isSyncing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-indigo-600 dark:text-indigo-400" />
+                  <span>Syncing...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span>Sync Form</span>
+                </>
+              )}
+            </button>
+            <span className="text-[11px] font-medium text-black/60 dark:text-white/60">
+              {lastSyncedAt ? (
+                <>Last synced: <span className="font-bold text-black/80 dark:text-white/80">{formatLastSynced(lastSyncedAt)}</span></>
+              ) : (
+                <span className="italic opacity-70">Not synced yet</span>
+              )}
+            </span>
+          </div>
 
           <button
             onClick={handleExportCSV}
@@ -415,7 +496,6 @@ export function FeeVerificationView({
                 <thead className="sticky top-0 z-10 text-[11px] font-black uppercase tracking-wider text-black dark:text-slate-200 shadow-xs">
                   <tr>
                     <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Student &amp; Class</th>
-                    <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">WhatsApp Contact</th>
                     <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Payment Info</th>
                     <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-center text-black dark:text-slate-200">Payment Proof</th>
                     <th className="sticky top-0 z-10 py-3.5 px-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 text-black dark:text-slate-200">Status</th>
@@ -457,39 +537,6 @@ export function FeeVerificationView({
                                 )}
                               </div>
                             </div>
-                          </div>
-                        </td>
-
-                        {/* WhatsApp Contact */}
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-1.5">
-                            <a
-                              href={`https://wa.me/${item.contactNumber?.replace(/[^0-9]/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="font-mono text-xs text-black dark:text-indigo-300 hover:underline flex items-center gap-1 font-black"
-                              title="Chat on WhatsApp"
-                            >
-                              <Phone className="w-3 h-3 text-black dark:text-indigo-300" />
-                              <span>{item.contactNumber || 'N/A'}</span>
-                            </a>
-                            {item.contactNumber && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCopy(item.contactNumber, item.id);
-                                }}
-                                className="p-1 rounded bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 opacity-80 hover:opacity-100"
-                                title="Copy Phone Number"
-                              >
-                                {copiedId === item.id ? (
-                                  <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                                ) : (
-                                  <Copy className="w-3 h-3 text-black dark:text-white" />
-                                )}
-                              </button>
-                            )}
                           </div>
                         </td>
 
@@ -576,6 +623,38 @@ export function FeeVerificationView({
                         {/* Actions */}
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            {isVer && (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={downloadingCardId === (item.receiptNumber || item.id)}
+                                  onClick={(e) => handleDownloadCard(e, item)}
+                                  className="p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 cursor-pointer transition-colors disabled:opacity-50"
+                                  title="Download Digital ID Card (PNG)"
+                                >
+                                  {downloadingCardId === (item.receiptNumber || item.id) ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <Download className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  disabled={resendingEmailId === item.id}
+                                  onClick={(e) => handleResendVerificationEmail(e, item)}
+                                  className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 cursor-pointer transition-colors disabled:opacity-50"
+                                  title="Resend Verification Email with ID Card"
+                                >
+                                  {resendingEmailId === item.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <Send className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                              </>
+                            )}
+
                             {isPend && (
                               <button
                                 disabled={processingVerifyId === item.id}
@@ -596,9 +675,22 @@ export function FeeVerificationView({
 
                             <button
                               onClick={() => onInspectRegistration(item)}
-                              className="px-2.5 py-1 rounded-lg btn-secondary text-[11px] font-black text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer transition-colors"
+                              className="p-1.5 rounded-lg btn-secondary text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer transition-colors"
+                              title="Inspect Details"
                             >
-                              Inspect
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeletingItem(item);
+                              }}
+                              className="p-1.5 rounded-lg hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 opacity-70 hover:opacity-100 transition-colors cursor-pointer"
+                              title="Delete Membership Record"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
@@ -710,10 +802,44 @@ export function FeeVerificationView({
                   <div className="pt-2 border-t border-slate-100 dark:border-white/10 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => onInspectRegistration(item)}
-                      className="flex-1 py-1.5 rounded-xl btn-secondary text-xs font-black text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
+                      className="flex-1 py-1.5 rounded-xl btn-secondary text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center cursor-pointer transition-colors"
+                      title="Inspect Details"
                     >
-                      Inspect Details
+                      <Eye className="w-4 h-4" />
                     </button>
+
+                    {isVer && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={downloadingCardId === (item.receiptNumber || item.id)}
+                          onClick={(e) => handleDownloadCard(e, item)}
+                          className="p-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 cursor-pointer transition-colors disabled:opacity-50"
+                          title="Download Member Digital ID Card (PNG)"
+                        >
+                          {downloadingCardId === (item.receiptNumber || item.id) ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Download className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={resendingEmailId === item.id}
+                          onClick={(e) => handleResendVerificationEmail(e, item)}
+                          className="p-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 cursor-pointer transition-colors disabled:opacity-50"
+                          title="Resend Verification Email with ID Card"
+                        >
+                          {resendingEmailId === item.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Send className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </>
+                    )}
+
                     {isPend && (
                       <button
                         disabled={processingVerifyId === item.id}
@@ -730,6 +856,18 @@ export function FeeVerificationView({
                         )}
                       </button>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingItem(item);
+                      }}
+                      className="p-1.5 rounded-xl hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 opacity-70 hover:opacity-100 transition-colors cursor-pointer"
+                      title="Delete Membership Record"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                 </div>
@@ -760,18 +898,23 @@ export function FeeVerificationView({
             <h3 className="text-base font-black text-black dark:text-white">No membership registrations found</h3>
             <p className="text-sm opacity-80 max-w-sm mx-auto mt-1 font-semibold text-black dark:text-white">
               {registrations.length === 0
-                ? 'No registrations imported yet. Click "Import Spreadsheet" to load responses from Downloads.'
+                ? 'No registrations found yet. Click "Sync Form" to synchronize responses from the membership form.'
                 : 'No records match your active search or filters.'}
             </p>
           </div>
           <div className="flex items-center justify-center gap-2 pt-2">
             {registrations.length === 0 ? (
               <button
-                onClick={onOpenImportModal}
-                className="px-4 py-2 rounded-lg text-sm font-black btn-primary inline-flex items-center gap-2 cursor-pointer shadow-lg text-white"
+                onClick={handleDefaultSync}
+                disabled={isSyncing}
+                className="px-4 py-2 rounded-lg text-sm font-black btn-primary inline-flex items-center gap-2 cursor-pointer shadow-lg text-white disabled:opacity-50"
               >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>Import Spreadsheet Responses</span>
+                {isSyncing ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 text-white" />
+                )}
+                <span>{isSyncing ? 'Syncing...' : 'Sync Form Responses'}</span>
               </button>
             ) : (
               <button
@@ -808,6 +951,22 @@ export function FeeVerificationView({
           mediaUrl={lightboxMedia.url}
           title={lightboxMedia.title}
           onClose={() => setLightboxMedia(null)}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingItem && (
+        <ConfirmDeleteMembershipModal
+          isOpen={Boolean(deletingItem)}
+          registration={deletingItem}
+          onClose={() => setDeletingItem(null)}
+          onConfirm={async (id) => {
+            if (onDeleteRegistration) {
+              await onDeleteRegistration(id);
+            }
+            setDeletingItem(null);
+          }}
+          showToast={showToast}
         />
       )}
 

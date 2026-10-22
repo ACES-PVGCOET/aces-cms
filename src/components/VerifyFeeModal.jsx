@@ -14,9 +14,12 @@ import {
   ShieldCheck, 
   User, 
   Phone, 
-  Loader2 
+  Loader2,
+  Download,
+  Trash2,
 } from 'lucide-react';
 import ConfirmVerifyModal from './ConfirmVerifyModal';
+import ConfirmDeleteMembershipModal from './ConfirmDeleteMembershipModal';
 
 function getDriveFileId(url) {
   if (!url) return '';
@@ -45,12 +48,18 @@ export function VerifyFeeModal({
   onClose,
   registration,
   onVerify,
+  onDownloadIdCard,
+  onResendEmail,
+  onDelete,
   onOpenMediaLightbox,
   showToast,
 }) {
   const [remarks, setRemarks] = useState('');
   const [customAmount, setCustomAmount] = useState(450);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDownloadingIdCard, setIsDownloadingIdCard] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [copiedContact, setCopiedContact] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [showConfirmPrompt, setShowConfirmPrompt] = useState(false);
@@ -61,8 +70,53 @@ export function VerifyFeeModal({
       setCustomAmount(registration.amount || 450);
       setImageError(false);
       setShowConfirmPrompt(false);
+      setShowDeleteConfirm(false);
     }
   }, [registration]);
+
+  const handleDownloadIdCard = async () => {
+    try {
+      setIsDownloadingIdCard(true);
+      if (onDownloadIdCard) {
+        await onDownloadIdCard(registration.receiptNumber || registration.id, registration.fullName);
+      }
+      if (showToast) {
+        showToast(
+          `Downloaded ID card for ${registration.fullName}.`,
+          'success',
+          'ID Card Downloaded'
+        );
+      }
+    } catch (err) {
+      if (showToast) {
+        showToast(err.message || 'Failed to download digital ID card.', 'error', 'Download Error');
+      }
+    } finally {
+      setIsDownloadingIdCard(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    try {
+      setIsResendingEmail(true);
+      if (onResendEmail) {
+        await onResendEmail(registration.id || registration.receiptNumber);
+      }
+      if (showToast) {
+        showToast(
+          `Verification email with ID card resent to ${registration.email || registration.fullName}.`,
+          'success',
+          'Email Sent'
+        );
+      }
+    } catch (err) {
+      if (showToast) {
+        showToast(err.message || 'Failed to resend verification email.', 'error', 'Email Error');
+      }
+    } finally {
+      setIsResendingEmail(false);
+    }
+  };
 
   if (!isOpen || !registration) return null;
 
@@ -290,20 +344,66 @@ export function VerifyFeeModal({
                 />
               </div>
 
-              {/* Receipt Sending Placeholder (User scope: receipt & email by others) */}
-              <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs space-y-1.5">
+              {/* Digital Membership Credentials & ID Card */}
+              <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-bold text-indigo-300">
+                  <div className="flex items-center gap-1.5 font-bold text-indigo-400">
                     <Send className="w-3.5 h-3.5" />
-                    <span>Receipt Dispatch Integration</span>
+                    <span>Digital Membership Credentials</span>
                   </div>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300">
-                    {isVerified ? 'Ready for Mailer' : 'Awaiting Verification'}
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    isVerified ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  }`}>
+                    {isVerified ? (registration.receiptStatus === 'SENT' ? 'Card Sent' : 'Verified') : 'Awaiting Verification'}
                   </span>
                 </div>
                 <p className="text-[11px] opacity-75 leading-relaxed">
-                  Automated PDF receipt generation & email dispatch is handled by the mailer worker once payment is marked verified.
+                  Official ACES digital membership ID card generated via API and emailed to member.
                 </p>
+
+                {isVerified && (
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleDownloadIdCard}
+                      disabled={isDownloadingIdCard}
+                      className="flex-1 min-w-[130px] flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-500 text-white shadow cursor-pointer transition-all disabled:opacity-50"
+                      title="Download Member Digital ID Card (PNG)"
+                    >
+                      {isDownloadingIdCard ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Downloading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Download ID Card</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleResendEmail}
+                      disabled={isResendingEmail}
+                      className="flex-1 min-w-[130px] flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black btn-secondary text-indigo-300 hover:bg-indigo-500/20 border border-indigo-500/40 cursor-pointer transition-all disabled:opacity-50"
+                      title="Resend welcome email with attached digital ID card"
+                    >
+                      {isResendingEmail ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Sending Email...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Resend Email</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -414,6 +514,17 @@ export function VerifyFeeModal({
                 Reset to Pending
               </button>
             )}
+
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 cursor-pointer transition-colors disabled:opacity-40"
+              title="Delete this membership registration permanently"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Record</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -471,6 +582,23 @@ export function VerifyFeeModal({
             setShowConfirmPrompt(false);
           }}
           onOpenMediaLightbox={onOpenMediaLightbox}
+          showToast={showToast}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <ConfirmDeleteMembershipModal
+          isOpen={showDeleteConfirm}
+          registration={registration}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={async (id) => {
+            if (onDelete) {
+              await onDelete(id);
+            }
+            setShowDeleteConfirm(false);
+            onClose();
+          }}
           showToast={showToast}
         />
       )}

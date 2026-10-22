@@ -51,7 +51,6 @@ import FormSubmitModal from './components/FormSubmitModal';
 import FeeVerificationView from './components/FeeVerificationView';
 import VerifyFeeModal from './components/VerifyFeeModal';
 import AddMembershipModal from './components/AddMembershipModal';
-import ImportMembershipModal from './components/ImportMembershipModal';
 import Toast from './components/Toast';
 import { useMembership } from './hooks/useMembership';
 
@@ -145,7 +144,6 @@ function AppContent() {
   const [isVerifyFeeModalOpen, setIsVerifyFeeModalOpen] = useState(false);
   const [inspectingRegistration, setInspectingRegistration] = useState(null);
   const [isAddMembershipModalOpen, setIsAddMembershipModalOpen] = useState(false);
-  const [isImportMembershipModalOpen, setIsImportMembershipModalOpen] = useState(false);
 
   // Auth & Workflow Modals
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -656,15 +654,21 @@ function AppContent() {
                 sortBy={membershipHook.sortBy}
                 onSortChange={membershipHook.setSortBy}
                 isLoading={membershipHook.isLoading}
-                onRefresh={membershipHook.fetchRegistrations}
-                onLoadSampleData={membershipHook.loadSampleSpreadsheet}
+                onRefresh={() => {
+                  membershipHook.fetchRegistrations();
+                  membershipHook.fetchSyncStatus?.();
+                }}
                 onOpenAddModal={() => setIsAddMembershipModalOpen(true)}
-                onOpenImportModal={() => setIsImportMembershipModalOpen(true)}
+                onSync={membershipHook.syncFromForm}
+                lastSyncedAt={membershipHook.lastSyncedAt}
                 onInspectRegistration={(reg) => {
                   setInspectingRegistration(reg);
                   setIsVerifyFeeModalOpen(true);
                 }}
                 onVerifyRegistration={membershipHook.verifyRegistration}
+                onDownloadIdCard={membershipHook.downloadIdCard}
+                onResendEmail={membershipHook.resendEmail}
+                onDeleteRegistration={membershipHook.deleteRegistration}
                 showToast={showToast}
               />
             )}
@@ -730,6 +734,8 @@ function AppContent() {
                 onExportCSV={formsHook.exportToCSV}
                 onFetchById={handleOpenSubmitForm}
                 onLoadSampleForms={formsHook.loadSampleForms}
+                onSyncWithMembership={membershipHook.syncFromForm}
+                showToast={showToast}
                 isLoading={formsHook.isLoading}
                 isResponsesLoading={formsHook.isResponsesLoading}
               />
@@ -969,6 +975,9 @@ function AppContent() {
         }}
         registration={inspectingRegistration}
         onVerify={membershipHook.verifyRegistration}
+        onDownloadIdCard={membershipHook.downloadIdCard}
+        onResendEmail={membershipHook.resendEmail}
+        onDelete={membershipHook.deleteRegistration}
         showToast={showToast}
       />
 
@@ -977,16 +986,6 @@ function AppContent() {
         isOpen={isAddMembershipModalOpen}
         onClose={() => setIsAddMembershipModalOpen(false)}
         onAddMember={membershipHook.addRegistration}
-        showToast={showToast}
-      />
-
-      {/* 16. Import Membership Spreadsheet Modal */}
-      <ImportMembershipModal
-        isOpen={isImportMembershipModalOpen}
-        onClose={() => setIsImportMembershipModalOpen(false)}
-        onImportLocal={membershipHook.importLocalSheet}
-        onBulkImport={membershipHook.bulkImport}
-        onLoadSampleData={membershipHook.loadSampleSpreadsheet}
         showToast={showToast}
       />
 
