@@ -18,7 +18,10 @@ import {
   QrCode,
   CreditCard,
   IndianRupee,
-  RefreshCw
+  RefreshCw,
+  ShoppingCart,
+  PackagePlus,
+  ReceiptText
 } from 'lucide-react';
 import { uploadToCloudinary } from '../services/api';
 
@@ -40,6 +43,7 @@ const DEFAULT_QUESTIONS = [
     multiple_choice_policy: { type: 'Single', options: [] },
     file_policy: { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
     payment_policy: { amount: '', primary_qr_url: '', fallback_qr_url: '' },
+    payment_checkout_policy: { items: [{ title: '', cost: 0 }], primary_qr_url: '', fallback_qr_url: '' },
   },
   {
     question_serial: 2,
@@ -51,6 +55,7 @@ const DEFAULT_QUESTIONS = [
     multiple_choice_policy: { type: 'Single', options: [] },
     file_policy: { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
     payment_policy: { amount: '', primary_qr_url: '', fallback_qr_url: '' },
+    payment_checkout_policy: { items: [{ title: '', cost: 0 }], primary_qr_url: '', fallback_qr_url: '' },
   },
 ];
 
@@ -89,6 +94,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
             multiple_choice_policy: q.multiple_choice_policy || { type: 'Single', options: ['Option 1', 'Option 2'] },
             file_policy: q.file_policy || { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
             payment_policy: q.payment_policy || { amount: '', primary_qr_url: '', fallback_qr_url: '' },
+            payment_checkout_policy: q.payment_checkout_policy || { items: [{ title: '', cost: 0 }], primary_qr_url: '', fallback_qr_url: '' },
           }))
         );
       } else {
@@ -163,6 +169,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
       multiple_choice_policy: { type: 'Single', options: ['Option 1', 'Option 2'] },
       file_policy: { supported_types: ['pdf', 'png', 'jpg'], max_size_mb: 5 },
       payment_policy: { amount: '', primary_qr_url: '', fallback_qr_url: '' },
+      payment_checkout_policy: { items: [{ title: '', cost: 0 }], primary_qr_url: '', fallback_qr_url: '' },
     };
     setQuestions([...questions, newQ]);
   };
@@ -184,24 +191,33 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
     setQuestions(updated);
   };
 
-  // Change Question Type (special logic for payment_acceptance)
+  // Change Question Type (special logic for payment_acceptance and payment_checkout)
   const handleTypeChange = (idx, newType) => {
     const updated = [...questions];
     const currentQ = updated[idx];
     const isPayment = newType === 'payment_acceptance';
+    const isCheckout = newType === 'payment_checkout';
     const paymentPolicy = currentQ.payment_policy || { amount: '', primary_qr_url: '', fallback_qr_url: '' };
+    const paymentCheckoutPolicy = currentQ.payment_checkout_policy || { items: [{ title: '', cost: 0 }], primary_qr_url: '', fallback_qr_url: '' };
     
     let statement = currentQ.question_statement;
     if (isPayment) {
       statement = generatePaymentStatement(paymentPolicy.amount, Boolean(paymentPolicy.fallback_qr_url));
+    } else if (isCheckout) {
+      // Auto-generate statement for checkout type
+      const hasFallback = Boolean(paymentCheckoutPolicy.fallback_qr_url);
+      statement = hasFallback
+        ? 'Select the items you wish to pay for below. Scan one of the QR codes to complete your payment, then upload your payment confirmation screenshot.'
+        : 'Select the items you wish to pay for below. Scan the QR code to complete your payment, then upload your payment confirmation screenshot.';
     }
 
     updated[idx] = {
       ...currentQ,
       question_type: newType,
-      is_required: isPayment ? true : currentQ.is_required, // Mandatory by default for payment_acceptance
+      is_required: (isPayment || isCheckout) ? true : currentQ.is_required,
       question_statement: statement,
       payment_policy: paymentPolicy,
+      payment_checkout_policy: paymentCheckoutPolicy,
     };
     setQuestions(updated);
   };
@@ -264,6 +280,90 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
       ...currentQ,
       payment_policy: policy,
       question_statement: statement,
+    };
+    setQuestions(updated);
+  };
+
+  // Upload Checkout QR Code (Primary / Fallback)
+  const handleCheckoutQrUpload = async (idx, qrKey, file) => {
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg(`QR Image file "${file.name}" exceeds maximum size of 5MB.`);
+      return;
+    }
+
+    const stateKey = `checkout_${idx}_${qrKey}`;
+    try {
+      setErrorMsg('');
+      setUploadingQrs((prev) => ({ ...prev, [stateKey]: true }));
+      const uploadedUrl = await uploadToCloudinary(file, 'form_qrs', 'image');
+
+      const updated = [...questions];
+      const currentQ = updated[idx];
+      const policy = { ...(currentQ.payment_checkout_policy || {}), [qrKey]: uploadedUrl };
+
+      updated[idx] = {
+        ...currentQ,
+        payment_checkout_policy: policy,
+      };
+      setQuestions(updated);
+    } catch (err) {
+      console.error('[FormBuilderModal] Checkout QR image upload failed:', err);
+      setErrorMsg(err.message || 'QR image upload failed. Please try again.');
+    } finally {
+      setUploadingQrs((prev) => ({ ...prev, [stateKey]: false }));
+    }
+  };
+
+  // Remove Checkout QR Code
+  const handleCheckoutQrRemove = (idx, qrKey) => {
+    const updated = [...questions];
+    const currentQ = updated[idx];
+    const policy = { ...(currentQ.payment_checkout_policy || {}), [qrKey]: '' };
+    updated[idx] = {
+      ...currentQ,
+      payment_checkout_policy: policy,
+    };
+    setQuestions(updated);
+  };
+
+  // Add Checkout Item
+  const handleCheckoutItemAdd = (idx) => {
+    const updated = [...questions];
+    const currentQ = updated[idx];
+    const policy = currentQ.payment_checkout_policy || { items: [], primary_qr_url: '', fallback_qr_url: '' };
+    const newItems = [...(policy.items || []), { title: '', cost: 0 }];
+    updated[idx] = {
+      ...currentQ,
+      payment_checkout_policy: { ...policy, items: newItems },
+    };
+    setQuestions(updated);
+  };
+
+  // Update Checkout Item field
+  const handleCheckoutItemChange = (idx, itemIdx, field, value) => {
+    const updated = [...questions];
+    const currentQ = updated[idx];
+    const policy = currentQ.payment_checkout_policy || { items: [], primary_qr_url: '', fallback_qr_url: '' };
+    const newItems = [...(policy.items || [])];
+    newItems[itemIdx] = { ...newItems[itemIdx], [field]: value };
+    updated[idx] = {
+      ...currentQ,
+      payment_checkout_policy: { ...policy, items: newItems },
+    };
+    setQuestions(updated);
+  };
+
+  // Remove Checkout Item
+  const handleCheckoutItemRemove = (idx, itemIdx) => {
+    const updated = [...questions];
+    const currentQ = updated[idx];
+    const policy = currentQ.payment_checkout_policy || { items: [], primary_qr_url: '', fallback_qr_url: '' };
+    const newItems = (policy.items || []).filter((_, i) => i !== itemIdx);
+    updated[idx] = {
+      ...currentQ,
+      payment_checkout_policy: { ...policy, items: newItems },
     };
     setQuestions(updated);
   };
@@ -382,6 +482,29 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
           setErrorMsg(`Question #${q.question_serial} requires a Primary QR code image.`);
           return;
         }
+      } else if (q.question_type === 'payment_checkout') {
+        const policy = q.payment_checkout_policy || {};
+        const items = policy.items || [];
+        if (items.length === 0) {
+          setErrorMsg(`Question #${q.question_serial} (Payment Checkout) requires at least one checkout item.`);
+          return;
+        }
+        for (let j = 0; j < items.length; j++) {
+          const item = items[j];
+          if (!item.title || !String(item.title).trim()) {
+            setErrorMsg(`Question #${q.question_serial}: Checkout item #${j + 1} must have a title.`);
+            return;
+          }
+          const cost = Number(item.cost);
+          if (isNaN(cost) || cost < 0) {
+            setErrorMsg(`Question #${q.question_serial}: Checkout item "${item.title}" must have a valid non-negative cost.`);
+            return;
+          }
+        }
+        if (!policy.primary_qr_url) {
+          setErrorMsg(`Question #${q.question_serial} (Payment Checkout) requires a Primary QR code image.`);
+          return;
+        }
       } else {
         if (!q.question_statement.trim()) {
           setErrorMsg(`Question #${q.question_serial} statement cannot be empty.`);
@@ -408,6 +531,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
   whatsapp_qr_code: whatsappQrCode.trim(),
         questions: questions.map((q, idx) => {
           const isPayment = q.question_type === 'payment_acceptance';
+          const isCheckout = q.question_type === 'payment_checkout';
           const numAmount = Number(q.payment_policy?.amount || 0);
           const statement = isPayment
             ? (q.question_statement?.trim() || generatePaymentStatement(numAmount, Boolean(q.payment_policy?.fallback_qr_url)))
@@ -426,6 +550,14 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
               amount: numAmount,
               primary_qr_url: q.payment_policy?.primary_qr_url || '',
               fallback_qr_url: q.payment_policy?.fallback_qr_url || '',
+            } : undefined,
+            payment_checkout_policy: isCheckout ? {
+              items: (q.payment_checkout_policy?.items || []).map((item) => ({
+                title: String(item.title || '').trim(),
+                cost: Number(item.cost) || 0,
+              })),
+              primary_qr_url: q.payment_checkout_policy?.primary_qr_url || '',
+              fallback_qr_url: q.payment_checkout_policy?.fallback_qr_url || '',
             } : undefined,
           };
         }),
@@ -582,6 +714,45 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                       </div>
                     </div>
                   )}
+
+                  {q.question_type === 'payment_checkout' && (() => {
+                    const checkoutPolicy = q.payment_checkout_policy || { items: [], primary_qr_url: '', fallback_qr_url: '' };
+                    const checkoutItems = checkoutPolicy.items || [];
+                    const totalCost = checkoutItems.reduce((sum, item) => sum + (Number(item.cost) || 0), 0);
+                    return (
+                      <div className="space-y-3 bg-black/30 p-4 rounded-xl border border-violet-500/30">
+                        <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+                          <ShoppingCart className="w-4 h-4 text-violet-400" />
+                          <span className="text-xs font-bold text-violet-300">Payment Checkout Preview</span>
+                          <span className="ml-auto text-[10px] font-mono text-violet-400 bg-violet-500/20 px-2 py-0.5 rounded">Max: ₹{totalCost}</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {checkoutItems.length === 0 && (
+                            <p className="text-[11px] text-violet-400/60 text-center py-2">No items configured yet.</p>
+                          )}
+                          {checkoutItems.map((item, iIdx) => (
+                            <div key={iIdx} className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
+                              <label className="flex items-center gap-2 text-xs opacity-60 cursor-not-allowed">
+                                <input type="checkbox" disabled className="rounded" />
+                                <span>{item.title || `Item ${iIdx + 1}`}</span>
+                              </label>
+                              <span className="text-xs font-bold text-emerald-400 font-mono">₹{Number(item.cost) || 0}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {checkoutPolicy.primary_qr_url && (
+                          <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
+                            <p className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider mb-2">Primary QR Code</p>
+                            <img src={checkoutPolicy.primary_qr_url} alt="Primary QR" className="w-28 h-28 mx-auto object-contain bg-white rounded-lg p-1" />
+                          </div>
+                        )}
+                        <div className="p-3 border-2 border-dashed border-white/20 rounded-xl flex items-center justify-center gap-2 opacity-60 text-xs">
+                          <UploadCloud className="w-4 h-4 text-violet-400" />
+                          <span>Payment Screenshot Upload Placeholder</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
@@ -769,14 +940,21 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                           {q.question_serial}
                         </span>
 
-                        {q.question_type === 'payment_acceptance' ? (
+                        {(q.question_type === 'payment_acceptance' || q.question_type === 'payment_checkout') ? (
                           <div className="flex-1 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-xs font-semibold text-indigo-200 flex items-center justify-between gap-2">
                             <span className="truncate" title={q.question_statement}>
-                              {q.question_statement || 'Auto-generated payment instruction prompt'}
+                              {q.question_statement || (q.question_type === 'payment_checkout' ? 'Payment Checkout instruction prompt' : 'Auto-generated payment instruction prompt')}
                             </span>
-                            <span className="shrink-0 text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                              Auto-Generated
-                            </span>
+                            {q.question_type === 'payment_acceptance' && (
+                              <span className="shrink-0 text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                Auto-Generated
+                              </span>
+                            )}
+                            {q.question_type === 'payment_checkout' && (
+                              <span className="shrink-0 text-[10px] font-mono px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                                Checkout
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <input
@@ -799,6 +977,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                           <option value="multiple_choice" className="bg-slate-900 text-white">Multiple Choice</option>
                           <option value="file" className="bg-slate-900 text-white">File Upload</option>
                           <option value="payment_acceptance" className="bg-slate-900 text-white">Payment Acceptance</option>
+                          <option value="payment_checkout" className="bg-slate-900 text-white">Payment Checkout</option>
                         </select>
                       </div>
 
@@ -1140,6 +1319,235 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                           </div>
                         </div>
                       )}
+
+                      {/* PAYMENT CHECKOUT POLICY */}
+                      {q.question_type === 'payment_checkout' && (() => {
+                        const checkoutPolicy = q.payment_checkout_policy || { items: [], primary_qr_url: '', fallback_qr_url: '' };
+                        const checkoutItems = checkoutPolicy.items || [];
+                        const totalCost = checkoutItems.reduce((sum, item) => sum + (Number(item.cost) || 0), 0);
+
+                        return (
+                          <div className="space-y-4 bg-black/30 p-4 rounded-xl border border-violet-500/30">
+                            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                              <div className="flex items-center gap-2 text-xs font-bold text-violet-300">
+                                <ShoppingCart className="w-4 h-4 text-violet-400" />
+                                <span>Payment Checkout Configuration</span>
+                              </div>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                                Dynamic Billing
+                              </span>
+                            </div>
+
+                            {/* Statement — editable for checkout */}
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-bold text-slate-300">Checkout Instruction Statement</label>
+                              <textarea
+                                rows={2}
+                                value={q.question_statement}
+                                onChange={(e) => updateQuestionField(idx, 'question_statement', e.target.value)}
+                                placeholder="Instructions to the user about selecting items and making payment..."
+                                className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 focus:border-violet-500 focus:outline-none text-xs font-medium resize-none"
+                              />
+                            </div>
+
+                            {/* Checkout Items Table */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                                  <ReceiptText className="w-3.5 h-3.5 text-violet-400" />
+                                  <span>Checkout Items</span>
+                                  <span className="text-red-400">*</span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] text-violet-300 font-mono bg-violet-500/20 px-2 py-0.5 rounded-full">
+                                    Max Total: ₹{totalCost.toFixed(0)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCheckoutItemAdd(idx)}
+                                    className="px-2 py-1 rounded-lg bg-violet-500/20 text-violet-300 text-[10px] font-bold hover:bg-violet-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <PackagePlus className="w-3 h-3" />
+                                    <span>Add Item</span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Item Rows */}
+                              {checkoutItems.length === 0 && (
+                                <div className="p-3 rounded-xl border border-dashed border-violet-500/30 text-center text-[11px] text-violet-400/60">
+                                  No items yet. Click &quot;Add Item&quot; to get started.
+                                </div>
+                              )}
+                              <div className="space-y-1.5">
+                                {checkoutItems.map((item, itemIdx) => (
+                                  <div key={itemIdx} className="flex items-center gap-2 p-2 rounded-lg bg-black/30 border border-white/5">
+                                    <span className="text-[10px] opacity-50 w-5 text-center shrink-0">{itemIdx + 1}.</span>
+                                    <input
+                                      type="text"
+                                      required
+                                      value={item.title}
+                                      onChange={(e) => handleCheckoutItemChange(idx, itemIdx, 'title', e.target.value)}
+                                      placeholder="Item name (e.g. T-Shirt, Registration Fee)"
+                                      className="flex-1 px-2.5 py-1.5 rounded-lg bg-black/40 border border-white/10 text-xs font-medium focus:outline-none focus:border-violet-500"
+                                    />
+                                    <div className="relative shrink-0">
+                                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold text-violet-400">₹</span>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="any"
+                                        value={item.cost}
+                                        onChange={(e) => handleCheckoutItemChange(idx, itemIdx, 'cost', e.target.value)}
+                                        placeholder="0"
+                                        className="w-24 pl-6 pr-2 py-1.5 rounded-lg bg-black/40 border border-white/10 text-xs font-bold text-emerald-400 text-right focus:outline-none focus:border-violet-500"
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCheckoutItemRemove(idx, itemIdx)}
+                                      disabled={checkoutItems.length <= 1}
+                                      className="p-1 text-red-400 opacity-60 hover:opacity-100 transition-opacity cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* QR Codes: Primary & Fallback */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+
+                              {/* PRIMARY QR (MANDATORY) */}
+                              <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                  <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                                    <QrCode className="w-4 h-4 text-emerald-400" />
+                                    <span>Primary QR Image</span>
+                                    <span className="text-red-400">*</span>
+                                  </label>
+                                  <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">
+                                    Mandatory
+                                  </span>
+                                </div>
+
+                                {checkoutPolicy.primary_qr_url ? (
+                                  <div className="space-y-2">
+                                    <div className="w-32 h-32 mx-auto rounded-xl bg-white p-1.5 shadow-md flex items-center justify-center overflow-hidden border border-white/20">
+                                      <img src={checkoutPolicy.primary_qr_url} alt="Primary QR" className="w-full h-full object-contain" />
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2 pt-1">
+                                      <label className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 text-[11px] font-bold cursor-pointer transition-colors">
+                                        <span>Replace</span>
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          disabled={uploadingQrs[`checkout_${idx}_primary_qr_url`]}
+                                          onChange={(e) => handleCheckoutQrUpload(idx, 'primary_qr_url', e.target.files?.[0])}
+                                          className="hidden"
+                                        />
+                                      </label>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCheckoutQrRemove(idx, 'primary_qr_url')}
+                                        className="px-2.5 py-1 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 text-[11px] font-bold cursor-pointer transition-colors"
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <label className="p-4 border border-dashed border-white/20 hover:border-emerald-500/50 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-black/20 hover:bg-emerald-500/10">
+                                    {uploadingQrs[`checkout_${idx}_primary_qr_url`] ? (
+                                      <div className="flex items-center gap-2 py-2 text-emerald-400">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span className="text-xs font-semibold">Uploading QR to Cloudinary...</span>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <UploadCloud className="w-6 h-6 mb-1 text-emerald-400" />
+                                        <span className="text-xs font-semibold text-slate-200">Upload Primary QR Image</span>
+                                        <span className="text-[10px] opacity-60 mt-0.5">PNG, JPG, WEBP (Max 5MB)</span>
+                                      </>
+                                    )}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      disabled={uploadingQrs[`checkout_${idx}_primary_qr_url`]}
+                                      onChange={(e) => handleCheckoutQrUpload(idx, 'primary_qr_url', e.target.files?.[0])}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                )}
+                              </div>
+
+                              {/* FALLBACK QR (OPTIONAL) */}
+                              <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                  <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                                    <QrCode className="w-4 h-4 text-amber-400" />
+                                    <span>Fallback QR Image</span>
+                                  </label>
+                                  <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+                                    Optional Backup
+                                  </span>
+                                </div>
+
+                                {checkoutPolicy.fallback_qr_url ? (
+                                  <div className="space-y-2">
+                                    <div className="w-32 h-32 mx-auto rounded-xl bg-white p-1.5 shadow-md flex items-center justify-center overflow-hidden border border-white/20">
+                                      <img src={checkoutPolicy.fallback_qr_url} alt="Fallback QR" className="w-full h-full object-contain" />
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2 pt-1">
+                                      <label className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 text-[11px] font-bold cursor-pointer transition-colors">
+                                        <span>Replace</span>
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          disabled={uploadingQrs[`checkout_${idx}_fallback_qr_url`]}
+                                          onChange={(e) => handleCheckoutQrUpload(idx, 'fallback_qr_url', e.target.files?.[0])}
+                                          className="hidden"
+                                        />
+                                      </label>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCheckoutQrRemove(idx, 'fallback_qr_url')}
+                                        className="px-2.5 py-1 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 text-[11px] font-bold cursor-pointer transition-colors"
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <label className="p-4 border border-dashed border-white/20 hover:border-amber-500/50 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-black/20 hover:bg-amber-500/10">
+                                    {uploadingQrs[`checkout_${idx}_fallback_qr_url`] ? (
+                                      <div className="flex items-center gap-2 py-2 text-amber-400">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span className="text-xs font-semibold">Uploading QR to Cloudinary...</span>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <UploadCloud className="w-6 h-6 mb-1 text-amber-400" />
+                                        <span className="text-xs font-semibold text-slate-200">Upload Fallback QR Image</span>
+                                        <span className="text-[10px] opacity-60 mt-0.5">Optional backup QR (Max 5MB)</span>
+                                      </>
+                                    )}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      disabled={uploadingQrs[`checkout_${idx}_fallback_qr_url`]}
+                                      onChange={(e) => handleCheckoutQrUpload(idx, 'fallback_qr_url', e.target.files?.[0])}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                )}
+                              </div>
+
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Bottom Row: Mandatory Checkbox & Remove Question */}
                       <div className="flex items-center justify-between pt-1 text-xs">

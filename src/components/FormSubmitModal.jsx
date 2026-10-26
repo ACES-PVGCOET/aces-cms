@@ -14,12 +14,15 @@ import {
   CreditCard, 
   ExternalLink, 
   Image as ImageIcon, 
-  Loader2 
+  Loader2,
+  ShoppingCart,
+  ReceiptText
 } from 'lucide-react';
 import { uploadToCloudinary, formsApi } from '../services/api';
 
 export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
   const [answersMap, setAnswersMap] = useState({});
+  const [checkoutSelections, setCheckoutSelections] = useState({}); // { serialKey: Set<itemIdx> }
   const [fillerEmail, setFillerEmail] = useState('');
   const [emailCheckStatus, setEmailCheckStatus] = useState(null); // null | 'checking' | 'exists' | 'available'
   const [emailCheckMsg, setEmailCheckMsg] = useState('');
@@ -42,10 +45,15 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
   useEffect(() => {
     if (form && Array.isArray(form.questions)) {
       const initialMap = {};
+      const initialSelections = {};
       form.questions.forEach((q) => {
         initialMap[String(q.question_serial)] = [];
+        if (q.question_type === 'payment_checkout') {
+          initialSelections[String(q.question_serial)] = new Set();
+        }
       });
       setAnswersMap(initialMap);
+      setCheckoutSelections(initialSelections);
     }
     setFillerEmail('');
     setEmailCheckStatus(null);
@@ -182,6 +190,20 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
     } finally {
       setUploadingFiles((prev) => ({ ...prev, [String(serial)]: false }));
     }
+  };
+
+  // Checkout item toggle handler (client-side selection tracking)
+  const handleCheckoutItemToggle = (serial, itemIdx) => {
+    setCheckoutSelections((prev) => {
+      const serialKey = String(serial);
+      const current = new Set(prev[serialKey] || []);
+      if (current.has(itemIdx)) {
+        current.delete(itemIdx);
+      } else {
+        current.add(itemIdx);
+      }
+      return { ...prev, [serialKey]: current };
+    });
   };
 
   // Submit Handler
@@ -673,7 +695,7 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
                                     Click or drop to upload payment confirmation screenshot
                                   </span>
                                   <span className="text-[10px] opacity-60 mt-0.5">
-                                    Capture the transaction ID & status screen from your payment app
+                                    Capture the transaction ID &amp; status screen from your payment app
                                   </span>
                                 </>
                               )}
@@ -689,6 +711,210 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
                         </div>
                       </div>
                     )}
+
+                    {/* PAYMENT CHECKOUT QUESTION INPUT */}
+                    {q.question_type === 'payment_checkout' && (() => {
+                      const checkoutPolicy = q.payment_checkout_policy || { items: [], primary_qr_url: '', fallback_qr_url: '' };
+                      const checkoutItems = checkoutPolicy.items || [];
+                      const selectedSet = checkoutSelections[serialKey] || new Set();
+                      const selectedItems = checkoutItems.filter((_, i) => selectedSet.has(i));
+                      const totalDue = selectedItems.reduce((sum, item) => sum + (Number(item.cost) || 0), 0);
+
+                      return (
+                        <div className="space-y-4">
+
+                          {/* Selectable Items */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 mb-2">
+                              <ShoppingCart className="w-4 h-4 text-violet-400" />
+                              <span className="text-xs font-bold text-violet-300">Select Items to Pay For</span>
+                              {q.is_required && <span className="text-red-400 text-xs">*</span>}
+                            </div>
+
+                            {checkoutItems.length === 0 && (
+                              <p className="text-[11px] text-violet-400/60 text-center py-3">No checkout items configured.</p>
+                            )}
+
+                            {checkoutItems.map((item, itemIdx) => {
+                              const isSelected = selectedSet.has(itemIdx);
+                              return (
+                                <label
+                                  key={itemIdx}
+                                  className={`flex items-center justify-between gap-3 p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-violet-500/20 border-violet-500/50 text-white'
+                                      : 'bg-black/20 border-white/10 opacity-80 hover:opacity-100 hover:border-violet-400/30'
+                                  } ${!form.is_active ? 'cursor-not-allowed opacity-50' : ''}`}
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <input
+                                      type="checkbox"
+                                      disabled={!form.is_active}
+                                      checked={isSelected}
+                                      onChange={() => handleCheckoutItemToggle(q.question_serial, itemIdx)}
+                                      className="rounded text-violet-500 w-3.5 h-3.5"
+                                    />
+                                    <span className={isSelected ? 'font-bold text-white' : ''}>{item.title}</span>
+                                  </div>
+                                  <span className={`font-mono font-bold shrink-0 ${
+                                    isSelected ? 'text-emerald-400' : 'text-slate-400'
+                                  }`}>
+                                    ₹{Number(item.cost) || 0}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+
+                          {/* Billing Summary Card */}
+                          <div className={`p-4 rounded-xl border transition-all ${
+                            selectedItems.length > 0
+                              ? 'bg-violet-500/10 border-violet-500/40'
+                              : 'bg-black/20 border-white/10 opacity-60'
+                          }`}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <ReceiptText className="w-3.5 h-3.5 text-violet-400" />
+                              <span className="text-[11px] font-bold text-violet-300">Billing Summary</span>
+                            </div>
+                            {selectedItems.length === 0 ? (
+                              <p className="text-[11px] text-slate-400">No items selected yet.</p>
+                            ) : (
+                              <div className="space-y-1">
+                                {selectedItems.map((item, i) => (
+                                  <div key={i} className="flex items-center justify-between text-[11px]">
+                                    <span className="text-slate-300">{item.title}</span>
+                                    <span className="font-mono text-emerald-400 font-bold">₹{Number(item.cost) || 0}</span>
+                                  </div>
+                                ))}
+                                <div className="flex items-center justify-between pt-2 mt-1 border-t border-white/10">
+                                  <span className="text-xs font-bold text-white">Total Due</span>
+                                  <span className="text-base font-mono font-extrabold text-emerald-400">₹{totalDue}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* QR Codes Grid */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Primary QR */}
+                            {checkoutPolicy.primary_qr_url && (
+                              <div className="p-3.5 rounded-xl bg-black/40 border border-emerald-500/30 text-center space-y-2">
+                                <span className="inline-block px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                                  Primary Payment QR
+                                </span>
+                                <div className="w-36 h-36 mx-auto rounded-xl bg-white p-2 flex items-center justify-center shadow-lg">
+                                  <img
+                                    src={checkoutPolicy.primary_qr_url}
+                                    alt="Primary Payment QR"
+                                    className="w-full h-full object-contain"
+                                  />
+                                </div>
+                                <a
+                                  href={checkoutPolicy.primary_qr_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] text-indigo-300 hover:text-indigo-200 underline"
+                                >
+                                  <span>Open Full QR</span>
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              </div>
+                            )}
+
+                            {/* Fallback QR */}
+                            {checkoutPolicy.fallback_qr_url && (
+                              <div className="p-3.5 rounded-xl bg-black/40 border border-amber-500/30 text-center space-y-2">
+                                <span className="inline-block px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold">
+                                  Secondary / Fallback QR
+                                </span>
+                                <div className="w-36 h-36 mx-auto rounded-xl bg-white p-2 flex items-center justify-center shadow-lg">
+                                  <img
+                                    src={checkoutPolicy.fallback_qr_url}
+                                    alt="Fallback Payment QR"
+                                    className="w-full h-full object-contain"
+                                  />
+                                </div>
+                                <a
+                                  href={checkoutPolicy.fallback_qr_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] text-indigo-300 hover:text-indigo-200 underline"
+                                >
+                                  <span>Open Full QR</span>
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Payment Screenshot Upload Zone */}
+                          <div className="space-y-1.5 pt-1">
+                            <label className="block text-xs font-bold text-slate-200 flex items-center justify-between">
+                              <span className="flex items-center gap-1.5">
+                                <ImageIcon className="w-3.5 h-3.5 text-violet-400" />
+                                <span>Upload Payment Screenshot</span>
+                                {q.is_required && <span className="text-red-400">*</span>}
+                              </span>
+                              <span className="text-[10px] opacity-60">PNG, JPG, WEBP, PDF (Max 10MB)</span>
+                            </label>
+
+                            {currentAns[0] ? (
+                              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-300 font-semibold">
+                                <div className="flex items-center gap-2 truncate pr-2">
+                                  <FileCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                                  <span className="truncate">{currentAns[0]}</span>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <label className="text-[11px] text-indigo-300 hover:text-white font-bold cursor-pointer hover:underline">
+                                    <span>Replace</span>
+                                    <input
+                                      type="file"
+                                      accept="image/*,application/pdf"
+                                      disabled={!form.is_active || isUploading}
+                                      onChange={(e) => handlePaymentScreenshotUpload(q.question_serial, e.target.files?.[0])}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleTextChange(q.question_serial, '')}
+                                    className="text-[11px] text-red-400 hover:underline cursor-pointer"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <label className="p-4 border-2 border-dashed border-violet-500/40 hover:border-violet-400 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-violet-500/5 hover:bg-violet-500/10">
+                                {isUploading ? (
+                                  <div className="flex items-center gap-2 py-2 text-violet-300">
+                                    <Loader2 className="w-4 h-4 animate-spin text-violet-400" />
+                                    <span className="text-xs font-semibold">Uploading payment screenshot...</span>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <UploadCloud className="w-6 h-6 mb-1 text-violet-400" />
+                                    <span className="text-xs font-semibold text-slate-200">
+                                      Click or drop to upload payment confirmation screenshot
+                                    </span>
+                                    <span className="text-[10px] opacity-60 mt-0.5">
+                                      Capture the transaction ID &amp; status screen from your payment app
+                                    </span>
+                                  </>
+                                )}
+                                <input
+                                  type="file"
+                                  accept="image/*,application/pdf"
+                                  disabled={!form.is_active || isUploading}
+                                  onChange={(e) => handlePaymentScreenshotUpload(q.question_serial, e.target.files?.[0])}
+                                  className="hidden"
+                                />
+                              </label>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })}
