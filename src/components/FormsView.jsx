@@ -19,9 +19,7 @@ import {
   HelpCircle,
   FileCheck,
   Filter,
-  FileSpreadsheet,
-  RefreshCw,
-  Loader2
+  FileSpreadsheet
 } from 'lucide-react';
 import { MediaPreviewModal } from './MediaPreviewModal';
 import Pagination from './Pagination';
@@ -60,7 +58,6 @@ export function FormsView({
   onExportCSV = () => {},
   onFetchById = () => {},
   onLoadSampleForms = () => {},
-  onSyncWithMembership,
   showToast,
   isLoading = false,
   isResponsesLoading = false,
@@ -72,28 +69,6 @@ export function FormsView({
   const [copiedId, setCopiedId] = useState(null);
   const [lookupError, setLookupError] = useState('');
   const [previewMediaUrl, setPreviewMediaUrl] = useState(null);
-  const [syncingFormId, setSyncingFormId] = useState(null);
-
-  const handleSyncFormMembership = async (formId) => {
-    if (!formId || !onSyncWithMembership) return;
-    try {
-      setSyncingFormId(formId);
-      const res = await onSyncWithMembership(formId);
-      if (showToast) {
-        showToast(
-          `Form synchronized with Membership! ${res?.synced_count || 0} registered, ${res?.skipped_count || 0} skipped.`,
-          'success',
-          'Membership Sync Complete'
-        );
-      }
-    } catch (err) {
-      if (showToast) {
-        showToast(err.message || 'Failed to sync form responses with membership.', 'error', 'Sync Failed');
-      }
-    } finally {
-      setSyncingFormId(null);
-    }
-  };
 
   // Fetch responses when opening form dashboard or switching to responses tab
   useEffect(() => {
@@ -244,27 +219,6 @@ export function FormsView({
                   <Eye className="w-3.5 h-3.5" />
                   <span>Preview &amp; Test Submit</span>
                 </button>
-
-                {onSyncWithMembership && (
-                  <button
-                    onClick={() => handleSyncFormMembership(activeForm.id)}
-                    disabled={syncingFormId === activeForm.id}
-                    className="px-3 py-1.5 rounded-xl bg-indigo-500/20 text-black dark:text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 text-xs font-black flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    title="Sync responses from this form into ACES Membership"
-                  >
-                    {syncingFormId === activeForm.id ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Syncing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                        <span>Sync to Membership</span>
-                      </>
-                    )}
-                  </button>
-                )}
 
                 <button
                   onClick={() => onOpenEditModal(activeForm)}
@@ -901,25 +855,6 @@ export function FormsView({
                         >
                           <Eye className="w-4 h-4 text-black dark:text-indigo-300" />
                         </button>
-
-                        {onSyncWithMembership && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSyncFormMembership(form.id);
-                            }}
-                            disabled={syncingFormId === form.id}
-                            title="Sync Form Responses to ACES Membership"
-                            className="p-2 rounded-xl hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 opacity-80 hover:opacity-100 transition-colors cursor-pointer disabled:opacity-50"
-                          >
-                            {syncingFormId === form.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <RefreshCw className="w-4 h-4" />
-                            )}
-                          </button>
-                        )}
 
                         <button
                           onClick={() => onOpenEditModal(form)}

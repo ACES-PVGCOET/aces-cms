@@ -734,7 +734,6 @@ function AppContent() {
                 onExportCSV={formsHook.exportToCSV}
                 onFetchById={handleOpenSubmitForm}
                 onLoadSampleForms={formsHook.loadSampleForms}
-                onSyncWithMembership={membershipHook.syncFromForm}
                 showToast={showToast}
                 isLoading={formsHook.isLoading}
                 isResponsesLoading={formsHook.isResponsesLoading}
