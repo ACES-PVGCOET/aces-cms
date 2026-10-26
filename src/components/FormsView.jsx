@@ -435,6 +435,63 @@ export function FormsView({
                           </div>
                         </div>
                       )}
+
+                      {q.question_type === 'payment_checkout' && (
+                        <div className="space-y-3 text-black dark:text-white">
+                          <div className="space-y-1.5">
+                            <span className="text-[11px] font-black uppercase tracking-wider text-violet-600 dark:text-violet-400 block">Checkout Items</span>
+                            <div className="flex flex-wrap gap-2">
+                              {(q.payment_checkout_policy?.items || []).map((item, iIdx) => (
+                                <span key={iIdx} className="px-2.5 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-xs font-bold text-violet-700 dark:text-violet-300">
+                                  {item.title} <span className="text-black dark:text-white font-mono ml-1">₹{item.cost}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-4 pt-1">
+                            {q.payment_checkout_policy?.primary_qr_url && (
+                              <div className="flex items-center gap-2 p-2 rounded-xl bg-black/5 dark:bg-black/30 border border-slate-200 dark:border-white/10 text-black dark:text-white">
+                                <img
+                                  src={q.payment_checkout_policy.primary_qr_url}
+                                  alt="Primary QR"
+                                  className="w-12 h-12 object-contain bg-white rounded p-0.5"
+                                />
+                                <div>
+                                  <span className="text-[10px] font-black text-black dark:text-violet-300 block">Primary QR</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewMediaUrl(q.payment_checkout_policy.primary_qr_url)}
+                                    className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer font-black"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    <span>Preview</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            {q.payment_checkout_policy?.fallback_qr_url && (
+                              <div className="flex items-center gap-2 p-2 rounded-xl bg-black/5 dark:bg-black/30 border border-slate-200 dark:border-white/10 text-black dark:text-white">
+                                <img
+                                  src={q.payment_checkout_policy.fallback_qr_url}
+                                  alt="Fallback QR"
+                                  className="w-12 h-12 object-contain bg-white rounded p-0.5"
+                                />
+                                <div>
+                                  <span className="text-[10px] font-black text-black dark:text-amber-300 block">Fallback QR</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewMediaUrl(q.payment_checkout_policy.fallback_qr_url)}
+                                    className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer font-black"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    <span>Preview</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -606,7 +663,7 @@ export function FormsView({
                               const ans = r.answers?.[serialKey] || r.answers?.[q.question_serial] || [];
                               const ansArray = Array.isArray(ans) ? ans : ans ? [ans] : [];
                               const ansStr = Array.isArray(ans) ? ans.join('; ') : String(ans || '');
-                              const isMediaQuestion = q.question_type === 'file' || q.question_type === 'media' || q.question_type === 'payment_acceptance';
+                              const isMediaQuestion = q.question_type === 'file' || q.question_type === 'media' || q.question_type === 'payment_acceptance' || q.question_type === 'payment_checkout';
                               
                               const mediaUrls = ansArray.filter(
                                 (item) => typeof item === 'string' && (item.startsWith('http://') || item.startsWith('https://'))
@@ -627,7 +684,7 @@ export function FormsView({
                                           >
                                             <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                                             <span>
-                                              {q.question_type === 'payment_acceptance'
+                                              {q.question_type === 'payment_acceptance' || q.question_type === 'payment_checkout'
                                                 ? (mediaUrls.length > 1 ? `Screenshot #${uIdx + 1}` : 'View Screenshot')
                                                 : (mediaUrls.length > 1 ? `Preview #${uIdx + 1}` : 'View Preview')}
                                             </span>
