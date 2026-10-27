@@ -1,16 +1,28 @@
 import { useState } from 'react';
-import { X, ExternalLink, Download, FileText, Film, Image as ImageIcon, Copy, Check } from 'lucide-react';
+import { X, ExternalLink, Download, FileText, Film, Image as ImageIcon, Copy, Check, ShoppingBag, ReceiptText } from 'lucide-react';
 import { isVideoMedia } from '../utils/mediaUtils';
 
 /**
  * MediaPreviewModal Component
- * Interactive Lightbox modal to preview form response media files (images, videos, documents).
+ * Interactive Lightbox modal to preview form response media files (images, videos, documents),
+ * and display selected items alongside payment screenshots for PAYMENT_CHECKOUT questions.
  */
-export function MediaPreviewModal({ isOpen, onClose, mediaUrl, title = 'Media Preview' }) {
+export function MediaPreviewModal({
+  isOpen,
+  onClose,
+  mediaUrl,
+  title = 'Media Preview',
+  checkoutDetails = null,
+  selectedItems = [],
+  totalAmount = null,
+}) {
   const [copied, setCopied] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
 
   if (!isOpen || !mediaUrl) return null;
+
+  const itemsList = checkoutDetails?.items || selectedItems || [];
+  const calculatedTotal = checkoutDetails?.totalAmount ?? totalAmount;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(mediaUrl);
@@ -85,6 +97,47 @@ export function MediaPreviewModal({ isOpen, onClose, mediaUrl, title = 'Media Pr
             </button>
           </div>
         </div>
+
+        {/* Selected Checkout Items Panel for PAYMENT_CHECKOUT */}
+        {itemsList.length > 0 && (
+          <div className="px-4 py-3 sm:px-6 bg-purple-950/40 border-b border-purple-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+            <div className="flex items-start sm:items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+                <ShoppingBag className="w-4 h-4" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-black uppercase tracking-wider text-purple-300">
+                  Selected Checkout Items
+                </span>
+                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                  {itemsList.map((item, idx) => {
+                    const title = typeof item === 'object' && item !== null ? item.title : String(item);
+                    const cost = typeof item === 'object' && item !== null ? item.cost : null;
+                    return (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-purple-400/30 text-white text-xs font-semibold"
+                      >
+                        <span>{title}</span>
+                        {cost !== undefined && cost !== null && (
+                          <span className="font-mono font-bold text-emerald-400">₹{cost}</span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {calculatedTotal !== null && calculatedTotal !== undefined && (
+              <div className="flex items-center gap-2 sm:self-center shrink-0 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl self-start sm:self-auto">
+                <ReceiptText className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-bold text-slate-200">Total Billed:</span>
+                <span className="font-mono font-extrabold text-sm text-emerald-400">₹{calculatedTotal}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Media Preview Container */}
         <div className="flex-1 bg-slate-950/90 p-4 sm:p-6 flex items-center justify-center min-h-[350px] overflow-auto relative">

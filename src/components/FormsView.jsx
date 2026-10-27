@@ -69,6 +69,12 @@ export function FormsView({
   const [copiedId, setCopiedId] = useState(null);
   const [lookupError, setLookupError] = useState('');
   const [previewMediaUrl, setPreviewMediaUrl] = useState(null);
+  const [previewCheckoutData, setPreviewCheckoutData] = useState(null);
+
+  const handleOpenPreview = (url, checkoutData = null) => {
+    setPreviewMediaUrl(url);
+    setPreviewCheckoutData(checkoutData);
+  };
 
   // Fetch responses when opening form dashboard or switching to responses tab
   useEffect(() => {
@@ -129,6 +135,37 @@ export function FormsView({
           type: 'mc',
           totalResps,
           counts,
+        };
+      } else if (q.question_type === 'payment_checkout') {
+        const policyItems = q.payment_checkout_policy?.items || [];
+        const sampleCheckouts = activeFormResponses
+          .map((r) => {
+            const ans = r.answers?.[serialKey] || r.answers?.[q.question_serial] || [];
+            const ansArr = Array.isArray(ans) ? ans : ans ? [ans] : [];
+            const urls = ansArr.filter((val) => typeof val === 'string' && (val.startsWith('http://') || val.startsWith('https://')));
+            const items = ansArr.filter((val) => typeof val === 'string' && !val.startsWith('http://') && !val.startsWith('https://'));
+            if (urls.length === 0 && items.length === 0) return null;
+            let total = 0;
+            const itemsWithCost = items.map((title) => {
+              const matched = policyItems.find((pi) => pi.title === title);
+              const cost = matched ? Number(matched.cost) || 0 : null;
+              if (cost !== null) total += cost;
+              return { title, cost };
+            });
+            return {
+              items: itemsWithCost,
+              screenshotUrl: urls[0] || '',
+              total,
+            };
+          })
+          .filter(Boolean)
+          .slice(0, 5);
+
+        return {
+          question: q,
+          type: 'payment_checkout',
+          totalResps,
+          sampleCheckouts,
         };
       } else {
         // Textual or file sample answers
@@ -514,6 +551,41 @@ export function FormsView({
                               );
                             })}
                           </div>
+                        ) : item.type === 'payment_checkout' ? (
+                          <div className="space-y-2 text-xs text-black dark:text-white">
+                            <span className="text-[10px] font-black uppercase text-black dark:text-white opacity-80">Recent Checkout Submissions:</span>
+                            {item.sampleCheckouts.length > 0 ? (
+                              item.sampleCheckouts.map((checkout, cIdx) => (
+                                <div key={cIdx} className="p-2.5 rounded-xl bg-black/5 dark:bg-black/20 border border-slate-200 dark:border-white/5 space-y-2">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    {checkout.items.map((it, iIdx) => (
+                                      <span key={iIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-700 dark:text-violet-300 text-[11px] font-bold">
+                                        <span>{it.title}</span>
+                                        {it.cost !== null && <span className="font-mono text-emerald-600 dark:text-emerald-400">₹{it.cost}</span>}
+                                      </span>
+                                    ))}
+                                    {checkout.total > 0 && (
+                                      <span className="text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400 ml-auto">
+                                        Total: ₹{checkout.total}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {checkout.screenshotUrl && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenPreview(checkout.screenshotUrl, { items: checkout.items, totalAmount: checkout.total })}
+                                      className="px-2.5 py-1 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-black dark:text-indigo-300 text-xs font-black flex items-center gap-1.5 border border-indigo-500/30 transition-all cursor-pointer"
+                                    >
+                                      <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                                      <span>View Screenshot &amp; Items</span>
+                                    </button>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <p className="opacity-70 text-[11px] font-semibold text-black dark:text-white">No checkout responses submitted.</p>
+                            )}
+                          </div>
                         ) : (
                           <div className="space-y-1.5 text-xs text-black dark:text-white">
                             <span className="text-[10px] font-black uppercase text-black dark:text-white opacity-80">Recent Sample Responses:</span>
@@ -525,7 +597,7 @@ export function FormsView({
                                     <div key={aIdx} className="py-1">
                                       <button
                                         type="button"
-                                        onClick={() => setPreviewMediaUrl(ans)}
+                                        onClick={() => handleOpenPreview(ans)}
                                         className="px-2.5 py-1 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-black dark:text-indigo-300 text-xs font-black flex items-center gap-1.5 border border-indigo-500/30 transition-all cursor-pointer"
                                       >
                                         <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
@@ -612,7 +684,7 @@ export function FormsView({
                               )}
                             </td>
 
-                              {(activeForm.questions || []).map((q) => {
+                            {(activeForm.questions || []).map((q) => {
                               const serialKey = String(q.question_serial);
                               const ans = r.answers?.[serialKey] || r.answers?.[q.question_serial] || [];
                               const ansArray = Array.isArray(ans) ? ans : ans ? [ans] : [];
@@ -622,6 +694,65 @@ export function FormsView({
                               const mediaUrls = ansArray.filter(
                                 (item) => typeof item === 'string' && (item.startsWith('http://') || item.startsWith('https://'))
                               );
+                              const nonMediaItems = ansArray.filter(
+                                (item) => typeof item === 'string' && !item.startsWith('http://') && !item.startsWith('https://')
+                              );
+
+                              if (q.question_type === 'payment_checkout') {
+                                const policyItems = q.payment_checkout_policy?.items || [];
+                                let totalBilled = 0;
+                                const itemsWithCost = nonMediaItems.map((title) => {
+                                  const matched = policyItems.find((pi) => pi.title === title);
+                                  const cost = matched ? Number(matched.cost) || 0 : null;
+                                  if (cost !== null) totalBilled += cost;
+                                  return { title, cost };
+                                });
+
+                                return (
+                                  <td key={q.question_serial} className="p-3 max-w-xs text-black dark:text-white">
+                                    {itemsWithCost.length > 0 || mediaUrls.length > 0 ? (
+                                      <div className="flex flex-col gap-1.5">
+                                        {itemsWithCost.length > 0 && (
+                                          <div className="flex flex-wrap gap-1 items-center">
+                                            {itemsWithCost.map((it, idx) => (
+                                              <span
+                                                key={idx}
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-700 dark:text-violet-300 text-[11px] font-bold"
+                                              >
+                                                <span>{it.title}</span>
+                                                {it.cost !== null && (
+                                                  <span className="font-mono text-emerald-600 dark:text-emerald-400">₹{it.cost}</span>
+                                                )}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        )}
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          {totalBilled > 0 && (
+                                            <span className="text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400">
+                                              Total: ₹{totalBilled}
+                                            </span>
+                                          )}
+                                          {mediaUrls.map((url, uIdx) => (
+                                            <button
+                                              key={uIdx}
+                                              type="button"
+                                              onClick={() => handleOpenPreview(url, { items: itemsWithCost, totalAmount: totalBilled })}
+                                              className="px-2 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-black dark:text-indigo-300 text-xs font-black flex items-center gap-1 border border-indigo-500/30 transition-all cursor-pointer shadow-xs"
+                                              title={`Preview screenshot: ${url}`}
+                                            >
+                                              <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                                              <span>{mediaUrls.length > 1 ? `Screenshot #${uIdx + 1}` : 'View Screenshot'}</span>
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <span className="opacity-60 italic text-black dark:text-white font-bold">—</span>
+                                    )}
+                                  </td>
+                                );
+                              }
 
                               return (
                                 <td key={q.question_serial} className="p-3 max-w-xs text-black dark:text-white">
@@ -632,13 +763,13 @@ export function FormsView({
                                           <button
                                             key={uIdx}
                                             type="button"
-                                            onClick={() => setPreviewMediaUrl(url)}
+                                            onClick={() => handleOpenPreview(url)}
                                             className="px-2.5 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-black dark:text-indigo-300 text-xs font-black flex items-center gap-1.5 border border-indigo-500/30 transition-all cursor-pointer shadow-xs"
                                             title={`Preview attachment: ${url}`}
                                           >
                                             <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                                             <span>
-                                              {q.question_type === 'payment_acceptance' || q.question_type === 'payment_checkout'
+                                              {q.question_type === 'payment_acceptance'
                                                 ? (mediaUrls.length > 1 ? `Screenshot #${uIdx + 1}` : 'View Screenshot')
                                                 : (mediaUrls.length > 1 ? `Preview #${uIdx + 1}` : 'View Preview')}
                                             </span>
@@ -898,9 +1029,13 @@ export function FormsView({
       {/* Media Preview Lightbox Modal */}
       <MediaPreviewModal
         isOpen={Boolean(previewMediaUrl)}
-        onClose={() => setPreviewMediaUrl(null)}
+        onClose={() => {
+          setPreviewMediaUrl(null);
+          setPreviewCheckoutData(null);
+        }}
         mediaUrl={previewMediaUrl}
-        title="Form Response Media Preview"
+        title={previewCheckoutData ? "Payment Confirmation Screenshot" : "Form Response Media Preview"}
+        checkoutDetails={previewCheckoutData}
       />
 
     </div>

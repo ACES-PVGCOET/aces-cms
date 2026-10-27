@@ -235,11 +235,40 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
       return;
     }
 
+    const finalAnswers = { ...answersMap };
+
     // Validate required questions
     for (const q of questions) {
       const serialKey = String(q.question_serial);
       const answerArr = answersMap[serialKey] || [];
-      if (q.is_required && answerArr.length === 0) {
+      const qType = (q.question_type || '').toLowerCase();
+
+      if (qType === 'payment_checkout') {
+        const selectedIndices = Array.from(checkoutSelections[serialKey] || []);
+        const screenshotUrl = (answerArr || []).find((s) => /^https?:\/\/.+/i.test(String(s).trim())) || '';
+
+        if (q.is_required && selectedIndices.length === 0) {
+          setErrorMsg(`Question #${q.question_serial} ("${q.question_statement}"): Please select at least one item.`);
+          return;
+        }
+        if (q.is_required && !screenshotUrl) {
+          setErrorMsg(`Question #${q.question_serial} ("${q.question_statement}"): Payment confirmation screenshot is required.`);
+          return;
+        }
+        if (selectedIndices.length > 0 && !screenshotUrl) {
+          setErrorMsg(`Question #${q.question_serial}: You have selected item(s). Please upload your payment confirmation screenshot before submitting.`);
+          return;
+        }
+
+        const items = q.payment_checkout_policy?.items || [];
+        const selectedTitles = selectedIndices
+          .map((idx) => items[idx]?.title)
+          .filter(Boolean);
+
+        finalAnswers[serialKey] = screenshotUrl
+          ? [...selectedTitles, screenshotUrl]
+          : selectedTitles;
+      } else if (q.is_required && answerArr.length === 0) {
         setErrorMsg(`Question #${q.question_serial} ("${q.question_statement}") is mandatory.`);
         return;
       }
@@ -247,7 +276,7 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
 
     try {
       setIsSubmitting(true);
-      await onSubmitResponse(form.form_id || form.id, answersMap, trimmedEmail);
+      await onSubmitResponse(form.form_id || form.id, finalAnswers, trimmedEmail);
       setIsSubmittedSuccess(true);
     } catch (err) {
       setErrorMsg(err.message || 'Submission failed. Please check your entries.');
