@@ -26,7 +26,7 @@ Toggle between themes with a single click in the top header (or press `Cmd/Ctrl 
 | 2 | **Member Hub** | `members` | Full member directory with search, team filters, sort, and profile modals |
 | 3 | **Fee Verification** | `fee-verification` | Registration payment review, receipt inspection, verify/flag controls |
 | 4 | **Event Lineup** | `events` | Event scheduling, status tracking, grid/list view toggle |
-| 5 | **Forms Engine** | `forms` | Custom form builder, response collection, CSV export |
+| 5 | **Forms Engine** | `forms` | Custom form builder with multiple/single response policies, response collection, CSV export |
 | 6 | **Announcements** | `announcements` | Public broadcast notices, API-backed lifecycle management |
 | 7 | **Media Showcase** | `showcase` | Multimedia albums, gallery collections, PDF viewer, media upload |
 
@@ -74,8 +74,8 @@ All modules connect to a live REST API. When the backend is offline, the system 
 - `ProfileModal` — Logged-in user profile & settings
 - `EventModal` — Create/edit event with registration date range
 - `EventDetailModal` — Event inspector with schedule & RSVP info
-- `FormBuilderModal` — Drag-and-drop style form schema builder (supports image questions, payment QR)
-- `FormSubmitModal` — Public form submission UI
+- `FormBuilderModal` — Drag-and-drop style form schema builder (supports image questions, payment QR, and "Allow multiple responses for same email" setting)
+- `FormSubmitModal` — Public form submission UI with real-time email existence verification and support for multi-response forms
 - `VerifyFeeModal` — Receipt inspector with verify/flag/reject controls
 - `ConfirmVerifyModal` — Confirmation dialog for fee verification actions
 - `AddMembershipModal` — Manual membership registration entry
