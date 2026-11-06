@@ -81,9 +81,15 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
       setEmailCheckStatus('checking');
       const formId = form.form_id || form.id;
       const res = await formsApi.checkResponseExists(formId, trimmed);
+      const isMultiAllowed = Boolean(form.allow_multiple_responses || res?.allow_multiple_responses);
       if (res && res.exists) {
-        setEmailCheckStatus('exists');
-        setEmailCheckMsg('A response has already been submitted with this email address.');
+        if (isMultiAllowed) {
+          setEmailCheckStatus('multiple_allowed');
+          setEmailCheckMsg('Previous response detected. Multiple responses are allowed for this form.');
+        } else {
+          setEmailCheckStatus('exists');
+          setEmailCheckMsg('A response has already been submitted with this email address.');
+        }
       } else {
         setEmailCheckStatus('available');
         setEmailCheckMsg('');
@@ -224,7 +230,7 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
       return;
     }
 
-    if (emailCheckStatus === 'exists') {
+    if (!form.allow_multiple_responses && emailCheckStatus === 'exists') {
       setErrorMsg('A response has already been submitted with this email address.');
       return;
     }
@@ -427,6 +433,14 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
               </div>
             )}
 
+            {/* Multiple Submissions Allowed Notice */}
+            {form.allow_multiple_responses && (
+              <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs flex items-center gap-2">
+                <Sparkles className="w-4 h-4 shrink-0 text-indigo-400" />
+                <span><strong>Multiple submissions enabled:</strong> You can submit this form multiple times using the same email address.</span>
+              </div>
+            )}
+
             {/* Question Items */}
             <div className="space-y-5 max-h-[55vh] overflow-y-auto pr-1">
               
@@ -454,8 +468,10 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
                   onBlur={(e) => checkEmailExistence(e.target.value)}
                   placeholder="Enter your email address (e.g. filler@example.com)"
                   className={`w-full px-3.5 py-2.5 rounded-xl bg-black/20 border text-xs font-medium focus:outline-none disabled:opacity-50 transition-colors ${
-                    emailCheckStatus === 'exists'
+                    !form.allow_multiple_responses && emailCheckStatus === 'exists'
                       ? 'border-red-500 text-red-300 bg-red-500/10'
+                      : emailCheckStatus === 'multiple_allowed'
+                      ? 'border-indigo-500/50 text-indigo-300 bg-indigo-500/10'
                       : emailCheckStatus === 'available'
                       ? 'border-emerald-500/50 text-emerald-300 bg-emerald-500/5'
                       : 'border-white/10 focus:border-indigo-500'
@@ -464,16 +480,22 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
                 {emailCheckStatus === 'checking' && (
                   <p className="text-[10px] text-indigo-300">Checking submission record for this email...</p>
                 )}
-                {emailCheckStatus === 'exists' && (
+                {!form.allow_multiple_responses && emailCheckStatus === 'exists' && (
                   <p className="text-[10px] text-red-400 font-medium flex items-center gap-1">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{emailCheckMsg}</span>
+                  </p>
+                )}
+                {emailCheckStatus === 'multiple_allowed' && (
+                  <p className="text-[10px] text-indigo-300 font-medium flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-indigo-400" />
                     <span>{emailCheckMsg}</span>
                   </p>
                 )}
                 {emailCheckStatus === 'available' && (
                   <p className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>Email verified. No prior response submitted for this form.</span>
+                    <span>Email verified. {form.allow_multiple_responses ? 'Multiple responses allowed for this form.' : 'No prior response submitted for this form.'}</span>
                   </p>
                 )}
               </div>
@@ -961,7 +983,7 @@ export function FormSubmitModal({ isOpen, form, onClose, onSubmitResponse }) {
 
               <button
                 type="submit"
-                disabled={!form.is_active || isSubmitting || emailCheckStatus === 'exists' || Object.values(uploadingFiles).some(Boolean)}
+                disabled={!form.is_active || isSubmitting || (!form.allow_multiple_responses && emailCheckStatus === 'exists') || Object.values(uploadingFiles).some(Boolean)}
                 className="btn-primary px-6 py-2 rounded-xl text-xs font-bold shadow-lg flex items-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (

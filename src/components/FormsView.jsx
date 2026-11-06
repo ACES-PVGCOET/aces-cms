@@ -283,6 +283,9 @@ export function FormsView({
                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${activeForm.is_active ? 'bg-emerald-500/20 text-black dark:text-emerald-300' : 'bg-rose-500/20 text-black dark:text-rose-300'}`}>
                     {activeForm.is_active ? 'Active' : 'Inactive'}
                   </span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${activeForm.allow_multiple_responses ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30' : 'bg-slate-500/20 text-slate-700 dark:text-slate-300 border border-slate-500/30'}`}>
+                    {activeForm.allow_multiple_responses ? 'Multiple Responses' : 'Single Response Only'}
+                  </span>
                 </div>
                 <p className="text-xs text-black dark:text-white opacity-80 font-medium mt-1">{activeForm.description || 'No description provided.'}</p>
               </div>
@@ -946,13 +949,18 @@ export function FormsView({
                       </p>
 
                       {/* Badges: Questions & Responses */}
-                      <div className="flex items-center gap-2 text-[11px] font-black text-black dark:text-white">
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] font-black text-black dark:text-white">
                         <span className="px-2.5 py-1 rounded-lg bg-black/5 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-black dark:text-white">
                           {form.question_count} Questions
                         </span>
                         <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-black dark:text-indigo-300 font-black">
                           {form.response_count} Responses
                         </span>
+                        {form.allow_multiple_responses && (
+                          <span className="px-2.5 py-1 rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-700 dark:text-violet-300 font-black text-[10px]">
+                            Multiple Responses
+                          </span>
+                        )}
                       </div>
 
                       {/* Form ID Box */}

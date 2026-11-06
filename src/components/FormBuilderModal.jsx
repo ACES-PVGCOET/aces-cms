@@ -63,6 +63,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [allowMultipleResponses, setAllowMultipleResponses] = useState(false);
   const [questions, setQuestions] = useState(DEFAULT_QUESTIONS);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -79,6 +80,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
       setTitle(initialForm.title || '');
       setDescription(initialForm.description || '');
       setIsActive(initialForm.is_active !== undefined ? Boolean(initialForm.is_active) : true);
+      setAllowMultipleResponses(initialForm.allow_multiple_responses !== undefined ? Boolean(initialForm.allow_multiple_responses) : false);
        setWhatsappGroupLink(initialForm.whatsapp_group_link || '');
     setWhatsappQrCode(initialForm.whatsapp_qr_code || '');
 
@@ -105,6 +107,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
       setTitle('');
       setDescription('');
       setIsActive(true);
+      setAllowMultipleResponses(false);
       setQuestions(DEFAULT_QUESTIONS);
        setWhatsappGroupLink('');
     setWhatsappQrCode('');
@@ -527,6 +530,7 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
         title: title.trim(),
         description: description.trim(),
         is_active: isActive,
+        allow_multiple_responses: allowMultipleResponses,
         whatsapp_group_link: whatsappGroupLink.trim(),
   whatsapp_qr_code: whatsappQrCode.trim(),
         questions: questions.map((q, idx) => {
@@ -627,9 +631,14 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
             <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-lg font-bold text-indigo-300">{title || 'Untitled Form'}</h3>
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
-                  {isActive ? 'Active Form' : 'Inactive Form'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                    {isActive ? 'Active Form' : 'Inactive Form'}
+                  </span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${allowMultipleResponses ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/10 text-white/70'}`}>
+                    {allowMultipleResponses ? 'Multiple Responses Allowed' : 'Single Response per Email'}
+                  </span>
+                </div>
               </div>
               <p className="text-xs opacity-80">{description || 'No description provided.'}</p>
             </div>
@@ -800,6 +809,44 @@ export function FormBuilderModal({ isOpen, initialForm, onClose, onSubmit }) {
                   placeholder="Briefly explain what this form is for and any instructions..."
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:outline-none text-xs font-medium resize-none"
                 />
+              </div>
+
+              {/* Submission Policy Setting: Allow Multiple Responses */}
+              <div className="sm:col-span-3 p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor="allow-multiple-responses-toggle"
+                        className="text-xs font-bold text-white cursor-pointer select-none"
+                      >
+                        Allow multiple responses for same email
+                      </label>
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${
+                        allowMultipleResponses ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-white/10 text-white/60'
+                      }`}>
+                        {allowMultipleResponses ? 'Multi-submission Enabled' : 'Default: Single Submission'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] opacity-70 mt-1 leading-relaxed">
+                      When selected, users can submit the form multiple times using the same email address. By default, only a single submission per email is permitted.
+                    </p>
+                  </div>
+
+                  <button
+                    id="allow-multiple-responses-toggle"
+                    type="button"
+                    onClick={() => setAllowMultipleResponses(!allowMultipleResponses)}
+                    className={`px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 self-start sm:self-center ${
+                      allowMultipleResponses
+                        ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300 shadow-sm'
+                        : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <CheckCircle2 className={`w-4 h-4 ${allowMultipleResponses ? 'text-indigo-400' : 'opacity-40'}`} />
+                    <span>{allowMultipleResponses ? 'Multiple Allowed' : 'Single Response Only'}</span>
+                  </button>
+                </div>
               </div>
 
               {/* WhatsApp Post-Submission Settings */}
